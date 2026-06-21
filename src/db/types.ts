@@ -1,0 +1,49 @@
+// Row shapes mirroring the SQLite schema (see migrations.ts / schema.sql).
+// All timestamps are UTC ISO-8601 strings; date_of_birth / measured_at are
+// date-only ISO (yyyy-MM-dd). Canonical units: ml, grams, cm.
+
+export type Sex = 'male' | 'female';
+export type FeedType = 'breast' | 'bottle' | 'pump';
+export type Side = 'left' | 'right' | 'both';
+export type Contents = 'breast_milk' | 'formula' | 'mixed';
+export type DiaperType = 'wet' | 'dirty' | 'both';
+
+export type UnitVolume = 'ml' | 'oz';
+export type UnitMass = 'g' | 'lb_oz';
+export type UnitLength = 'cm' | 'in';
+
+export interface Baby {
+  id: number;
+  name: string;
+  sex: Sex;
+  date_of_birth: string; // yyyy-MM-dd
+  created_at: string;
+  updated_at: string;
+}
+
+/** Fields captured at onboarding / profile edit. */
+export interface BabyInput {
+  name: string;
+  sex: Sex;
+  date_of_birth: string; // yyyy-MM-dd
+}
+
+export interface Settings {
+  id: 1;
+  unit_volume: UnitVolume;
+  unit_mass: UnitMass;
+  unit_length: UnitLength;
+  active_baby_id: number | null;
+  theme: string;
+  updated_at: string;
+}
+
+export interface ReminderConfig {
+  id: number;
+  baby_id: number;
+  type: 'feed';
+  enabled: 0 | 1;
+  interval_minutes: number;
+  created_at: string;
+  updated_at: string;
+}

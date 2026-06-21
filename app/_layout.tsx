@@ -4,12 +4,14 @@ import {
   HankenGrotesk_600SemiBold,
 } from '@expo-google-fonts/hanken-grotesk';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
+import { AppDataProvider, useAppData } from '@/src/state/AppDataProvider';
 import { colors } from '@/src/theme/theme';
 
 export {
@@ -22,7 +24,7 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Prevent the splash screen from auto-hiding before fonts + data are ready.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -37,15 +39,41 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
   if (!loaded) {
     return null;
   }
+
+  return (
+    <SafeAreaProvider>
+      <AppDataProvider>
+        <RootNavigator />
+      </AppDataProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function RootNavigator() {
+  const { ready, activeBaby } = useAppData();
+  const segments = useSegments();
+  const router = useRouter();
+
+  // Hold the splash screen until both fonts and the initial data load finish.
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
+
+  // Route gate: no baby yet → onboarding; baby exists → keep out of onboarding.
+  useEffect(() => {
+    if (!ready) return;
+    const inOnboarding = segments[0] === 'onboarding';
+    if (!activeBaby && !inOnboarding) {
+      router.replace('/onboarding');
+    } else if (activeBaby && inOnboarding) {
+      router.replace('/');
+    }
+  }, [ready, activeBaby, segments, router]);
+
+  if (!ready) return null;
 
   return (
     <>
@@ -58,6 +86,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </>
