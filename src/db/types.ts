@@ -47,3 +47,32 @@ export interface ReminderConfig {
   created_at: string;
   updated_at: string;
 }
+
+export interface FeedEvent {
+  id: number;
+  baby_id: number;
+  type: FeedType;
+  start_time: string; // UTC ISO
+  end_time: string | null;
+  side: Side | null;
+  duration_left_s: number | null;
+  duration_right_s: number | null;
+  volume_ml: number | null;
+  contents: Contents | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Fields written when logging / editing a feed (ids + timestamps added by repo). */
+export interface FeedInput {
+  type: FeedType;
+  start_time: string; // UTC ISO
+  end_time?: string | null;
+  side?: Side | null;
+  duration_left_s?: number | null;
+  duration_right_s?: number | null;
+  volume_ml?: number | null; // canonical ml
+  contents?: Contents | null;
+  notes?: string | null;
+}

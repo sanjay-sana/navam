@@ -4,7 +4,7 @@
 import * as SQLite from 'expo-sqlite';
 
 import { openDatabase } from './migrations';
-import type { Baby, BabyInput, Settings } from './types';
+import type { Baby, BabyInput, FeedInput, Settings } from './types';
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -143,6 +143,39 @@ export async function countFeedsBetween(
     [babyId, startIso, endIso]
   );
   return row?.n ?? 0;
+}
+
+// --- Feed events ------------------------------------------------------------
+
+/**
+ * Insert a feed event. Returns the new id. NOTE: callers must trigger the
+ * next-feed reminder recompute (§5.4) after qualifying-feed writes — that
+ * scheduling lands in Phase 6.
+ */
+export async function createFeedEvent(babyId: number, input: FeedInput): Promise<number> {
+  const db = await getDb();
+  const ts = nowUtc();
+  const res = await db.runAsync(
+    `INSERT INTO feed_events
+       (baby_id, type, start_time, end_time, side, duration_left_s, duration_right_s,
+        volume_ml, contents, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      babyId,
+      input.type,
+      input.start_time,
+      input.end_time ?? null,
+      input.side ?? null,
+      input.duration_left_s ?? null,
+      input.duration_right_s ?? null,
+      input.volume_ml ?? null,
+      input.contents ?? null,
+      input.notes ?? null,
+      ts,
+      ts,
+    ]
+  );
+  return res.lastInsertRowId;
 }
 
 /** Count diaper events in [startIso, endIso). */
