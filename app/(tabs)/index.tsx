@@ -86,7 +86,12 @@ export default function TodayScreen() {
             <Ionicons name="moon" size={22} color={colors.accent} />
             <Text style={styles.brandText}>Lull</Text>
           </View>
-          <Text style={styles.greeting}>{greeting(now)}</Text>
+          <View style={styles.headerRight}>
+            <Text style={styles.greeting}>{greeting(now)}</Text>
+            <Pressable onPress={() => router.push('/history')} hitSlop={12}>
+              <Ionicons name="time-outline" size={24} color={colors.dim} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.ringWrap}>
@@ -124,7 +129,7 @@ export default function TodayScreen() {
           </Pressable>
           <Pressable
             style={[styles.quickButton, styles.diaperButton]}
-            onPress={() => router.navigate('/log')}
+            onPress={() => router.push('/log-diaper')}
           >
             <Ionicons name="water" size={22} color={colors.diaper} />
             <Text style={styles.diaperButtonText}>Diaper</Text>
@@ -158,6 +163,7 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   brandText: { fontFamily: fonts.display, fontSize: 26, color: colors.text },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   greeting: { fontFamily: fonts.ui, fontSize: 16, color: colors.dim },
 
   ringWrap: { alignItems: 'center', marginTop: spacing.lg, marginBottom: spacing.lg },

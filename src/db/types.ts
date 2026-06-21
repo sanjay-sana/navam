@@ -76,3 +76,23 @@ export interface FeedInput {
   contents?: Contents | null;
   notes?: string | null;
 }
+
+export interface DiaperEvent {
+  id: number;
+  baby_id: number;
+  time: string; // UTC ISO
+  type: DiaperType;
+  color: string | null;
+  consistency: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DiaperInput {
+  time: string; // UTC ISO
+  type: DiaperType;
+  color?: string | null;
+  consistency?: string | null;
+  notes?: string | null;
+}

@@ -4,7 +4,15 @@
 import * as SQLite from 'expo-sqlite';
 
 import { openDatabase } from './migrations';
-import type { Baby, BabyInput, FeedInput, Settings } from './types';
+import type {
+  Baby,
+  BabyInput,
+  DiaperEvent,
+  DiaperInput,
+  FeedEvent,
+  FeedInput,
+  Settings,
+} from './types';
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -176,6 +184,101 @@ export async function createFeedEvent(babyId: number, input: FeedInput): Promise
     ]
   );
   return res.lastInsertRowId;
+}
+
+export async function getFeedEvent(id: number): Promise<FeedEvent | null> {
+  const db = await getDb();
+  return (await db.getFirstAsync<FeedEvent>('SELECT * FROM feed_events WHERE id = ?', [id])) ?? null;
+}
+
+export async function updateFeedEvent(id: number, input: FeedInput): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE feed_events SET
+       type = ?, start_time = ?, end_time = ?, side = ?, duration_left_s = ?,
+       duration_right_s = ?, volume_ml = ?, contents = ?, notes = ?, updated_at = ?
+     WHERE id = ?`,
+    [
+      input.type,
+      input.start_time,
+      input.end_time ?? null,
+      input.side ?? null,
+      input.duration_left_s ?? null,
+      input.duration_right_s ?? null,
+      input.volume_ml ?? null,
+      input.contents ?? null,
+      input.notes ?? null,
+      nowUtc(),
+      id,
+    ]
+  );
+}
+
+export async function deleteFeedEvent(id: number): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM feed_events WHERE id = ?', [id]);
+}
+
+export async function getFeedEventsBetween(
+  babyId: number,
+  startIso: string,
+  endIso: string
+): Promise<FeedEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<FeedEvent>(
+    `SELECT * FROM feed_events
+     WHERE baby_id = ? AND start_time >= ? AND start_time < ?
+     ORDER BY start_time DESC`,
+    [babyId, startIso, endIso]
+  );
+}
+
+// --- Diaper events ----------------------------------------------------------
+
+export async function createDiaperEvent(babyId: number, input: DiaperInput): Promise<number> {
+  const db = await getDb();
+  const ts = nowUtc();
+  const res = await db.runAsync(
+    `INSERT INTO diaper_events (baby_id, time, type, color, consistency, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [babyId, input.time, input.type, input.color ?? null, input.consistency ?? null, input.notes ?? null, ts, ts]
+  );
+  return res.lastInsertRowId;
+}
+
+export async function getDiaperEvent(id: number): Promise<DiaperEvent | null> {
+  const db = await getDb();
+  return (
+    (await db.getFirstAsync<DiaperEvent>('SELECT * FROM diaper_events WHERE id = ?', [id])) ?? null
+  );
+}
+
+export async function updateDiaperEvent(id: number, input: DiaperInput): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE diaper_events SET time = ?, type = ?, color = ?, consistency = ?, notes = ?, updated_at = ?
+     WHERE id = ?`,
+    [input.time, input.type, input.color ?? null, input.consistency ?? null, input.notes ?? null, nowUtc(), id]
+  );
+}
+
+export async function deleteDiaperEvent(id: number): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM diaper_events WHERE id = ?', [id]);
+}
+
+export async function getDiaperEventsBetween(
+  babyId: number,
+  startIso: string,
+  endIso: string
+): Promise<DiaperEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<DiaperEvent>(
+    `SELECT * FROM diaper_events
+     WHERE baby_id = ? AND time >= ? AND time < ?
+     ORDER BY time DESC`,
+    [babyId, startIso, endIso]
+  );
 }
 
 /** Count diaper events in [startIso, endIso). */

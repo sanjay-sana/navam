@@ -1,23 +1,15 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Segmented } from '@/src/components/Segmented';
+import { TimeField } from '@/src/components/TimeField';
 import * as repo from '@/src/db/repo';
-import type { Contents, FeedType, Side } from '@/src/db/types';
+import type { Contents, FeedEvent, FeedType, Side } from '@/src/db/types';
 import { validateFeedDraft, type FeedErrors } from '@/src/logic/feed';
-import { volumeUnitLabel } from '@/src/logic/units';
+import { mlToUnit, volumeUnitLabel } from '@/src/logic/units';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 
@@ -43,8 +35,19 @@ function formatMMSS(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+function feedTotalSeconds(f: FeedEvent): number | null {
+  const perSide = (f.duration_left_s ?? 0) + (f.duration_right_s ?? 0);
+  if (perSide > 0) return perSide;
+  if (f.end_time) {
+    return Math.round((new Date(f.end_time).getTime() - new Date(f.start_time).getTime()) / 1000);
+  }
+  return null;
+}
+
 export default function LogFeedScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const editId = id ? Number(id) : null;
   const { activeBaby, settings } = useAppData();
   const unit = settings?.unit_volume ?? 'ml';
 
@@ -53,24 +56,39 @@ export default function LogFeedScreen() {
   const [volumeText, setVolumeText] = useState('');
   const [contents, setContents] = useState<Contents | null>(null);
   const [manualMinutes, setManualMinutes] = useState('');
-
-  // Time / backfill
   const [startTime, setStartTime] = useState<Date>(() => new Date());
-  const [pickStep, setPickStep] = useState<'date' | 'time' | null>(null);
 
   // Live timer (breast)
   const [timing, setTiming] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState<number | null>(null); // captured on stop
+  const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
   const recordStartRef = useRef<number | null>(null);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   const [errors, setErrors] = useState<FeedErrors>({});
   const [saving, setSaving] = useState(false);
 
+  // Load the event when editing.
+  useEffect(() => {
+    if (editId == null) return;
+    (async () => {
+      const f = await repo.getFeedEvent(editId);
+      if (!f) return;
+      setType(f.type);
+      setSide(f.side);
+      setStartTime(new Date(f.start_time));
+      if (f.type === 'breast') {
+        setTimerSeconds(feedTotalSeconds(f));
+      } else if (f.volume_ml != null) {
+        setVolumeText(String(mlToUnit(f.volume_ml, unit)));
+        setContents(f.contents);
+      }
+    })();
+  }, [editId, unit]);
+
   useEffect(() => {
     if (!timing) return;
-    const id = setInterval(() => setTick((t) => t + 1), 250);
-    return () => clearInterval(id);
+    const t = setInterval(() => setTick((n) => n + 1), 250);
+    return () => clearInterval(t);
   }, [timing]);
 
   function switchType(next: FeedType) {
@@ -101,21 +119,16 @@ export default function LogFeedScreen() {
     setTiming(false);
   }
 
-  function applyPreset(minutesAgo: number) {
-    setStartTime(new Date(Date.now() - minutesAgo * 60_000));
+  function effectiveDurationSeconds(): number | null {
+    if (timerSeconds != null) return timerSeconds;
+    const m = Number(manualMinutes.trim());
+    return Number.isFinite(m) && m > 0 ? Math.round(m * 60) : null;
   }
 
   const liveSeconds =
     timing && recordStartRef.current != null
       ? Math.floor((Date.now() - recordStartRef.current) / 1000)
       : 0;
-
-  // Effective breast duration: timer result, else manual minutes.
-  function effectiveDurationSeconds(): number | null {
-    if (timerSeconds != null) return timerSeconds;
-    const m = Number(manualMinutes.trim());
-    return Number.isFinite(m) && m > 0 ? Math.round(m * 60) : null;
-  }
 
   async function onSave() {
     if (!activeBaby) return;
@@ -135,28 +148,43 @@ export default function LogFeedScreen() {
     setErrors({});
     setSaving(true);
     try {
-      await repo.createFeedEvent(activeBaby.id, result.value);
+      if (editId != null) {
+        await repo.updateFeedEvent(editId, result.value);
+      } else {
+        await repo.createFeedEvent(activeBaby.id, result.value);
+      }
       // TODO(P6): trigger next-feed reminder recompute + reschedule here.
-      router.navigate('/');
+      router.back();
     } catch (e) {
       setSaving(false);
       throw e;
     }
   }
 
+  function onDelete() {
+    if (editId == null) return;
+    Alert.alert('Delete feed?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await repo.deleteFeedEvent(editId);
+          // TODO(P6): trigger next-feed reminder recompute + reschedule here.
+          router.back();
+        },
+      },
+    ]);
+  }
+
   if (!activeBaby) return null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.title}>Log feed</Text>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>{editId != null ? 'Edit feed' : 'Log feed'}</Text>
 
-        <View style={styles.block}>
-          <Segmented options={TYPE_OPTIONS} value={type} onChange={switchType} />
-        </View>
+        <Segmented options={TYPE_OPTIONS} value={type} onChange={switchType} />
 
         {type === 'breast' ? (
           <>
@@ -169,7 +197,7 @@ export default function LogFeedScreen() {
                 {timing ? `RECORDING · ${side?.toUpperCase()}` : 'TIMER'}
               </Text>
               <Text style={styles.timerClock}>
-                {formatMMSS(timing ? liveSeconds : (timerSeconds ?? 0))}
+                {formatMMSS(timing ? liveSeconds : timerSeconds ?? 0)}
               </Text>
               <Pressable
                 style={[styles.timerButton, timing && styles.timerButtonStop]}
@@ -180,7 +208,7 @@ export default function LogFeedScreen() {
             </View>
 
             {!timing && timerSeconds == null ? (
-              <View style={styles.block}>
+              <>
                 <Label>OR ENTER MINUTES</Label>
                 <TextInput
                   style={styles.input}
@@ -190,7 +218,7 @@ export default function LogFeedScreen() {
                   placeholderTextColor={colors.dim}
                   keyboardType="number-pad"
                 />
-              </View>
+              </>
             ) : null}
           </>
         ) : (
@@ -225,48 +253,19 @@ export default function LogFeedScreen() {
           </>
         )}
 
-        {/* Time / backfill — hidden while the timer owns the start time. */}
         {!timing ? (
-          <View style={styles.block}>
-            <Label>{type === 'breast' ? 'STARTED' : 'TIME'}</Label>
-            <View style={styles.timeRow}>
-              <Text style={styles.timeText}>{format(startTime, 'EEE d MMM · h:mm a')}</Text>
-            </View>
-            <View style={styles.whenRow}>
-              <WhenChip label="Now" onPress={() => applyPreset(0)} />
-              <WhenChip label="15m" onPress={() => applyPreset(15)} />
-              <WhenChip label="30m" onPress={() => applyPreset(30)} />
-              <WhenChip label="1h" onPress={() => applyPreset(60)} />
-              <WhenChip label="Pick" onPress={() => setPickStep('date')} />
-            </View>
-            {errors.time ? <ErrorText>{errors.time}</ErrorText> : null}
-          </View>
+          <TimeField
+            label={type === 'breast' ? 'STARTED' : 'TIME'}
+            value={startTime}
+            onChange={setStartTime}
+            error={errors.time}
+          />
         ) : null}
 
-        {pickStep ? (
-          <DateTimePicker
-            value={startTime}
-            mode={pickStep}
-            maximumDate={pickStep === 'date' ? new Date() : undefined}
-            onChange={(event, selected) => {
-              if (event.type !== 'set' || !selected) {
-                setPickStep(null);
-                return;
-              }
-              if (pickStep === 'date') {
-                // Keep the existing time-of-day, swap the date, then ask for time.
-                const merged = new Date(startTime);
-                merged.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
-                setStartTime(merged);
-                setPickStep(Platform.OS === 'ios' ? null : 'time');
-              } else {
-                const merged = new Date(startTime);
-                merged.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
-                setStartTime(merged);
-                setPickStep(null);
-              }
-            }}
-          />
+        {editId != null ? (
+          <Pressable style={styles.deleteButton} onPress={onDelete}>
+            <Text style={styles.deleteText}>Delete feed</Text>
+          </Pressable>
         ) : null}
       </ScrollView>
 
@@ -275,7 +274,7 @@ export default function LogFeedScreen() {
         onPress={onSave}
         disabled={saving || timing}
       >
-        <Text style={styles.saveText}>{saving ? 'Saving…' : 'Save feed'}</Text>
+        <Text style={styles.saveText}>{saving ? 'Saving…' : editId != null ? 'Save changes' : 'Save feed'}</Text>
       </Pressable>
     </SafeAreaView>
   );
@@ -286,13 +285,6 @@ function Label({ children }: { children: ReactNode }) {
 }
 function ErrorText({ children }: { children: ReactNode }) {
   return <Text style={styles.error}>{children}</Text>;
-}
-function WhenChip({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable style={styles.chip} onPress={onPress}>
-      <Text style={styles.chipText}>{label}</Text>
-    </Pressable>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -305,7 +297,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.lg,
   },
-  block: { marginTop: spacing.lg },
   label: {
     fontFamily: fonts.uiBold,
     fontSize: 12,
@@ -346,25 +337,9 @@ const styles = StyleSheet.create({
   timerButtonStop: { backgroundColor: colors.diaper },
   timerButtonText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.bg },
 
-  timeRow: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  timeText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
-  whenRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  chip: {
-    backgroundColor: colors.surface2,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  chipText: { fontFamily: fonts.uiBold, fontSize: 14, color: colors.text },
-
   error: { fontFamily: fonts.ui, fontSize: 13, color: '#E8896B', marginTop: spacing.sm },
+  deleteButton: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.md },
+  deleteText: { fontFamily: fonts.uiBold, fontSize: 16, color: '#E8896B' },
   saveButton: {
     backgroundColor: colors.accent,
     borderRadius: radius.lg,
