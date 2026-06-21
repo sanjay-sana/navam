@@ -1,15 +1,31 @@
 // Pure builders for the History timeline + per-day summary. Maps raw feed/diaper
 // rows into display entries; no React/DB. Time strings are UTC ISO, so lexical
 // sort == chronological.
-import type { DiaperEvent, FeedEvent, FeedType, UnitVolume } from '@/src/db/types';
-import { formatVolume } from './units';
+import type {
+  DiaperEvent,
+  FeedEvent,
+  FeedType,
+  GrowthMeasurement,
+  UnitLength,
+  UnitMass,
+  UnitVolume,
+} from '@/src/db/types';
+import { formatLength, formatMass, formatVolume } from './units';
+
+export interface DisplayUnits {
+  volume: UnitVolume;
+  mass: UnitMass;
+  length: UnitLength;
+}
 
 export interface TimelineEntry {
   key: string;
   id: number;
-  kind: 'feed' | 'diaper';
+  kind: 'feed' | 'diaper' | 'growth';
   feedType?: FeedType;
-  time: string; // UTC ISO
+  time: string; // UTC ISO (growth uses midday of its date for ordering)
+  /** False for growth (date-only) — the row hides the clock time. */
+  hasClock: boolean;
   title: string;
   subtitle: string;
 }
@@ -29,7 +45,7 @@ function breastMinutes(f: FeedEvent): number | null {
 }
 
 export function feedEntry(f: FeedEvent, unit: UnitVolume): TimelineEntry {
-  const base = { key: `feed-${f.id}`, id: f.id, kind: 'feed' as const, feedType: f.type, time: f.start_time };
+  const base = { key: `feed-${f.id}`, id: f.id, kind: 'feed' as const, feedType: f.type, time: f.start_time, hasClock: true };
   if (f.type === 'breast') {
     const m = breastMinutes(f);
     const parts = [f.side ? SIDE_LABEL[f.side] : null, m != null ? `${m} min` : null].filter(Boolean);
@@ -50,18 +66,42 @@ export function diaperEntry(d: DiaperEvent): TimelineEntry {
     id: d.id,
     kind: 'diaper',
     time: d.time,
+    hasClock: true,
     title: 'Diaper',
     subtitle: DIAPER_LABEL[d.type],
   };
 }
 
-/** Merge feeds + diapers into one timeline, newest first. */
+export function growthEntry(m: GrowthMeasurement, units: DisplayUnits): TimelineEntry {
+  const parts = [
+    m.weight_g != null ? formatMass(m.weight_g, units.mass) : null,
+    m.length_cm != null ? formatLength(m.length_cm, units.length) : null,
+    m.head_circumference_cm != null ? `${formatLength(m.head_circumference_cm, units.length)} head` : null,
+  ].filter(Boolean) as string[];
+  return {
+    key: `growth-${m.id}`,
+    id: m.id,
+    kind: 'growth',
+    // Date-only measurement: anchor at midday so it orders sensibly within the day.
+    time: `${m.measured_at}T12:00:00.000Z`,
+    hasClock: false,
+    title: 'Measurement',
+    subtitle: parts.join(' · '),
+  };
+}
+
+/** Merge feeds + diapers + growth into one timeline, newest first. */
 export function buildTimeline(
   feeds: FeedEvent[],
   diapers: DiaperEvent[],
-  unit: UnitVolume
+  growth: GrowthMeasurement[],
+  units: DisplayUnits
 ): TimelineEntry[] {
-  const items = [...feeds.map((f) => feedEntry(f, unit)), ...diapers.map(diaperEntry)];
+  const items = [
+    ...feeds.map((f) => feedEntry(f, units.volume)),
+    ...diapers.map(diaperEntry),
+    ...growth.map((m) => growthEntry(m, units)),
+  ];
   items.sort((a, b) => b.time.localeCompare(a.time));
   return items;
 }
@@ -70,11 +110,13 @@ export interface DaySummary {
   feeds: number;
   diapers: number;
   volume: string | null; // bottle-only ml/oz, null when no bottles
+  weighIns: number;
 }
 
 export function daySummary(
   feeds: FeedEvent[],
   diapers: DiaperEvent[],
+  growth: GrowthMeasurement[],
   unit: UnitVolume
 ): DaySummary {
   const feedCount = feeds.filter((f) => f.type !== 'pump').length;
@@ -85,5 +127,6 @@ export function daySummary(
     feeds: feedCount,
     diapers: diapers.length,
     volume: volMl > 0 ? formatVolume(volMl, unit) : null,
+    weighIns: growth.length,
   };
 }

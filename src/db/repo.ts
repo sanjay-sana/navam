@@ -11,6 +11,8 @@ import type {
   DiaperInput,
   FeedEvent,
   FeedInput,
+  GrowthInput,
+  GrowthMeasurement,
   Settings,
 } from './types';
 
@@ -278,6 +280,70 @@ export async function getDiaperEventsBetween(
      WHERE baby_id = ? AND time >= ? AND time < ?
      ORDER BY time DESC`,
     [babyId, startIso, endIso]
+  );
+}
+
+// --- Growth measurements ----------------------------------------------------
+
+export async function createGrowthMeasurement(babyId: number, input: GrowthInput): Promise<number> {
+  const db = await getDb();
+  const ts = nowUtc();
+  const res = await db.runAsync(
+    `INSERT INTO growth_measurements
+       (baby_id, measured_at, weight_g, length_cm, head_circumference_cm, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      babyId,
+      input.measured_at,
+      input.weight_g ?? null,
+      input.length_cm ?? null,
+      input.head_circumference_cm ?? null,
+      input.notes ?? null,
+      ts,
+      ts,
+    ]
+  );
+  return res.lastInsertRowId;
+}
+
+export async function getGrowthMeasurement(id: number): Promise<GrowthMeasurement | null> {
+  const db = await getDb();
+  return (
+    (await db.getFirstAsync<GrowthMeasurement>('SELECT * FROM growth_measurements WHERE id = ?', [
+      id,
+    ])) ?? null
+  );
+}
+
+export async function updateGrowthMeasurement(id: number, input: GrowthInput): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE growth_measurements SET
+       measured_at = ?, weight_g = ?, length_cm = ?, head_circumference_cm = ?, notes = ?, updated_at = ?
+     WHERE id = ?`,
+    [
+      input.measured_at,
+      input.weight_g ?? null,
+      input.length_cm ?? null,
+      input.head_circumference_cm ?? null,
+      input.notes ?? null,
+      nowUtc(),
+      id,
+    ]
+  );
+}
+
+export async function deleteGrowthMeasurement(id: number): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM growth_measurements WHERE id = ?', [id]);
+}
+
+/** All measurements for a baby, oldest first (for plotting over age). */
+export async function getGrowthMeasurements(babyId: number): Promise<GrowthMeasurement[]> {
+  const db = await getDb();
+  return db.getAllAsync<GrowthMeasurement>(
+    'SELECT * FROM growth_measurements WHERE baby_id = ? ORDER BY measured_at ASC',
+    [babyId]
   );
 }
 

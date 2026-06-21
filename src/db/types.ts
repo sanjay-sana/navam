@@ -96,3 +96,23 @@ export interface DiaperInput {
   consistency?: string | null;
   notes?: string | null;
 }
+
+export interface GrowthMeasurement {
+  id: number;
+  baby_id: number;
+  measured_at: string; // date-only ISO (yyyy-MM-dd)
+  weight_g: number | null;
+  length_cm: number | null;
+  head_circumference_cm: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GrowthInput {
+  measured_at: string; // yyyy-MM-dd
+  weight_g?: number | null;
+  length_cm?: number | null;
+  head_circumference_cm?: number | null;
+  notes?: string | null;
+}

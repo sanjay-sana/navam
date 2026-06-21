@@ -7,9 +7,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as repo from '@/src/db/repo';
 import { localDayBoundsIso, localDayStart } from '@/src/logic/day';
-import { buildTimeline, daySummary, type TimelineEntry } from '@/src/logic/history';
+import { buildTimeline, daySummary, type DaySummary, type TimelineEntry } from '@/src/logic/history';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, eventColors, fonts, radius, spacing } from '@/src/theme/theme';
+
+function dayKey(d: Date): string {
+  return format(d, 'yyyy-MM-dd');
+}
 
 function dayLabel(day: Date, now: Date): string {
   const datePart = format(day, 'EEE, MMM d');
@@ -21,11 +25,15 @@ function dayLabel(day: Date, now: Date): string {
 export default function HistoryScreen() {
   const router = useRouter();
   const { activeBaby, settings } = useAppData();
-  const unit = settings?.unit_volume ?? 'ml';
+  const units = {
+    volume: settings?.unit_volume ?? 'ml',
+    mass: settings?.unit_mass ?? 'g',
+    length: settings?.unit_length ?? 'cm',
+  } as const;
 
   const [day, setDay] = useState<Date>(() => localDayStart(new Date()));
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
-  const [summary, setSummary] = useState({ feeds: 0, diapers: 0, volume: null as string | null });
+  const [summary, setSummary] = useState<DaySummary>({ feeds: 0, diapers: 0, volume: null, weighIns: 0 });
 
   const now = new Date();
   const isToday = isSameDay(day, now);
@@ -33,13 +41,16 @@ export default function HistoryScreen() {
   const load = useCallback(async () => {
     if (!activeBaby) return;
     const { startIso, endIso } = localDayBoundsIso(day);
-    const [feeds, diapers] = await Promise.all([
+    const [feeds, diapers, allGrowth] = await Promise.all([
       repo.getFeedEventsBetween(activeBaby.id, startIso, endIso),
       repo.getDiaperEventsBetween(activeBaby.id, startIso, endIso),
+      repo.getGrowthMeasurements(activeBaby.id),
     ]);
-    setEntries(buildTimeline(feeds, diapers, unit));
-    setSummary(daySummary(feeds, diapers, unit));
-  }, [activeBaby, day, unit]);
+    // Growth is date-only, so match on the local day key rather than ISO range.
+    const growth = allGrowth.filter((m) => m.measured_at === dayKey(day));
+    setEntries(buildTimeline(feeds, diapers, growth, units));
+    setSummary(daySummary(feeds, diapers, growth, units.volume));
+  }, [activeBaby, day, units.volume, units.mass, units.length]);
 
   useFocusEffect(
     useCallback(() => {
@@ -50,8 +61,10 @@ export default function HistoryScreen() {
   function openEntry(entry: TimelineEntry) {
     if (entry.kind === 'feed') {
       router.push({ pathname: '/log', params: { id: String(entry.id) } });
-    } else {
+    } else if (entry.kind === 'diaper') {
       router.push({ pathname: '/log-diaper', params: { id: String(entry.id) } });
+    } else {
+      router.push({ pathname: '/log-growth', params: { id: String(entry.id) } });
     }
   }
 
@@ -59,6 +72,7 @@ export default function HistoryScreen() {
     `${summary.feeds} feeds`,
     `${summary.diapers} diapers`,
     ...(summary.volume ? [summary.volume] : []),
+    ...(summary.weighIns > 0 ? [`${summary.weighIns} weigh-in${summary.weighIns > 1 ? 's' : ''}`] : []),
   ];
 
   if (!activeBaby) return null;
@@ -97,16 +111,25 @@ export default function HistoryScreen() {
 
 function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => void }) {
   const color =
-    entry.kind === 'diaper'
-      ? eventColors.diaper
-      : entry.feedType === 'pump'
-        ? eventColors.pump
-        : eventColors.feed;
-  const icon = entry.kind === 'diaper' ? 'water' : entry.feedType === 'pump' ? 'arrow-down' : 'cafe';
+    entry.kind === 'growth'
+      ? eventColors.growth
+      : entry.kind === 'diaper'
+        ? eventColors.diaper
+        : entry.feedType === 'pump'
+          ? eventColors.pump
+          : eventColors.feed;
+  const icon =
+    entry.kind === 'growth'
+      ? 'trending-up'
+      : entry.kind === 'diaper'
+        ? 'water'
+        : entry.feedType === 'pump'
+          ? 'arrow-down'
+          : 'cafe';
 
   return (
     <Pressable style={styles.row} onPress={onPress}>
-      <Text style={styles.rowTime}>{format(new Date(entry.time), 'h:mm a')}</Text>
+      <Text style={styles.rowTime}>{entry.hasClock ? format(new Date(entry.time), 'h:mm a') : ''}</Text>
       <View style={[styles.rowIcon, { backgroundColor: `${color}24` }]}>
         <Ionicons name={icon} size={20} color={color} />
       </View>
