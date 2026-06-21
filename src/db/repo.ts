@@ -128,6 +128,29 @@ export async function getFeedReminder(
   return { enabled: row.enabled === 1, intervalMinutes: row.interval_minutes };
 }
 
+/** Enable/disable + interval for the feed reminder. */
+export async function updateReminder(
+  babyId: number,
+  patch: { enabled?: boolean; intervalMinutes?: number }
+): Promise<void> {
+  const db = await getDb();
+  const sets: string[] = [];
+  const vals: (number | string)[] = [];
+  if (patch.enabled !== undefined) {
+    sets.push('enabled = ?');
+    vals.push(patch.enabled ? 1 : 0);
+  }
+  if (patch.intervalMinutes !== undefined) {
+    sets.push('interval_minutes = ?');
+    vals.push(patch.intervalMinutes);
+  }
+  if (sets.length === 0) return;
+  await db.runAsync(
+    `UPDATE reminder_configs SET ${sets.join(', ')}, updated_at = ? WHERE baby_id = ? AND type = 'feed'`,
+    [...vals, nowUtc(), babyId]
+  );
+}
+
 /** MAX(start_time) over qualifying feeds (breast | bottle); null if none yet. */
 export async function getLatestQualifyingFeedStart(babyId: number): Promise<string | null> {
   const db = await getDb();
@@ -232,6 +255,22 @@ export async function getFeedEventsBetween(
      WHERE baby_id = ? AND start_time >= ? AND start_time < ?
      ORDER BY start_time DESC`,
     [babyId, startIso, endIso]
+  );
+}
+
+export async function getAllFeedEvents(babyId: number): Promise<FeedEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<FeedEvent>(
+    'SELECT * FROM feed_events WHERE baby_id = ? ORDER BY start_time ASC',
+    [babyId]
+  );
+}
+
+export async function getAllDiaperEvents(babyId: number): Promise<DiaperEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<DiaperEvent>(
+    'SELECT * FROM diaper_events WHERE baby_id = ? ORDER BY time ASC',
+    [babyId]
   );
 }
 

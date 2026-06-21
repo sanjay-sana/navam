@@ -4,6 +4,7 @@ import {
   HankenGrotesk_600SemiBold,
 } from '@expo-google-fonts/hanken-grotesk';
 import { useFonts } from 'expo-font';
+import * as Notifications from 'expo-notifications';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,6 +12,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
+import { configureNotifications } from '@/src/notifications/feedReminder';
 import { AppDataProvider, useAppData } from '@/src/state/AppDataProvider';
 import { colors } from '@/src/theme/theme';
 
@@ -26,6 +28,7 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before fonts + data are ready.
 SplashScreen.preventAutoHideAsync();
+configureNotifications();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -61,6 +64,15 @@ function RootNavigator() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
+
+  // Tapping a feed reminder deep-links to the Log feed screen (§5.4).
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const url = response.notification.request.content.data?.url;
+      if (typeof url === 'string') router.navigate(url as never);
+    });
+    return () => sub.remove();
+  }, [router]);
 
   // Route gate: no baby yet → onboarding; baby exists → keep out of onboarding.
   useEffect(() => {

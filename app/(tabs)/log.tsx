@@ -10,6 +10,7 @@ import * as repo from '@/src/db/repo';
 import type { Contents, FeedEvent, FeedType, Side } from '@/src/db/types';
 import { validateFeedDraft, type FeedErrors } from '@/src/logic/feed';
 import { mlToUnit, volumeUnitLabel } from '@/src/logic/units';
+import { syncFeedReminder } from '@/src/notifications/feedReminder';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 
@@ -153,7 +154,7 @@ export default function LogFeedScreen() {
       } else {
         await repo.createFeedEvent(activeBaby.id, result.value);
       }
-      // TODO(P6): trigger next-feed reminder recompute + reschedule here.
+      await syncFeedReminder(activeBaby.id);
       router.back();
     } catch (e) {
       setSaving(false);
@@ -170,7 +171,7 @@ export default function LogFeedScreen() {
         style: 'destructive',
         onPress: async () => {
           await repo.deleteFeedEvent(editId);
-          // TODO(P6): trigger next-feed reminder recompute + reschedule here.
+          if (activeBaby) await syncFeedReminder(activeBaby.id);
           router.back();
         },
       },

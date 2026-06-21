@@ -59,6 +59,7 @@ export default function TabLayout() {
       {/* Routes in the group but hidden from the tab bar (tab bar stays at 4). */}
       <Tabs.Screen name="log-diaper" options={{ href: null }} />
       <Tabs.Screen name="log-growth" options={{ href: null }} />
+      <Tabs.Screen name="edit-profile" options={{ href: null }} />
       <Tabs.Screen name="history" options={{ href: null }} />
     </Tabs>
   );
