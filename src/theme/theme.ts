@@ -34,8 +34,8 @@ export const eventColors = {
 export const fonts = {
   // Load via expo-font / @expo-google-fonts.
   display: 'Fraunces_600SemiBold',     // app name, hero numbers, section headers
-  ui: 'HankenGrotesque_500Medium',     // body / UI
-  uiBold: 'HankenGrotesque_600SemiBold',
+  ui: 'HankenGrotesk_500Medium',       // body / UI
+  uiBold: 'HankenGrotesk_600SemiBold',
 } as const;
 
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;

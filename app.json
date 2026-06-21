@@ -7,9 +7,9 @@
     "scheme": "lull",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#17131D",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#17131D"
     },
@@ -17,7 +17,8 @@
     "android": {
       "package": "com.sanjay.lull",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png",
         "backgroundColor": "#17131D"
       },
       "permissions": ["POST_NOTIFICATIONS"]
