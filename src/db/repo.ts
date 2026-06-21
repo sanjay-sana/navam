@@ -101,3 +101,61 @@ export async function updateBaby(id: number, input: BabyInput): Promise<void> {
     [input.name, input.sex, input.date_of_birth, nowUtc(), id]
   );
 }
+
+// --- Today screen queries ---------------------------------------------------
+
+/** Feed reminder config for a baby (interval drives the Today ring even when disabled). */
+export async function getFeedReminder(
+  babyId: number
+): Promise<{ enabled: boolean; intervalMinutes: number } | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ enabled: number; interval_minutes: number }>(
+    `SELECT enabled, interval_minutes FROM reminder_configs
+     WHERE baby_id = ? AND type = 'feed' LIMIT 1`,
+    [babyId]
+  );
+  if (!row) return null;
+  return { enabled: row.enabled === 1, intervalMinutes: row.interval_minutes };
+}
+
+/** MAX(start_time) over qualifying feeds (breast | bottle); null if none yet. */
+export async function getLatestQualifyingFeedStart(babyId: number): Promise<string | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ start: string | null }>(
+    `SELECT MAX(start_time) AS start FROM feed_events
+     WHERE baby_id = ? AND type IN ('breast','bottle')`,
+    [babyId]
+  );
+  return row?.start ?? null;
+}
+
+/** Count qualifying feeds (breast | bottle, pump excluded) in [startIso, endIso). */
+export async function countFeedsBetween(
+  babyId: number,
+  startIso: string,
+  endIso: string
+): Promise<number> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM feed_events
+     WHERE baby_id = ? AND type IN ('breast','bottle')
+       AND start_time >= ? AND start_time < ?`,
+    [babyId, startIso, endIso]
+  );
+  return row?.n ?? 0;
+}
+
+/** Count diaper events in [startIso, endIso). */
+export async function countDiapersBetween(
+  babyId: number,
+  startIso: string,
+  endIso: string
+): Promise<number> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM diaper_events
+     WHERE baby_id = ? AND time >= ? AND time < ?`,
+    [babyId, startIso, endIso]
+  );
+  return row?.n ?? 0;
+}
