@@ -43,11 +43,7 @@ export function TimeField({
           value={value}
           mode={step}
           maximumDate={step === 'date' ? new Date() : undefined}
-          onChange={(event, selected) => {
-            if (event.type !== 'set' || !selected) {
-              setStep(null);
-              return;
-            }
+          onValueChange={(_event, selected) => {
             if (step === 'date') {
               const merged = new Date(value);
               merged.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
@@ -60,6 +56,7 @@ export function TimeField({
               setStep(null);
             }
           }}
+          onDismiss={() => setStep(null)}
         />
       ) : null}
     </View>

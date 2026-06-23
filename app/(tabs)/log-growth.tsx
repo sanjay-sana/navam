@@ -136,10 +136,11 @@ export default function LogGrowthScreen() {
             value={date}
             mode="date"
             maximumDate={new Date()}
-            onChange={(event, selected) => {
+            onValueChange={(_event, selected) => {
               setShowPicker(false);
-              if (event.type === 'set' && selected) setDate(selected);
+              setDate(selected);
             }}
+            onDismiss={() => setShowPicker(false)}
           />
         ) : null}
 

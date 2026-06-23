@@ -90,11 +90,11 @@ export default function OnboardingScreen() {
             value={dob ?? new Date()}
             mode="date"
             maximumDate={new Date()}
-            onChange={(event, selected) => {
-              // Android fires the dialog dismissal through this callback.
-              setShowPicker(Platform.OS === 'ios');
-              if (event.type === 'set' && selected) setDob(selected);
+            onValueChange={(_event, selected) => {
+              setShowPicker(Platform.OS === 'ios'); // iOS keeps the inline spinner open
+              setDob(selected);
             }}
+            onDismiss={() => setShowPicker(false)}
           />
         ) : null}
       </View>

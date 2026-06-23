@@ -87,10 +87,11 @@ export default function EditProfileScreen() {
             value={dob ?? new Date()}
             mode="date"
             maximumDate={new Date()}
-            onChange={(event, selected) => {
-              setShowPicker(Platform.OS === 'ios');
-              if (event.type === 'set' && selected) setDob(selected);
+            onValueChange={(_event, selected) => {
+              setShowPicker(Platform.OS === 'ios'); // iOS keeps the inline spinner open
+              setDob(selected);
             }}
+            onDismiss={() => setShowPicker(false)}
           />
         ) : null}
       </ScrollView>
