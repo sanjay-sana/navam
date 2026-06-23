@@ -4,7 +4,6 @@ import {
   HankenGrotesk_600SemiBold,
 } from '@expo-google-fonts/hanken-grotesk';
 import { useFonts } from 'expo-font';
-import * as Notifications from 'expo-notifications';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,7 +11,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
-import { configureNotifications } from '@/src/notifications/feedReminder';
+import { addReminderTapListener, configureNotifications } from '@/src/notifications/feedReminder';
 import { AppDataProvider, useAppData } from '@/src/state/AppDataProvider';
 import { colors } from '@/src/theme/theme';
 
@@ -22,7 +21,6 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
@@ -66,13 +64,7 @@ function RootNavigator() {
   }, [ready]);
 
   // Tapping a feed reminder deep-links to the Log feed screen (§5.4).
-  useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const url = response.notification.request.content.data?.url;
-      if (typeof url === 'string') router.navigate(url as never);
-    });
-    return () => sub.remove();
-  }, [router]);
+  useEffect(() => addReminderTapListener((url) => router.navigate(url as never)), [router]);
 
   // Route gate: no baby yet → onboarding; baby exists → keep out of onboarding.
   useEffect(() => {
@@ -99,7 +91,6 @@ function RootNavigator() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </>
   );
