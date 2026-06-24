@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import type { Sex } from '@/src/db/types';
 import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
@@ -82,21 +82,17 @@ export default function EditProfileScreen() {
         </Pressable>
         {errors.dob ? <Text style={styles.error}>{errors.dob}</Text> : null}
 
-        {showPicker ? (
-          <DateTimePicker
-            value={dob ?? new Date()}
-            mode="date"
-            display="spinner"
-            maximumDate={new Date()}
-            positiveButton={{ textColor: colors.accent }}
-            negativeButton={{ textColor: colors.dim }}
-            onValueChange={(_event, selected) => {
-              setShowPicker(Platform.OS === 'ios'); // iOS keeps the inline spinner open
-              setDob(selected);
-            }}
-            onDismiss={() => setShowPicker(false)}
-          />
-        ) : null}
+        <WheelDateTimeModal
+          visible={showPicker}
+          mode="date"
+          value={dob ?? new Date()}
+          maximumDate={new Date()}
+          onCancel={() => setShowPicker(false)}
+          onConfirm={(d) => {
+            setDob(d);
+            setShowPicker(false);
+          }}
+        />
       </ScrollView>
 
       <Pressable style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={onSave} disabled={saving}>

@@ -1,11 +1,10 @@
-// Editable event time with quick "when" presets (Now / 15m / 30m / 1h / Pick).
-// Pick does date→time sequentially so Android can express a full datetime for
-// backfilling older events. Used by the feed and diaper log screens.
-import DateTimePicker from '@react-native-community/datetimepicker';
+// Editable event time. Tapping the row opens the custom wheel picker (date,
+// then time); "Now" snaps to the current time. Used by feed and diaper logs.
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { WheelDateTimeModal } from '@/src/components/WheelPicker';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 
 export function TimeField({
@@ -34,30 +33,32 @@ export function TimeField({
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      {step ? (
-        <DateTimePicker
-          value={value}
-          mode={step}
-          display="spinner"
-          maximumDate={step === 'date' ? new Date() : undefined}
-          positiveButton={{ textColor: colors.accent }}
-          negativeButton={{ textColor: colors.dim }}
-          onValueChange={(_event, selected) => {
-            if (step === 'date') {
-              const merged = new Date(value);
-              merged.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
-              onChange(merged);
-              setStep(Platform.OS === 'ios' ? null : 'time');
-            } else {
-              const merged = new Date(value);
-              merged.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
-              onChange(merged);
-              setStep(null);
-            }
-          }}
-          onDismiss={() => setStep(null)}
-        />
-      ) : null}
+      <WheelDateTimeModal
+        visible={step === 'date'}
+        mode="date"
+        value={value}
+        maximumDate={new Date()}
+        onCancel={() => setStep(null)}
+        onConfirm={(d) => {
+          const merged = new Date(value);
+          merged.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
+          onChange(merged);
+          setStep('time');
+        }}
+      />
+      <WheelDateTimeModal
+        visible={step === 'time'}
+        mode="time"
+        value={value}
+        maximumDate={new Date()}
+        onCancel={() => setStep(null)}
+        onConfirm={(d) => {
+          const merged = new Date(value);
+          merged.setHours(d.getHours(), d.getMinutes(), 0, 0);
+          onChange(merged);
+          setStep(null);
+        }}
+      />
     </View>
   );
 }

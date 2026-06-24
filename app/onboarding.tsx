@@ -1,17 +1,10 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
 import { useAppData } from '@/src/state/AppDataProvider';
@@ -85,21 +78,17 @@ export default function OnboardingScreen() {
         </Pressable>
         {errors.dob ? <Text style={styles.error}>{errors.dob}</Text> : null}
 
-        {showPicker ? (
-          <DateTimePicker
-            value={dob ?? new Date()}
-            mode="date"
-            display="spinner"
-            maximumDate={new Date()}
-            positiveButton={{ textColor: colors.accent }}
-            negativeButton={{ textColor: colors.dim }}
-            onValueChange={(_event, selected) => {
-              setShowPicker(Platform.OS === 'ios'); // iOS keeps the inline spinner open
-              setDob(selected);
-            }}
-            onDismiss={() => setShowPicker(false)}
-          />
-        ) : null}
+        <WheelDateTimeModal
+          visible={showPicker}
+          mode="date"
+          value={dob ?? new Date()}
+          maximumDate={new Date()}
+          onCancel={() => setShowPicker(false)}
+          onConfirm={(d) => {
+            setDob(d);
+            setShowPicker(false);
+          }}
+        />
       </View>
 
       <Pressable

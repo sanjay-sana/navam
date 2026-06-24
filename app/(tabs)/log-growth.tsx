@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import { validateGrowthDraft, type GrowthErrors } from '@/src/logic/growth';
 import { cmToUnit, gramsToUnit, lengthUnitLabel, massUnitLabel } from '@/src/logic/units';
@@ -124,21 +124,17 @@ export default function LogGrowthScreen() {
         {errors.date ? <Text style={styles.error}>{errors.date}</Text> : null}
         {errors.general ? <Text style={styles.error}>{errors.general}</Text> : null}
 
-        {showPicker ? (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="spinner"
-            maximumDate={new Date()}
-            positiveButton={{ textColor: colors.accent }}
-            negativeButton={{ textColor: colors.dim }}
-            onValueChange={(_event, selected) => {
-              setShowPicker(false);
-              setDate(selected);
-            }}
-            onDismiss={() => setShowPicker(false)}
-          />
-        ) : null}
+        <WheelDateTimeModal
+          visible={showPicker}
+          mode="date"
+          value={date}
+          maximumDate={new Date()}
+          onCancel={() => setShowPicker(false)}
+          onConfirm={(d) => {
+            setDate(d);
+            setShowPicker(false);
+          }}
+        />
 
         {editId != null ? (
           <Pressable style={styles.deleteButton} onPress={onDelete}>
