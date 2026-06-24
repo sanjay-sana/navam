@@ -1,6 +1,6 @@
 // Custom dark-themed "casino scroll" date/time picker — a bottom-sheet modal
 // with snapping scroll wheels, fully on-theme (replaces the native dialog).
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   Modal,
   type NativeScrollEvent,
@@ -201,39 +201,49 @@ export function WheelDateTimeModal({
   );
 }
 
-export function WheelNumberModal({
+export interface WheelColumnSpec {
+  items: WheelItem[];
+  /** Unit suffix shown to the right of the wheel (e.g. "kg", "lb", "ft"). */
+  label?: string;
+}
+
+/**
+ * Compound numeric picker: one or more wheels (each with an optional unit
+ * label) combined into a single number by `compose`. `initial` gives the
+ * starting index per column. Used for weight (kg+g / lb+oz) and length
+ * (cm / ft+in).
+ */
+export function WheelCompoundModal({
   visible,
   title,
-  unit,
-  min,
-  max,
-  value,
-  defaultValue,
+  columns,
+  initial,
+  compose,
   onConfirm,
   onCancel,
 }: {
   visible: boolean;
   title: string;
-  unit: string;
-  min: number; // whole-number range (inclusive)
-  max: number;
-  value: number | null;
-  defaultValue: number;
+  columns: WheelColumnSpec[];
+  initial: number[];
+  compose: (indices: number[]) => number;
   onConfirm: (next: number) => void;
   onCancel: () => void;
 }) {
-  const [whole, setWhole] = useState(0);
-  const [dec, setDec] = useState(0);
+  const [idx, setIdx] = useState<number[]>(initial);
 
+  // Reset to `initial` only when the sheet opens (not on every re-render).
   useEffect(() => {
-    if (!visible) return;
-    const v = value ?? defaultValue;
-    setWhole(clamp(Math.floor(v), min, max));
-    setDec(clamp(Math.round((v - Math.floor(v)) * 10), 0, 9));
-  }, [visible, value, defaultValue, min, max]);
+    if (visible) setIdx(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
-  const wholeItems = Array.from({ length: max - min + 1 }, (_, i) => ({ label: String(min + i) }));
-  const decItems = Array.from({ length: 10 }, (_, i) => ({ label: `.${i}` }));
+  const setAt = (col: number, i: number) =>
+    setIdx((prev) => {
+      const next = [...prev];
+      next[col] = i;
+      return next;
+    });
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
@@ -244,22 +254,27 @@ export function WheelNumberModal({
             <Text style={styles.cancel}>Cancel</Text>
           </Pressable>
           <Text style={styles.title}>{title}</Text>
-          <Pressable onPress={() => onConfirm(whole + dec / 10)} hitSlop={10}>
+          <Pressable onPress={() => onConfirm(compose(idx))} hitSlop={10}>
             <Text style={styles.done}>Done</Text>
           </Pressable>
         </View>
         <View style={styles.wheels}>
           <View style={styles.highlight} pointerEvents="none" />
-          <WheelColumn
-            items={wholeItems}
-            selectedIndex={clamp(whole - min, 0, wholeItems.length - 1)}
-            onChange={(i) => setWhole(min + i)}
-            flex={2}
-          />
-          <WheelColumn items={decItems} selectedIndex={dec} onChange={setDec} flex={2} />
-          <View style={styles.unitCol}>
-            <Text style={styles.unitText}>{unit}</Text>
-          </View>
+          {columns.map((c, ci) => (
+            <Fragment key={ci}>
+              <WheelColumn
+                items={c.items}
+                selectedIndex={clamp(idx[ci] ?? 0, 0, c.items.length - 1)}
+                onChange={(i) => setAt(ci, i)}
+                flex={2}
+              />
+              {c.label ? (
+                <View style={styles.unitCol}>
+                  <Text style={styles.unitText}>{c.label}</Text>
+                </View>
+              ) : null}
+            </Fragment>
+          ))}
         </View>
       </View>
     </Modal>
