@@ -26,7 +26,7 @@ export function GrowthChart({
   formatY?: (v: number) => string;
 }) {
   const leftPad = 30;
-  const rightPad = 10;
+  const rightPad = 30; // room for the P3 / P50 / P97 curve labels
   const topPad = 12;
   const bottomPad = 24;
   const plotW = width - leftPad - rightPad;
@@ -73,6 +73,23 @@ export function GrowthChart({
       {curves.map((c) => (
         <Polyline key={c.label} points={toPoints(c.points)} fill="none" stroke={colors.dim} strokeWidth={1} opacity={0.5} />
       ))}
+      {curves.map((c) => {
+        const last = c.points[c.points.length - 1];
+        if (!last) return null;
+        return (
+          <SvgText
+            key={`cl${c.label}`}
+            x={xFor(last.weeks) + 4}
+            y={yFor(last.value) + 3}
+            fill={colors.dim}
+            fontSize={9}
+            fontFamily={fonts.ui}
+            textAnchor="start"
+          >
+            {c.label}
+          </SvgText>
+        );
+      })}
 
       {babyPoints.length > 1 ? (
         <Polyline points={toPoints(babyPoints)} fill="none" stroke={color} strokeWidth={3} />

@@ -28,11 +28,10 @@ export function isSupported(metric: GrowthMetric): metric is 'weight' | 'length'
 
 const WEEKS_PER_MONTH = 52 / 12; // 4.333…
 
+// Curves drawn on the chart (kept to 3 for legibility on a phone).
 export const PERCENTILE_BANDS = [
   { label: 'P3', z: -1.88079 },
-  { label: 'P15', z: -1.03643 },
   { label: 'P50', z: 0 },
-  { label: 'P85', z: 1.03643 },
   { label: 'P97', z: 1.88079 },
 ] as const;
 

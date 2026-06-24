@@ -34,14 +34,8 @@ describe('whoCurves', () => {
     expect(whoCurves('head', 'male', 26)).toHaveLength(0);
   });
 
-  it('produces the 5 standard percentile bands', () => {
-    expect(whoCurves('weight', 'male', 26).map((c) => c.label)).toEqual([
-      'P3',
-      'P15',
-      'P50',
-      'P85',
-      'P97',
-    ]);
+  it('produces the P3 / P50 / P97 bands', () => {
+    expect(whoCurves('weight', 'male', 26).map((c) => c.label)).toEqual(['P3', 'P50', 'P97']);
   });
 });
 
