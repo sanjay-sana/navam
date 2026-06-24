@@ -124,6 +124,7 @@ export default function LogFeedScreen() {
     recordStartRef.current = start.getTime();
     setStartTime(start);
     setTimerSeconds(null);
+    setErrors({});
     setTiming(true);
   }
 
@@ -228,14 +229,17 @@ export default function LogFeedScreen() {
                 <TextInput
                   style={styles.input}
                   value={manualMinutes}
-                  onChangeText={setManualMinutes}
+                  onChangeText={(t) => {
+                    setManualMinutes(t);
+                    if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+                  }}
                   placeholder="e.g. 12"
                   placeholderTextColor={colors.dim}
                   keyboardType="number-pad"
                 />
               </>
             ) : null}
-            {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
+            {!timing && errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
           </>
         ) : (
           <>
