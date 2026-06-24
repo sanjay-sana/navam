@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CountdownRing } from '@/src/components/CountdownRing';
+import { LullMark } from '@/src/components/LullMark';
 import * as repo from '@/src/db/repo';
 import { localDayBoundsIso } from '@/src/logic/day';
 import { computeFeedRing, formatElapsed, formatOverdue } from '@/src/logic/prediction';
@@ -83,7 +84,7 @@ export default function TodayScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.brand}>
-            <Ionicons name="moon" size={22} color={colors.accent} />
+            <LullMark size={30} />
             <Text style={styles.brandText}>Lull</Text>
           </View>
           <View style={styles.headerRight}>
