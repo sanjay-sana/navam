@@ -31,9 +31,6 @@ export function TimeField({
       </View>
       <View style={styles.whenRow}>
         <Chip label="Now" onPress={() => applyPreset(0)} />
-        <Chip label="15m" onPress={() => applyPreset(15)} />
-        <Chip label="30m" onPress={() => applyPreset(30)} />
-        <Chip label="1h" onPress={() => applyPreset(60)} />
         <Chip label="Pick" onPress={() => setStep('date')} />
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
