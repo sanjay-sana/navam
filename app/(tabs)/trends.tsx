@@ -112,16 +112,15 @@ function ActivityView() {
             />
           </View>
         </View>
-        {mode === 'volume' ? (
-          <View style={styles.noteRow}>
-            <Text style={styles.note}>bottle volume only</Text>
-            {summary.hasBottle ? (
-              <Text style={styles.avgNote}>
-                avg {mlToUnit(summary.avgIntakeMl, unit)} {volumeUnitLabel(unit)}
-              </Text>
-            ) : null}
-          </View>
-        ) : null}
+        {/* Caption row always present so the card height is the same in both modes. */}
+        <View style={styles.noteRow}>
+          <Text style={styles.note}>{mode === 'volume' ? 'bottle volume only' : 'breast + bottle'}</Text>
+          {mode === 'volume' && summary.hasBottle ? (
+            <Text style={styles.avgNote}>
+              avg {mlToUnit(summary.avgIntakeMl, unit)} {volumeUnitLabel(unit)}
+            </Text>
+          ) : null}
+        </View>
 
         {mode === 'count' ? (
           <BarChart
@@ -137,7 +136,9 @@ function ActivityView() {
             avg={mlToUnit(summary.avgIntakeMl, unit)}
           />
         ) : (
-          <Text style={styles.empty}>No bottle feeds in this range.</Text>
+          <View style={styles.chartEmpty}>
+            <Text style={styles.empty}>No bottle feeds in this range.</Text>
+          </View>
         )}
       </View>
 
@@ -339,6 +340,7 @@ const styles = StyleSheet.create({
   noteRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   avgNote: { fontFamily: fonts.uiBold, fontSize: 12, color: colors.dim },
   empty: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, textAlign: 'center', paddingVertical: spacing.xl },
+  chartEmpty: { height: 180, alignItems: 'center', justifyContent: 'center' },
 
   legend: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.sm },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
