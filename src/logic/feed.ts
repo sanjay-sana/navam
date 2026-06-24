@@ -86,8 +86,11 @@ export function validateFeedDraft(draft: FeedDraft, now: Date = new Date()): Fee
         contents: draft.contents,
       };
     } else {
-      // pump — duration is optional; when present, store it as end_time.
+      // pump — needs a duration (timer or minutes), like breast.
       const dur = draft.durationSeconds;
+      if (dur == null || dur <= 0) {
+        errors.duration = 'Record a time or enter minutes';
+      }
       const end_time =
         dur && dur > 0 ? new Date(draft.startTime.getTime() + dur * 1000).toISOString() : null;
       value = {
@@ -95,7 +98,7 @@ export function validateFeedDraft(draft: FeedDraft, now: Date = new Date()): Fee
         start_time,
         end_time,
         volume_ml: parsed !== null ? unitToMl(parsed, draft.unitVolume) : null,
-        side: draft.side, // optional for pump
+        side: draft.side,
       };
     }
   }

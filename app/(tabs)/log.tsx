@@ -245,7 +245,7 @@ export default function LogFeedScreen() {
         {/* Duration — record with the timer OR enter minutes (one is enough). */}
         {type !== 'bottle' ? (
           <>
-            <Label>{type === 'pump' ? 'TIMER (OPTIONAL)' : 'TIMER'}</Label>
+            <Label>TIMER</Label>
             <View style={styles.timerCard}>
               {timing ? (
                 <Text style={styles.timerCaption}>
