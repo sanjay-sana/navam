@@ -26,12 +26,11 @@ export function TimeField({
   return (
     <View style={styles.block}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.timeRow}>
+      <Pressable style={styles.timeRow} onPress={() => setStep('date')}>
         <Text style={styles.timeText}>{format(value, 'EEE d MMM · h:mm a')}</Text>
-      </View>
+      </Pressable>
       <View style={styles.whenRow}>
         <Chip label="Now" onPress={() => applyPreset(0)} />
-        <Chip label="Pick" onPress={() => setStep('date')} />
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
