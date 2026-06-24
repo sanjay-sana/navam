@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { format } from 'date-fns';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -296,6 +298,32 @@ function GrowthView() {
       <Pressable style={styles.addButton} onPress={() => router.push('/log-growth')}>
         <Text style={styles.addText}>Add measurement</Text>
       </Pressable>
+
+      {rows.length > 0 ? (
+        <View style={styles.measList}>
+          {[...rows].reverse().map((m) => {
+            const parts = [
+              m.weight_g != null ? formatMass(m.weight_g, unitMass) : null,
+              m.length_cm != null ? formatLength(m.length_cm, unitLength) : null,
+            ].filter(Boolean) as string[];
+            return (
+              <Pressable
+                key={m.id}
+                style={styles.measRow}
+                onPress={() => router.push({ pathname: '/log-growth', params: { id: String(m.id) } })}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.measDate}>
+                    {format(new Date(`${m.measured_at}T00:00:00`), 'd MMM yyyy')}
+                  </Text>
+                  {parts.length > 0 ? <Text style={styles.measVals}>{parts.join(' · ')}</Text> : null}
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.dim} />
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
     </>
   );
 }
@@ -388,4 +416,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   addText: { fontFamily: fonts.uiBold, fontSize: 18, color: colors.growth },
+  measList: { marginTop: spacing.lg, gap: spacing.sm },
+  measRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  measDate: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.text },
+  measVals: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, marginTop: 2 },
 });
