@@ -89,11 +89,17 @@ describe('bottle feeds', () => {
 
 describe('pump feeds', () => {
   it('accepts volume with optional side', () => {
-    const withSide = validateFeedDraft({ ...base, type: 'pump', volumeText: '110', side: 'left' }, now);
+    const withSide = validateFeedDraft(
+      { ...base, type: 'pump', volumeText: '110', side: 'left', durationSeconds: 600 },
+      now
+    );
     expect(withSide.ok).toBe(true);
     if (withSide.ok) expect(withSide.value.side).toBe('left');
 
-    const noSide = validateFeedDraft({ ...base, type: 'pump', volumeText: '110', side: null }, now);
+    const noSide = validateFeedDraft(
+      { ...base, type: 'pump', volumeText: '110', side: null, durationSeconds: 600 },
+      now
+    );
     expect(noSide.ok).toBe(true);
     if (noSide.ok) expect(noSide.value.side).toBeNull();
   });
