@@ -100,15 +100,17 @@ function ActivityView() {
       {/* Milk intake */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>MILK INTAKE PER DAY</Text>
-          <Segmented
-            options={[
-              { label: 'Count', value: 'count' as const },
-              { label: 'Volume', value: 'volume' as const },
-            ]}
-            value={mode}
-            onChange={setMode}
-          />
+          <Text style={styles.cardTitle}>MILK INTAKE</Text>
+          <View style={styles.headerToggle}>
+            <Segmented
+              options={[
+                { label: 'Count', value: 'count' as const },
+                { label: 'Volume', value: 'volume' as const },
+              ]}
+              value={mode}
+              onChange={setMode}
+            />
+          </View>
         </View>
         {mode === 'volume' ? (
           <Text style={styles.note}>bottle volume only · breast not measurable</Text>
@@ -136,7 +138,7 @@ function ActivityView() {
       {/* Diapers */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>DIAPERS PER DAY</Text>
+          <Text style={styles.cardTitle}>DIAPERS</Text>
           <View style={styles.legend}>
             <Legend color={colors.diaper} label="wet" />
             <Legend color={colors.accent} label="dirty" />
@@ -326,6 +328,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm, gap: spacing.md },
   cardTitle: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 0.5, color: colors.dim, flexShrink: 1 },
+  headerToggle: { width: 168 },
   note: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginBottom: spacing.sm },
   empty: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, textAlign: 'center', paddingVertical: spacing.xl },
 
