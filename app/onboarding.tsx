@@ -89,6 +89,7 @@ export default function OnboardingScreen() {
           <DateTimePicker
             value={dob ?? new Date()}
             mode="date"
+            display="spinner"
             maximumDate={new Date()}
             onValueChange={(_event, selected) => {
               setShowPicker(Platform.OS === 'ios'); // iOS keeps the inline spinner open
