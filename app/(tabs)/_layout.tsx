@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LullMark } from '@/src/components/LullMark';
 import { colors, fonts } from '@/src/theme/theme';
@@ -9,13 +10,18 @@ import { colors, fonts } from '@/src/theme/theme';
 // Log is the prominent center action — a filled accent square with a plus,
 // matching the approved mockups.
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.dim,
-        tabBarStyle: styles.tabBar,
+        // Lift the bar off the Android gesture/nav area so taps don't trigger it.
+        tabBarStyle: [
+          styles.tabBar,
+          { height: 64 + insets.bottom, paddingTop: 8, paddingBottom: 10 + insets.bottom },
+        ],
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
