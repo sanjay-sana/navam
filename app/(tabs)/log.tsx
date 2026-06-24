@@ -242,19 +242,16 @@ export default function LogFeedScreen() {
           </>
         )}
 
-        {/* Timer — required for breast, optional for pump */}
+        {/* Duration — record with the timer OR enter minutes (one is enough). */}
         {type !== 'bottle' ? (
           <>
+            <Label>{type === 'pump' ? 'TIMER (OPTIONAL)' : 'TIMER'}</Label>
             <View style={styles.timerCard}>
-              <Text style={styles.timerCaption}>
-                {timing
-                  ? side
-                    ? `RECORDING · ${side.toUpperCase()}`
-                    : 'RECORDING'
-                  : type === 'pump'
-                    ? 'TIMER (OPTIONAL)'
-                    : 'TIMER'}
-              </Text>
+              {timing ? (
+                <Text style={styles.timerCaption}>
+                  {side ? `RECORDING · ${side.toUpperCase()}` : 'RECORDING'}
+                </Text>
+              ) : null}
               <Text style={styles.timerClock}>
                 {formatMMSS(timing ? liveSeconds : timerSeconds ?? 0)}
               </Text>
@@ -268,7 +265,7 @@ export default function LogFeedScreen() {
 
             {!timing && timerSeconds == null ? (
               <>
-                <Label>OR ENTER MINUTES</Label>
+                <Text style={styles.orDivider}>or enter minutes</Text>
                 <TextInput
                   style={styles.input}
                   value={manualMinutes}
@@ -363,10 +360,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     paddingVertical: spacing.xl,
-    marginTop: spacing.lg,
     gap: spacing.md,
   },
   timerCaption: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 1, color: colors.dim },
+  orDivider: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.dim,
+    textAlign: 'center',
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
   timerClock: { fontFamily: fonts.display, fontSize: 56, color: colors.text },
   timerButton: {
     backgroundColor: colors.accent,
