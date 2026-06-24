@@ -7,7 +7,10 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS babies (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  name          TEXT NOT NULL,
+  name          TEXT NOT NULL,                                   -- full display name (first+middle+last)
+  first_name    TEXT,                                            -- v2
+  middle_name   TEXT,                                            -- v2
+  last_name     TEXT,                                            -- v2
   sex           TEXT NOT NULL CHECK (sex IN ('male','female')),  -- required for WHO percentiles
   date_of_birth TEXT NOT NULL,                                   -- ISO date; drives age
   created_at    TEXT NOT NULL,

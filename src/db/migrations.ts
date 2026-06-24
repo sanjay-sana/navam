@@ -81,6 +81,15 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 `;
 
+// v2: split name into first/middle/last. Keep `name` as the full display name
+// (kept in sync by the repo); backfill first_name from the existing name.
+const MIGRATION_2 = `
+ALTER TABLE babies ADD COLUMN first_name TEXT;
+ALTER TABLE babies ADD COLUMN middle_name TEXT;
+ALTER TABLE babies ADD COLUMN last_name TEXT;
+UPDATE babies SET first_name = name WHERE first_name IS NULL;
+`;
+
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('lull.db');
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -103,6 +112,10 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
     await db.execAsync('PRAGMA user_version = 1');
   }
 
-  // Future migrations:
-  // if (version < 2) { ...; await db.execAsync('PRAGMA user_version = 2'); }
+  if (version < 2) {
+    await db.withTransactionAsync(async () => {
+      await db.execAsync(MIGRATION_2);
+    });
+    await db.execAsync('PRAGMA user_version = 2');
+  }
 }

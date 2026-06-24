@@ -2,14 +2,16 @@
 import type { BabyInput, Sex } from '@/src/db/types';
 
 export interface BabyDraft {
-  name: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
   sex: Sex | null;
   /** Local date-only; null until the user picks one. */
   dob: Date | null;
 }
 
 export interface BabyDraftErrors {
-  name?: string;
+  firstName?: string;
   sex?: string;
   dob?: string;
 }
@@ -33,8 +35,8 @@ export function toIsoDate(d: Date): string {
 export function validateBabyDraft(draft: BabyDraft, now: Date = new Date()): ValidationResult {
   const errors: BabyDraftErrors = {};
 
-  const name = draft.name.trim();
-  if (name.length === 0) errors.name = 'Enter a name';
+  const firstName = draft.firstName.trim();
+  if (firstName.length === 0) errors.firstName = 'Enter a first name';
 
   if (draft.sex !== 'male' && draft.sex !== 'female') {
     errors.sex = 'Select boy or girl';
@@ -53,6 +55,12 @@ export function validateBabyDraft(draft: BabyDraft, now: Date = new Date()): Val
 
   return {
     ok: true,
-    value: { name, sex: draft.sex as Sex, date_of_birth: toIsoDate(draft.dob!) },
+    value: {
+      first_name: firstName,
+      middle_name: draft.middleName.trim() || null,
+      last_name: draft.lastName.trim() || null,
+      sex: draft.sex as Sex,
+      date_of_birth: toIsoDate(draft.dob!),
+    },
   };
 }

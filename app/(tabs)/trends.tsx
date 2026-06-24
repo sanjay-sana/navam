@@ -273,7 +273,7 @@ function GrowthView() {
               formatY={(v) => (metric === 'weight' ? String(Math.round(v)) : String(Math.round(v)))}
             />
             <View style={styles.legend}>
-              <Legend color={colors.growth} label={activeBaby.name} />
+              <Legend color={colors.growth} label={activeBaby.first_name ?? activeBaby.name} />
               <Legend color={colors.dim} label="WHO P3–P97" />
             </View>
           </>

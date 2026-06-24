@@ -16,7 +16,9 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { activeBaby, refresh } = useAppData();
 
-  const [name, setName] = useState(activeBaby?.name ?? '');
+  const [firstName, setFirstName] = useState(activeBaby?.first_name ?? activeBaby?.name ?? '');
+  const [middleName, setMiddleName] = useState(activeBaby?.middle_name ?? '');
+  const [lastName, setLastName] = useState(activeBaby?.last_name ?? '');
   const [sex, setSex] = useState<Sex | null>(activeBaby?.sex ?? null);
   const [dob, setDob] = useState<Date | null>(
     activeBaby ? new Date(`${activeBaby.date_of_birth}T00:00:00`) : null
@@ -29,7 +31,7 @@ export default function EditProfileScreen() {
 
   async function onSave() {
     if (!activeBaby) return;
-    const result = validateBabyDraft({ name, sex, dob });
+    const result = validateBabyDraft({ firstName, middleName, lastName, sex, dob });
     if (!result.ok) {
       setErrors(result.errors);
       return;
@@ -56,16 +58,36 @@ export default function EditProfileScreen() {
           <Text style={styles.title}>Edit profile</Text>
         </View>
 
-        <Text style={styles.label}>NAME</Text>
+        <Text style={styles.label}>FIRST NAME</Text>
         <TextInput
           style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Baby's name"
+          value={firstName}
+          onChangeText={setFirstName}
+          placeholder="First name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
         />
-        {errors.name ? <Text style={styles.error}>{errors.name}</Text> : null}
+        {errors.firstName ? <Text style={styles.error}>{errors.firstName}</Text> : null}
+
+        <Text style={styles.label}>MIDDLE NAME (OPTIONAL)</Text>
+        <TextInput
+          style={styles.input}
+          value={middleName}
+          onChangeText={setMiddleName}
+          placeholder="Middle name"
+          placeholderTextColor={colors.dim}
+          autoCapitalize="words"
+        />
+
+        <Text style={styles.label}>LAST NAME (OPTIONAL)</Text>
+        <TextInput
+          style={styles.input}
+          value={lastName}
+          onChangeText={setLastName}
+          placeholder="Last name"
+          placeholderTextColor={colors.dim}
+          autoCapitalize="words"
+        />
 
         <Text style={styles.label}>SEX</Text>
         <View style={styles.segmented}>

@@ -74,6 +74,14 @@ export async function getActiveBaby(): Promise<Baby | null> {
   );
 }
 
+/** Full display name from the parts (e.g. "Aarav Kumar Sana"). */
+function composeName(input: BabyInput): string {
+  return [input.first_name, input.middle_name, input.last_name]
+    .map((s) => s?.trim())
+    .filter(Boolean)
+    .join(' ');
+}
+
 /**
  * Create a baby, seed its default feed-reminder config, and make it active.
  * Done in one transaction so we never end up with a baby but no active id.
@@ -84,9 +92,18 @@ export async function createBaby(input: BabyInput): Promise<Baby> {
   let id = 0;
   await db.withTransactionAsync(async () => {
     const res = await db.runAsync(
-      `INSERT INTO babies (name, sex, date_of_birth, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?)`,
-      [input.name, input.sex, input.date_of_birth, ts, ts]
+      `INSERT INTO babies (name, first_name, middle_name, last_name, sex, date_of_birth, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        composeName(input),
+        input.first_name.trim(),
+        input.middle_name?.trim() || null,
+        input.last_name?.trim() || null,
+        input.sex,
+        input.date_of_birth,
+        ts,
+        ts,
+      ]
     );
     id = res.lastInsertRowId;
     await db.runAsync(
@@ -107,8 +124,18 @@ export async function createBaby(input: BabyInput): Promise<Baby> {
 export async function updateBaby(id: number, input: BabyInput): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    `UPDATE babies SET name = ?, sex = ?, date_of_birth = ?, updated_at = ? WHERE id = ?`,
-    [input.name, input.sex, input.date_of_birth, nowUtc(), id]
+    `UPDATE babies SET name = ?, first_name = ?, middle_name = ?, last_name = ?, sex = ?, date_of_birth = ?, updated_at = ?
+     WHERE id = ?`,
+    [
+      composeName(input),
+      input.first_name.trim(),
+      input.middle_name?.trim() || null,
+      input.last_name?.trim() || null,
+      input.sex,
+      input.date_of_birth,
+      nowUtc(),
+      id,
+    ]
   );
 }
 

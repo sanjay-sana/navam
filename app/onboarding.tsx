@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { WheelDateTimeModal } from '@/src/components/WheelPicker';
@@ -15,7 +15,9 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const { refresh } = useAppData();
 
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [sex, setSex] = useState<Sex | null>(null);
   const [dob, setDob] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -23,7 +25,7 @@ export default function OnboardingScreen() {
   const [saving, setSaving] = useState(false);
 
   async function onSave() {
-    const result = validateBabyDraft({ name, sex, dob });
+    const result = validateBabyDraft({ firstName, middleName, lastName, sex, dob });
     if (!result.ok) {
       setErrors(result.errors);
       return;
@@ -42,24 +44,43 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Text style={styles.title}>Welcome to Lull</Text>
           <Text style={styles.subtitle}>Let&apos;s set up your baby.</Text>
         </View>
 
         {/* Name */}
-        <Text style={styles.label}>NAME</Text>
+        <Text style={styles.label}>FIRST NAME</Text>
         <TextInput
           style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Baby's name"
+          value={firstName}
+          onChangeText={setFirstName}
+          placeholder="First name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
-          returnKeyType="done"
         />
-        {errors.name ? <Text style={styles.error}>{errors.name}</Text> : null}
+        {errors.firstName ? <Text style={styles.error}>{errors.firstName}</Text> : null}
+
+        <Text style={styles.label}>MIDDLE NAME (OPTIONAL)</Text>
+        <TextInput
+          style={styles.input}
+          value={middleName}
+          onChangeText={setMiddleName}
+          placeholder="Middle name"
+          placeholderTextColor={colors.dim}
+          autoCapitalize="words"
+        />
+
+        <Text style={styles.label}>LAST NAME (OPTIONAL)</Text>
+        <TextInput
+          style={styles.input}
+          value={lastName}
+          onChangeText={setLastName}
+          placeholder="Last name"
+          placeholderTextColor={colors.dim}
+          autoCapitalize="words"
+        />
 
         {/* Sex */}
         <Text style={styles.label}>SEX</Text>
@@ -89,7 +110,7 @@ export default function OnboardingScreen() {
             setShowPicker(false);
           }}
         />
-      </View>
+      </ScrollView>
 
       <Pressable
         style={[styles.saveButton, saving && styles.saveButtonDisabled]}
@@ -123,7 +144,8 @@ function SexOption({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  container: { flex: 1, paddingHorizontal: spacing.lg },
+  scroll: { flex: 1 },
+  container: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
   header: { marginTop: spacing.xl, marginBottom: spacing.xl },
   title: { fontFamily: fonts.display, fontSize: 34, color: colors.text },
   subtitle: {

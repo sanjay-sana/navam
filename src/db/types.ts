@@ -14,7 +14,10 @@ export type UnitLength = 'cm' | 'in';
 
 export interface Baby {
   id: number;
-  name: string;
+  name: string; // full display name (first + middle + last), kept in sync by the repo
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
   sex: Sex;
   date_of_birth: string; // yyyy-MM-dd
   created_at: string;
@@ -23,7 +26,9 @@ export interface Baby {
 
 /** Fields captured at onboarding / profile edit. */
 export interface BabyInput {
-  name: string;
+  first_name: string;
+  middle_name?: string | null;
+  last_name?: string | null;
   sex: Sex;
   date_of_birth: string; // yyyy-MM-dd
 }
