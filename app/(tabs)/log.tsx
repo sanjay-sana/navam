@@ -198,7 +198,9 @@ export default function LogFeedScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>{editId != null ? 'Edit feed' : 'Log feed'}</Text>
+        <Text style={styles.title}>
+          {`${editId != null ? 'Edit' : 'Log'} ${type === 'pump' ? 'pump' : 'feed'}`}
+        </Text>
 
         <Segmented options={TYPE_OPTIONS} value={type} onChange={switchType} />
 
@@ -294,7 +296,9 @@ export default function LogFeedScreen() {
         onPress={onSave}
         disabled={saving || timing}
       >
-        <Text style={styles.saveText}>{saving ? 'Saving…' : editId != null ? 'Save changes' : 'Save feed'}</Text>
+        <Text style={styles.saveText}>
+          {saving ? 'Saving…' : editId != null ? 'Save changes' : type === 'pump' ? 'Save pump' : 'Save feed'}
+        </Text>
       </Pressable>
     </SafeAreaView>
   );
