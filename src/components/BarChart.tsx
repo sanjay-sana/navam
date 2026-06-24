@@ -16,7 +16,6 @@ export function BarChart({
   color = colors.accent,
   valueFormat = (v) => String(v),
   avg,
-  avgLabel,
 }: {
   data: BarDatum[];
   width: number;
@@ -24,7 +23,6 @@ export function BarChart({
   color?: string;
   valueFormat?: (v: number) => string;
   avg?: number;
-  avgLabel?: string;
 }) {
   const topPad = 22;
   const bottomPad = 22;
@@ -38,22 +36,15 @@ export function BarChart({
   return (
     <Svg width={width} height={height}>
       {avg != null && avg > 0 ? (
-        <>
-          <Line
-            x1={0}
-            y1={yFor(avg)}
-            x2={width}
-            y2={yFor(avg)}
-            stroke={colors.dim}
-            strokeWidth={1}
-            strokeDasharray="4 4"
-          />
-          {avgLabel ? (
-            <SvgText x={width} y={yFor(avg) - 4} fill={colors.dim} fontSize={11} fontFamily={fonts.ui} textAnchor="end">
-              {avgLabel}
-            </SvgText>
-          ) : null}
-        </>
+        <Line
+          x1={0}
+          y1={yFor(avg)}
+          x2={width}
+          y2={yFor(avg)}
+          stroke={colors.dim}
+          strokeWidth={1}
+          strokeDasharray="4 4"
+        />
       ) : null}
 
       {data.map((d, i) => {

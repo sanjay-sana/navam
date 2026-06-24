@@ -113,7 +113,14 @@ function ActivityView() {
           </View>
         </View>
         {mode === 'volume' ? (
-          <Text style={styles.note}>bottle volume only · breast not measurable</Text>
+          <View style={styles.noteRow}>
+            <Text style={styles.note}>bottle volume only</Text>
+            {summary.hasBottle ? (
+              <Text style={styles.avgNote}>
+                avg {mlToUnit(summary.avgIntakeMl, unit)} {volumeUnitLabel(unit)}
+              </Text>
+            ) : null}
+          </View>
         ) : null}
 
         {mode === 'count' ? (
@@ -128,7 +135,6 @@ function ActivityView() {
             width={CHART_W}
             height={180}
             avg={mlToUnit(summary.avgIntakeMl, unit)}
-            avgLabel={`avg ${mlToUnit(summary.avgIntakeMl, unit)} ${volumeUnitLabel(unit)}`}
           />
         ) : (
           <Text style={styles.empty}>No bottle feeds in this range.</Text>
@@ -329,7 +335,9 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm, gap: spacing.md },
   cardTitle: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 0.5, color: colors.dim, flexShrink: 1 },
   headerToggle: { width: 168 },
-  note: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginBottom: spacing.sm },
+  note: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim },
+  noteRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  avgNote: { fontFamily: fonts.uiBold, fontSize: 12, color: colors.dim },
   empty: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, textAlign: 'center', paddingVertical: spacing.xl },
 
   legend: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.sm },
