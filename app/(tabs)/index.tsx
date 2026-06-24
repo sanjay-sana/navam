@@ -84,7 +84,7 @@ export default function TodayScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.brand}>
-            <LullMark size={30} />
+            <LullMark size={38} />
             <Text style={styles.brandText}>Lull</Text>
           </View>
           <View style={styles.headerRight}>

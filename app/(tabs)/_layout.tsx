@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { LullMark } from '@/src/components/LullMark';
 import { colors, fonts } from '@/src/theme/theme';
 
 // 4 tabs: Today / Log / Trends / Settings (per CLAUDE.md). Dark-only.
@@ -22,9 +23,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Today',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="moon" color={color} size={size} />
-          ),
+          tabBarIcon: () => <LullMark size={28} />,
         }}
       />
       <Tabs.Screen
