@@ -33,7 +33,7 @@ export default function TabLayout() {
           title: 'Log',
           tabBarIcon: () => (
             <View style={styles.logButton}>
-              <Ionicons name="add" color={colors.bg} size={26} />
+              <Ionicons name="add" color={colors.bg} size={22} />
             </View>
           ),
         }}
@@ -75,9 +75,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   logButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
