@@ -42,6 +42,7 @@ export function TimeField({
         <DateTimePicker
           value={value}
           mode={step}
+          display="spinner"
           maximumDate={step === 'date' ? new Date() : undefined}
           onValueChange={(_event, selected) => {
             if (step === 'date') {
