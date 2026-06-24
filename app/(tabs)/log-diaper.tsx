@@ -53,10 +53,11 @@ export default function LogDiaperScreen() {
       } else {
         await repo.createDiaperEvent(activeBaby.id, result.value);
       }
+      setType(null);
+      setTime(new Date());
       router.back();
-    } catch (e) {
+    } finally {
       setSaving(false);
-      throw e;
     }
   }
 

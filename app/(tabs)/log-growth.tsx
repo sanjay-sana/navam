@@ -60,10 +60,12 @@ export default function LogGrowthScreen() {
       } else {
         await repo.createGrowthMeasurement(activeBaby.id, result.value);
       }
+      setWeight('');
+      setLength('');
+      setDate(new Date());
       router.back();
-    } catch (e) {
+    } finally {
       setSaving(false);
-      throw e;
     }
   }
 
