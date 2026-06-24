@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LullMark } from '@/src/components/LullMark';
 import { Segmented } from '@/src/components/Segmented';
 import * as repo from '@/src/db/repo';
 import type { UnitLength, UnitMass, UnitVolume } from '@/src/db/types';
@@ -92,7 +93,7 @@ export default function SettingsScreen() {
         {/* Profile */}
         <Pressable style={styles.profile} onPress={() => router.push('/edit-profile')}>
           <View style={styles.avatar}>
-            <Ionicons name="happy-outline" size={30} color={colors.accent} />
+            <LullMark size={42} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.profileName}>{activeBaby.name}</Text>
