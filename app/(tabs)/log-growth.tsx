@@ -135,6 +135,7 @@ export default function LogGrowthScreen() {
           <DateTimePicker
             value={date}
             mode="date"
+            display="spinner"
             maximumDate={new Date()}
             onValueChange={(_event, selected) => {
               setShowPicker(false);
