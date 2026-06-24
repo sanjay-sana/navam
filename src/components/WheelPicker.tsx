@@ -201,6 +201,71 @@ export function WheelDateTimeModal({
   );
 }
 
+export function WheelNumberModal({
+  visible,
+  title,
+  unit,
+  min,
+  max,
+  value,
+  defaultValue,
+  onConfirm,
+  onCancel,
+}: {
+  visible: boolean;
+  title: string;
+  unit: string;
+  min: number; // whole-number range (inclusive)
+  max: number;
+  value: number | null;
+  defaultValue: number;
+  onConfirm: (next: number) => void;
+  onCancel: () => void;
+}) {
+  const [whole, setWhole] = useState(0);
+  const [dec, setDec] = useState(0);
+
+  useEffect(() => {
+    if (!visible) return;
+    const v = value ?? defaultValue;
+    setWhole(clamp(Math.floor(v), min, max));
+    setDec(clamp(Math.round((v - Math.floor(v)) * 10), 0, 9));
+  }, [visible, value, defaultValue, min, max]);
+
+  const wholeItems = Array.from({ length: max - min + 1 }, (_, i) => ({ label: String(min + i) }));
+  const decItems = Array.from({ length: 10 }, (_, i) => ({ label: `.${i}` }));
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
+      <Pressable style={styles.backdrop} onPress={onCancel} />
+      <View style={styles.sheet}>
+        <View style={styles.header}>
+          <Pressable onPress={onCancel} hitSlop={10}>
+            <Text style={styles.cancel}>Cancel</Text>
+          </Pressable>
+          <Text style={styles.title}>{title}</Text>
+          <Pressable onPress={() => onConfirm(whole + dec / 10)} hitSlop={10}>
+            <Text style={styles.done}>Done</Text>
+          </Pressable>
+        </View>
+        <View style={styles.wheels}>
+          <View style={styles.highlight} pointerEvents="none" />
+          <WheelColumn
+            items={wholeItems}
+            selectedIndex={clamp(whole - min, 0, wholeItems.length - 1)}
+            onChange={(i) => setWhole(min + i)}
+            flex={2}
+          />
+          <WheelColumn items={decItems} selectedIndex={dec} onChange={setDec} flex={2} />
+          <View style={styles.unitCol}>
+            <Text style={styles.unitText}>{unit}</Text>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   sheet: {
@@ -243,4 +308,6 @@ const styles = StyleSheet.create({
   item: { height: ITEM_H, alignItems: 'center', justifyContent: 'center' },
   itemText: { fontFamily: fonts.ui, fontSize: 20, color: colors.dim },
   itemTextSel: { fontFamily: fonts.uiBold, color: colors.text },
+  unitCol: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  unitText: { fontFamily: fonts.uiBold, fontSize: 18, color: colors.dim },
 });
