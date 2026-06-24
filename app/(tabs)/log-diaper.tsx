@@ -80,7 +80,12 @@ export default function LogDiaperScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{editId != null ? 'Edit diaper' : 'Log diaper'}</Text>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="chevron-back" size={26} color={colors.text} />
+          </Pressable>
+          <Text style={styles.title}>{editId != null ? 'Edit diaper' : 'Log diaper'}</Text>
+        </View>
 
         <Text style={styles.label}>WHAT KIND?</Text>
         {TYPES.map((t) => {
@@ -130,12 +135,17 @@ export default function LogDiaperScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
+  },
   title: {
     fontFamily: fonts.display,
     fontSize: 30,
     color: colors.text,
-    marginTop: spacing.sm,
-    marginBottom: spacing.lg,
   },
   label: {
     fontFamily: fonts.uiBold,

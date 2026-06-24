@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -199,9 +200,16 @@ export default function LogFeedScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>
-          {`${editId != null ? 'Edit' : 'Log'} ${type === 'pump' ? 'pump' : 'feed'}`}
-        </Text>
+        <View style={styles.header}>
+          {editId != null ? (
+            <Pressable onPress={() => router.back()} hitSlop={12}>
+              <Ionicons name="chevron-back" size={26} color={colors.text} />
+            </Pressable>
+          ) : null}
+          <Text style={styles.title}>
+            {`${editId != null ? 'Edit' : 'Log'} ${type === 'pump' ? 'pump' : 'feed'}`}
+          </Text>
+        </View>
 
         <Segmented options={TYPE_OPTIONS} value={type} onChange={switchType} />
 
@@ -317,12 +325,17 @@ function ErrorText({ children }: { children: ReactNode }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
+  },
   title: {
     fontFamily: fonts.display,
     fontSize: 30,
     color: colors.text,
-    marginTop: spacing.sm,
-    marginBottom: spacing.lg,
   },
   label: {
     fontFamily: fonts.uiBold,

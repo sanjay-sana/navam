@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -86,7 +87,12 @@ export default function LogGrowthScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>{editId != null ? 'Edit measurement' : 'Add measurement'}</Text>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="chevron-back" size={26} color={colors.text} />
+          </Pressable>
+          <Text style={styles.title}>{editId != null ? 'Edit measurement' : 'Add measurement'}</Text>
+        </View>
         <Text style={styles.hint}>Enter at least one. Leave the rest blank.</Text>
 
         <Text style={styles.label}>WEIGHT ({massUnitLabel(unitMass)})</Text>
@@ -149,7 +155,8 @@ export default function LogGrowthScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
-  title: { fontFamily: fonts.display, fontSize: 30, color: colors.text, marginTop: spacing.sm },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
+  title: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
   hint: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, marginTop: spacing.xs, marginBottom: spacing.sm },
   label: { fontFamily: fonts.uiBold, fontSize: 12, letterSpacing: 1, color: colors.dim, marginTop: spacing.lg, marginBottom: spacing.sm },
   input: {

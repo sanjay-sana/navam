@@ -27,14 +27,6 @@ const DEFAULT_DATA: TodayData = {
   diapers: 0,
 };
 
-function greeting(now: Date): string {
-  const h = now.getHours();
-  if (h < 5 || h >= 21) return 'Good night';
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
-}
-
 export default function TodayScreen() {
   const router = useRouter();
   const { activeBaby } = useAppData();
@@ -87,12 +79,10 @@ export default function TodayScreen() {
             <LullMark size={38} />
             <Text style={styles.brandText}>Lull</Text>
           </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.greeting}>{greeting(now)}</Text>
-            <Pressable onPress={() => router.push('/history')} hitSlop={12}>
-              <Ionicons name="time-outline" size={24} color={colors.dim} />
-            </Pressable>
-          </View>
+          <Pressable style={styles.historyButton} onPress={() => router.push('/history')}>
+            <Ionicons name="time-outline" size={16} color={colors.accent} />
+            <Text style={styles.historyButtonText}>History</Text>
+          </Pressable>
         </View>
 
         <View style={styles.ringWrap}>
@@ -164,8 +154,16 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   brandText: { fontFamily: fonts.display, fontSize: 26, color: colors.text },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  greeting: { fontFamily: fonts.ui, fontSize: 16, color: colors.dim },
+  historyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  historyButtonText: { fontFamily: fonts.uiBold, fontSize: 14, color: colors.accent },
 
   ringWrap: { alignItems: 'center', marginTop: spacing.lg, marginBottom: spacing.lg },
   bigTime: { fontFamily: fonts.display, fontSize: 56, color: colors.text },
