@@ -139,6 +139,20 @@ export async function updateBaby(id: number, input: BabyInput): Promise<void> {
   );
 }
 
+/**
+ * Wipe all babies (cascades to every event + reminder) and clear the active
+ * baby, so the app returns to onboarding. Unit preferences are kept.
+ */
+export async function resetApp(): Promise<void> {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE settings SET active_baby_id = NULL, updated_at = ? WHERE id = 1', [
+      nowUtc(),
+    ]);
+    await db.runAsync('DELETE FROM babies'); // ON DELETE CASCADE clears events + reminders
+  });
+}
+
 // --- Today screen queries ---------------------------------------------------
 
 /** Feed reminder config for a baby (interval drives the Today ring even when disabled). */

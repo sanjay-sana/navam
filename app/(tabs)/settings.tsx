@@ -83,6 +83,24 @@ export default function SettingsScreen() {
     }
   }
 
+  function onStartOver() {
+    Alert.alert(
+      'Start over?',
+      'This deletes the baby profile and all logged data. Unit settings are kept. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete everything',
+          style: 'destructive',
+          onPress: async () => {
+            await repo.resetApp();
+            await refresh(); // active baby now null → route gate sends you to onboarding
+          },
+        },
+      ]
+    );
+  }
+
   const dob = new Date(`${activeBaby.date_of_birth}T00:00:00`);
 
   return (
@@ -179,6 +197,10 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.dim} />
           </View>
         </Pressable>
+
+        <Pressable style={styles.startOver} onPress={onStartOver}>
+          <Text style={styles.startOverText}>Start over</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -258,4 +280,6 @@ const styles = StyleSheet.create({
   },
   exportRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   exportHint: { fontFamily: fonts.ui, fontSize: 15, color: colors.dim },
+  startOver: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.xl },
+  startOverText: { fontFamily: fonts.uiBold, fontSize: 16, color: '#E8896B' },
 });
