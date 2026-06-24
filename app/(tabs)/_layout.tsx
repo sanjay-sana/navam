@@ -13,6 +13,7 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
