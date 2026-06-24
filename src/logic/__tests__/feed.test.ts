@@ -103,6 +103,16 @@ describe('pump feeds', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.errors.volume).toBeDefined();
   });
+
+  it('stores an optional duration as end_time', () => {
+    const withDur = validateFeedDraft({ ...base, type: 'pump', volumeText: '110', durationSeconds: 900 }, now);
+    expect(withDur.ok).toBe(true);
+    if (withDur.ok) expect(withDur.value.end_time).toBe(new Date(start.getTime() + 900_000).toISOString());
+
+    const noDur = validateFeedDraft({ ...base, type: 'pump', volumeText: '110', durationSeconds: null }, now);
+    expect(noDur.ok).toBe(true); // duration optional for pump
+    if (noDur.ok) expect(noDur.value.end_time).toBeNull();
+  });
 });
 
 describe('future times', () => {

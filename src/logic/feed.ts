@@ -86,9 +86,14 @@ export function validateFeedDraft(draft: FeedDraft, now: Date = new Date()): Fee
         contents: draft.contents,
       };
     } else {
+      // pump — duration is optional; when present, store it as end_time.
+      const dur = draft.durationSeconds;
+      const end_time =
+        dur && dur > 0 ? new Date(draft.startTime.getTime() + dur * 1000).toISOString() : null;
       value = {
         type: 'pump',
         start_time,
+        end_time,
         volume_ml: parsed !== null ? unitToMl(parsed, draft.unitVolume) : null,
         side: draft.side, // optional for pump
       };

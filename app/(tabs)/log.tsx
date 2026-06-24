@@ -79,9 +79,10 @@ export default function LogFeedScreen() {
       setStartTime(new Date(f.start_time));
       if (f.type === 'breast') {
         setTimerSeconds(feedTotalSeconds(f));
-      } else if (f.volume_ml != null) {
-        setVolumeText(String(mlToUnit(f.volume_ml, unit)));
+      } else {
+        if (f.volume_ml != null) setVolumeText(String(mlToUnit(f.volume_ml, unit)));
         setContents(f.contents);
+        if (f.type === 'pump') setTimerSeconds(feedTotalSeconds(f));
       }
     })();
   }, [editId, unit]);
@@ -152,7 +153,7 @@ export default function LogFeedScreen() {
       type,
       startTime,
       side,
-      durationSeconds: type === 'breast' ? effectiveDurationSeconds() : null,
+      durationSeconds: type === 'bottle' ? null : effectiveDurationSeconds(),
       volumeText,
       contents,
       unitVolume: unit,
@@ -209,10 +210,42 @@ export default function LogFeedScreen() {
             <Label>SIDE</Label>
             <Segmented options={SIDE_OPTIONS} value={side} onChange={setSide} />
             {errors.side ? <ErrorText>{errors.side}</ErrorText> : null}
+          </>
+        ) : (
+          <>
+            <Label>VOLUME ({volumeUnitLabel(unit)})</Label>
+            <TextInput
+              style={styles.input}
+              value={volumeText}
+              onChangeText={setVolumeText}
+              placeholder={`Volume in ${volumeUnitLabel(unit)}`}
+              placeholderTextColor={colors.dim}
+              keyboardType="decimal-pad"
+            />
+            {errors.volume ? <ErrorText>{errors.volume}</ErrorText> : null}
 
+            {type === 'bottle' ? (
+              <>
+                <Label>CONTENTS</Label>
+                <Segmented options={CONTENTS_OPTIONS} value={contents} onChange={setContents} />
+                {errors.contents ? <ErrorText>{errors.contents}</ErrorText> : null}
+              </>
+            ) : null}
+          </>
+        )}
+
+        {/* Timer — required for breast, optional for pump */}
+        {type !== 'bottle' ? (
+          <>
             <View style={styles.timerCard}>
               <Text style={styles.timerCaption}>
-                {timing ? `RECORDING · ${side?.toUpperCase()}` : 'TIMER'}
+                {timing
+                  ? side
+                    ? `RECORDING · ${side.toUpperCase()}`
+                    : 'RECORDING'
+                  : type === 'pump'
+                    ? 'TIMER (OPTIONAL)'
+                    : 'TIMER'}
               </Text>
               <Text style={styles.timerClock}>
                 {formatMMSS(timing ? liveSeconds : timerSeconds ?? 0)}
@@ -243,28 +276,7 @@ export default function LogFeedScreen() {
             ) : null}
             {!timing && errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
           </>
-        ) : (
-          <>
-            <Label>VOLUME ({volumeUnitLabel(unit)})</Label>
-            <TextInput
-              style={styles.input}
-              value={volumeText}
-              onChangeText={setVolumeText}
-              placeholder={`Volume in ${volumeUnitLabel(unit)}`}
-              placeholderTextColor={colors.dim}
-              keyboardType="decimal-pad"
-            />
-            {errors.volume ? <ErrorText>{errors.volume}</ErrorText> : null}
-
-            {type === 'bottle' ? (
-              <>
-                <Label>CONTENTS</Label>
-                <Segmented options={CONTENTS_OPTIONS} value={contents} onChange={setContents} />
-                {errors.contents ? <ErrorText>{errors.contents}</ErrorText> : null}
-              </>
-            ) : null}
-          </>
-        )}
+        ) : null}
 
         {!timing ? (
           <TimeField
