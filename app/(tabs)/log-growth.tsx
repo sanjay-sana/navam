@@ -21,7 +21,6 @@ export default function LogGrowthScreen() {
 
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
-  const [head, setHead] = useState('');
   const [date, setDate] = useState<Date>(() => new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [errors, setErrors] = useState<GrowthErrors>({});
@@ -34,7 +33,6 @@ export default function LogGrowthScreen() {
       if (!m) return;
       if (m.weight_g != null) setWeight(String(gramsToUnit(m.weight_g, unitMass)));
       if (m.length_cm != null) setLength(String(cmToUnit(m.length_cm, unitLength)));
-      if (m.head_circumference_cm != null) setHead(String(cmToUnit(m.head_circumference_cm, unitLength)));
       setDate(new Date(`${m.measured_at}T00:00:00`));
     })();
   }, [editId, unitMass, unitLength]);
@@ -45,7 +43,7 @@ export default function LogGrowthScreen() {
       measuredAt: date,
       weightText: weight,
       lengthText: length,
-      headText: head,
+      headText: '',
       unitMass,
       unitLength,
     });
@@ -112,17 +110,6 @@ export default function LogGrowthScreen() {
           keyboardType="decimal-pad"
         />
         {errors.length ? <Text style={styles.error}>{errors.length}</Text> : null}
-
-        <Text style={styles.label}>HEAD ({lengthUnitLabel(unitLength)})</Text>
-        <TextInput
-          style={styles.input}
-          value={head}
-          onChangeText={setHead}
-          placeholder="e.g. 39.2"
-          placeholderTextColor={colors.dim}
-          keyboardType="decimal-pad"
-        />
-        {errors.head ? <Text style={styles.error}>{errors.head}</Text> : null}
 
         <Text style={styles.label}>DATE</Text>
         <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
