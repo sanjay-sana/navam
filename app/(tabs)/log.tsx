@@ -262,16 +262,7 @@ export default function LogFeedScreen() {
                 <Segmented options={CONTENTS_OPTIONS} value={contents} onChange={setContents} />
                 {errors.contents ? <ErrorText>{errors.contents}</ErrorText> : null}
               </>
-            ) : (
-              <>
-                <Label>SIDE (OPTIONAL)</Label>
-                <Segmented
-                  options={SIDE_OPTIONS}
-                  value={side}
-                  onChange={(v) => setSide(side === v ? null : v)}
-                />
-              </>
-            )}
+            ) : null}
           </>
         )}
 
