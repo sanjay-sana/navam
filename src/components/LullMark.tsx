@@ -2,7 +2,7 @@
 // SVG so it stays crisp at any size and follows the theme. Same geometry as the
 // app icon (composition B).
 import { memo } from 'react';
-import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 
 import { colors } from '@/src/theme/theme';
 
@@ -32,9 +32,17 @@ const MOON = lune({ x: 512, y: 560 }, 380, { x: 512, y: 360 }, 355);
 const HC = { x: 512, y: 455 };
 const HR = 170;
 
-export const LullMark = memo(function LullMark({ size = 30 }: { size?: number }) {
+export const LullMark = memo(function LullMark({
+  size = 30,
+  dimmed = false,
+}: {
+  size?: number;
+  /** Fades the mark for an inactive/disabled state (e.g. unfocused tab). */
+  dimmed?: boolean;
+}) {
   return (
     <Svg width={size} height={size} viewBox="0 0 1024 1024">
+      <G opacity={dimmed ? 0.4 : 1}>
       <Path d={MOON} fill={colors.accent} />
       <Circle cx={HC.x} cy={HC.y} r={HR} fill={colors.text} />
       <Path
@@ -62,6 +70,7 @@ export const LullMark = memo(function LullMark({ size = 30 }: { size?: number })
       />
       <Ellipse cx={HC.x} cy={HC.y + 96} rx={33} ry={44} fill="#54414B" />
       <Ellipse cx={HC.x} cy={HC.y + 114} rx={19} ry={17} fill="#E8907E" />
+      </G>
     </Svg>
   );
 });

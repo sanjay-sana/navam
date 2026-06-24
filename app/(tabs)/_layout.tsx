@@ -29,7 +29,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Today',
-          tabBarIcon: () => <LullMark size={28} />,
+          tabBarIcon: ({ focused }) => <LullMark size={28} dimmed={!focused} />,
         }}
       />
       <Tabs.Screen
