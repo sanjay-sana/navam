@@ -22,6 +22,7 @@ export interface FeedErrors {
   side?: string;
   volume?: string;
   contents?: string;
+  duration?: string;
 }
 
 export type FeedResult =
@@ -50,6 +51,9 @@ export function validateFeedDraft(draft: FeedDraft, now: Date = new Date()): Fee
       errors.side = 'Pick a side';
     }
     const dur = draft.durationSeconds;
+    if (dur == null || dur <= 0) {
+      errors.duration = 'Record a time or enter minutes';
+    }
     const end_time =
       dur && dur > 0 ? new Date(draft.startTime.getTime() + dur * 1000).toISOString() : null;
     value = {

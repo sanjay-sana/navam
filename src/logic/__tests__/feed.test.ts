@@ -39,13 +39,19 @@ describe('breast feeds', () => {
     if (!r.ok) expect(r.errors.side).toBeDefined();
   });
 
-  it('allows no duration (just logging that a feed happened)', () => {
-    const r = validateFeedDraft({ ...base, type: 'breast', side: 'right', durationSeconds: null }, now);
+  it('requires a duration (timer or minutes)', () => {
+    const none = validateFeedDraft({ ...base, type: 'breast', side: 'right', durationSeconds: null }, now);
+    expect(none.ok).toBe(false);
+    if (!none.ok) expect(none.errors.duration).toBeDefined();
+
+    const zero = validateFeedDraft({ ...base, type: 'breast', side: 'right', durationSeconds: 0 }, now);
+    expect(zero.ok).toBe(false);
+  });
+
+  it('accepts a right-side feed with a duration', () => {
+    const r = validateFeedDraft({ ...base, type: 'breast', side: 'right', durationSeconds: 540 }, now);
     expect(r.ok).toBe(true);
-    if (r.ok) {
-      expect(r.value.end_time).toBeNull();
-      expect(r.value.duration_right_s).toBeNull();
-    }
+    if (r.ok) expect(r.value.duration_right_s).toBe(540);
   });
 });
 

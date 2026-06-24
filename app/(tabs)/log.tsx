@@ -93,8 +93,22 @@ export default function LogFeedScreen() {
   }, [timing]);
 
   function switchType(next: FeedType) {
-    setType(next);
     setSide(next === 'breast' ? 'left' : null);
+    setType(next);
+    setErrors({});
+    setTiming(false);
+    setTimerSeconds(null);
+    recordStartRef.current = null;
+    setManualMinutes('');
+    setVolumeText('');
+    setContents(null);
+    setStartTime(new Date());
+  }
+
+  // Clear back to a fresh "new feed" form (called after a successful save).
+  function resetForm() {
+    setType('breast');
+    setSide('left');
     setErrors({});
     setTiming(false);
     setTimerSeconds(null);
@@ -155,10 +169,10 @@ export default function LogFeedScreen() {
         await repo.createFeedEvent(activeBaby.id, result.value);
       }
       await syncFeedReminder(activeBaby.id);
+      resetForm();
       router.back();
-    } catch (e) {
+    } finally {
       setSaving(false);
-      throw e;
     }
   }
 
@@ -221,6 +235,7 @@ export default function LogFeedScreen() {
                 />
               </>
             ) : null}
+            {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
           </>
         ) : (
           <>
