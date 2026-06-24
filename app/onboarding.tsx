@@ -91,6 +91,8 @@ export default function OnboardingScreen() {
             mode="date"
             display="spinner"
             maximumDate={new Date()}
+            positiveButton={{ textColor: colors.accent }}
+            negativeButton={{ textColor: colors.dim }}
             onValueChange={(_event, selected) => {
               setShowPicker(Platform.OS === 'ios'); // iOS keeps the inline spinner open
               setDob(selected);

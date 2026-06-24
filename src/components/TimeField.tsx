@@ -40,6 +40,8 @@ export function TimeField({
           mode={step}
           display="spinner"
           maximumDate={step === 'date' ? new Date() : undefined}
+          positiveButton={{ textColor: colors.accent }}
+          negativeButton={{ textColor: colors.dim }}
           onValueChange={(_event, selected) => {
             if (step === 'date') {
               const merged = new Date(value);
