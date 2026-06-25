@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LullMark } from '@/src/components/LullMark';
@@ -31,6 +31,7 @@ export default function SettingsScreen() {
   const [intervalMin, setIntervalMin] = useState(180);
   const [exporting, setExporting] = useState(false);
   const [showReset, setShowReset] = useState(false);
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
 
   const loadReminder = useCallback(async () => {
     if (!activeBaby) return;
@@ -57,7 +58,10 @@ export default function SettingsScreen() {
     if (next) {
       const granted = await ensureNotificationPermission();
       if (!granted) {
-        Alert.alert('Notifications disabled', 'Enable notifications in system settings to get feed reminders.');
+        setNotice({
+          title: 'Notifications disabled',
+          message: 'Enable notifications in system settings to get feed reminders.',
+        });
         return;
       }
     }
@@ -79,7 +83,7 @@ export default function SettingsScreen() {
     try {
       await exportCsv(activeBaby.id, activeBaby.name);
     } catch (e) {
-      Alert.alert('Export failed', String(e));
+      setNotice({ title: 'Export failed', message: String(e) });
     } finally {
       setExporting(false);
     }
@@ -200,6 +204,16 @@ export default function SettingsScreen() {
           destructive
           onCancel={() => setShowReset(false)}
           onConfirm={doStartOver}
+        />
+
+        <ConfirmDialog
+          visible={notice != null}
+          title={notice?.title ?? ''}
+          message={notice?.message}
+          confirmLabel="OK"
+          showCancel={false}
+          onCancel={() => setNotice(null)}
+          onConfirm={() => setNotice(null)}
         />
       </ScrollView>
     </SafeAreaView>

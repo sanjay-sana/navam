@@ -11,6 +11,7 @@ export function ConfirmDialog({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   destructive = false,
+  showCancel = true,
   onConfirm,
   onCancel,
 }: {
@@ -20,6 +21,8 @@ export function ConfirmDialog({
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  /** Hide the cancel button for single-button notices. */
+  showCancel?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -31,9 +34,11 @@ export function ConfirmDialog({
           <Text style={styles.title}>{title}</Text>
           {message ? <Text style={styles.message}>{message}</Text> : null}
           <View style={styles.actions}>
-            <Pressable style={styles.btn} onPress={onCancel}>
-              <Text style={styles.cancelText}>{cancelLabel}</Text>
-            </Pressable>
+            {showCancel ? (
+              <Pressable style={styles.btn} onPress={onCancel}>
+                <Text style={styles.cancelText}>{cancelLabel}</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               style={[styles.btn, styles.confirmBtn, destructive && styles.destructiveBtn]}
               onPress={onConfirm}
