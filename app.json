@@ -8,11 +8,6 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#17131D",
     "icon": "./assets/images/icon.png",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#17131D"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -38,6 +33,15 @@
         "expo-notifications",
         {
           "color": "#F4A259"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#17131D"
         }
       ]
     ],
