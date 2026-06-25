@@ -158,10 +158,10 @@ export default function LogGrowthScreen() {
         </Pressable>
         {errors.weight ? <Text style={styles.error}>{errors.weight}</Text> : null}
 
-        <Text style={styles.label}>LENGTH</Text>
+        <Text style={styles.label}>HEIGHT</Text>
         <Pressable style={styles.field} onPress={() => setPicker('length')}>
           <Text style={length != null ? styles.fieldText : styles.fieldPlaceholder}>
-            {length != null ? lengthLabel(length, unitLength) : 'Add length'}
+            {length != null ? lengthLabel(length, unitLength) : 'Add height'}
           </Text>
         </Pressable>
         {errors.length ? <Text style={styles.error}>{errors.length}</Text> : null}
@@ -187,7 +187,7 @@ export default function LogGrowthScreen() {
         />
         <WheelCompoundModal
           visible={picker === 'length'}
-          title="Length"
+          title="Height"
           columns={lengthColumns(unitLength)}
           initial={lengthInitial(unitLength, length ?? lengthDefault)}
           compose={(i) => lengthCompose(unitLength, i)}

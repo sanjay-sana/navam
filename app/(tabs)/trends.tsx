@@ -174,7 +174,7 @@ function ActivityView() {
 
 const METRICS: { label: string; value: GrowthMetric }[] = [
   { label: 'Weight', value: 'weight' },
-  { label: 'Length', value: 'length' },
+  { label: 'Height', value: 'length' },
 ];
 
 function GrowthView() {

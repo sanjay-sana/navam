@@ -139,7 +139,7 @@ export default function SettingsScreen() {
           </View>
         </View>
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Length</Text>
+          <Text style={styles.rowLabel}>Height</Text>
           <View style={styles.rowControl}>
             <Segmented
               options={[{ label: 'cm', value: 'cm' }, { label: 'in', value: 'in' }]}
