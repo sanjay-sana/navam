@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import {
   WheelCompoundModal,
   WheelDateTimeModal,
@@ -81,6 +82,7 @@ export default function LogGrowthScreen() {
   const [picker, setPicker] = useState<Picker>(null);
   const [errors, setErrors] = useState<GrowthErrors>({});
   const [saving, setSaving] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   const weightDefault = unitMass === 'lb_oz' ? 9 : 4;
   const lengthDefault = unitLength === 'in' ? 20 : 52;
@@ -128,19 +130,11 @@ export default function LogGrowthScreen() {
     }
   }
 
-  function onDelete() {
+  async function doDelete() {
     if (editId == null) return;
-    Alert.alert('Delete measurement?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await repo.deleteGrowthMeasurement(editId);
-          router.back();
-        },
-      },
-    ]);
+    setShowDelete(false);
+    await repo.deleteGrowthMeasurement(editId);
+    router.back();
   }
 
   if (!activeBaby) return null;
@@ -216,10 +210,20 @@ export default function LogGrowthScreen() {
         />
 
         {editId != null ? (
-          <Pressable style={styles.deleteButton} onPress={onDelete}>
+          <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
             <Text style={styles.deleteText}>Delete measurement</Text>
           </Pressable>
         ) : null}
+
+        <ConfirmDialog
+          visible={showDelete}
+          title="Delete measurement?"
+          message="This cannot be undone."
+          confirmLabel="Delete"
+          destructive
+          onCancel={() => setShowDelete(false)}
+          onConfirm={doDelete}
+        />
       </ScrollView>
 
       <Pressable style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={onSave} disabled={saving}>

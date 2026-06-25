@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { TimeField } from '@/src/components/TimeField';
 import * as repo from '@/src/db/repo';
 import type { DiaperType } from '@/src/db/types';
@@ -27,6 +28,7 @@ export default function LogDiaperScreen() {
   const [time, setTime] = useState<Date>(() => new Date());
   const [errors, setErrors] = useState<DiaperErrors>({});
   const [saving, setSaving] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   useEffect(() => {
     if (editId == null) return;
@@ -61,19 +63,11 @@ export default function LogDiaperScreen() {
     }
   }
 
-  function onDelete() {
+  async function doDelete() {
     if (editId == null) return;
-    Alert.alert('Delete diaper?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await repo.deleteDiaperEvent(editId);
-          router.back();
-        },
-      },
-    ]);
+    setShowDelete(false);
+    await repo.deleteDiaperEvent(editId);
+    router.back();
   }
 
   if (!activeBaby) return null;
@@ -114,10 +108,20 @@ export default function LogDiaperScreen() {
         <TimeField label="TIME" value={time} onChange={setTime} error={errors.time} />
 
         {editId != null ? (
-          <Pressable style={styles.deleteButton} onPress={onDelete}>
+          <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
             <Text style={styles.deleteText}>Delete diaper</Text>
           </Pressable>
         ) : null}
+
+        <ConfirmDialog
+          visible={showDelete}
+          title="Delete diaper?"
+          message="This cannot be undone."
+          confirmLabel="Delete"
+          destructive
+          onCancel={() => setShowDelete(false)}
+          onConfirm={doDelete}
+        />
       </ScrollView>
 
       <Pressable

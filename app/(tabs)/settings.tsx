@@ -6,6 +6,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LullMark } from '@/src/components/LullMark';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Segmented } from '@/src/components/Segmented';
 import * as repo from '@/src/db/repo';
 import type { UnitLength, UnitMass, UnitVolume } from '@/src/db/types';
@@ -29,6 +30,7 @@ export default function SettingsScreen() {
   const [reminderOn, setReminderOn] = useState(false);
   const [intervalMin, setIntervalMin] = useState(180);
   const [exporting, setExporting] = useState(false);
+  const [showReset, setShowReset] = useState(false);
 
   const loadReminder = useCallback(async () => {
     if (!activeBaby) return;
@@ -83,22 +85,10 @@ export default function SettingsScreen() {
     }
   }
 
-  function onStartOver() {
-    Alert.alert(
-      'Start over?',
-      'This deletes the baby profile and all logged data. Unit settings are kept. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete everything',
-          style: 'destructive',
-          onPress: async () => {
-            await repo.resetApp();
-            await refresh(); // active baby now null → route gate sends you to onboarding
-          },
-        },
-      ]
-    );
+  async function doStartOver() {
+    setShowReset(false);
+    await repo.resetApp();
+    await refresh(); // active baby now null → route gate sends you to onboarding
   }
 
   const dob = new Date(`${activeBaby.date_of_birth}T00:00:00`);
@@ -198,9 +188,19 @@ export default function SettingsScreen() {
           </View>
         </Pressable>
 
-        <Pressable style={styles.startOver} onPress={onStartOver}>
+        <Pressable style={styles.startOver} onPress={() => setShowReset(true)}>
           <Text style={styles.startOverText}>Start over</Text>
         </Pressable>
+
+        <ConfirmDialog
+          visible={showReset}
+          title="Start over?"
+          message="This deletes the baby profile and all logged data. Unit settings are kept. This cannot be undone."
+          confirmLabel="Delete everything"
+          destructive
+          onCancel={() => setShowReset(false)}
+          onConfirm={doStartOver}
+        />
       </ScrollView>
     </SafeAreaView>
   );

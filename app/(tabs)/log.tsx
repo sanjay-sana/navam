@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Segmented } from '@/src/components/Segmented';
 import { TimeField } from '@/src/components/TimeField';
 import * as repo from '@/src/db/repo';
@@ -68,6 +69,7 @@ export default function LogFeedScreen() {
 
   const [errors, setErrors] = useState<FeedErrors>({});
   const [saving, setSaving] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   // Load the event when editing.
   useEffect(() => {
@@ -179,20 +181,12 @@ export default function LogFeedScreen() {
     }
   }
 
-  function onDelete() {
+  async function doDelete() {
     if (editId == null) return;
-    Alert.alert('Delete feed?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await repo.deleteFeedEvent(editId);
-          if (activeBaby) await syncFeedReminder(activeBaby.id);
-          router.back();
-        },
-      },
-    ]);
+    setShowDelete(false);
+    await repo.deleteFeedEvent(editId);
+    if (activeBaby) await syncFeedReminder(activeBaby.id);
+    router.back();
   }
 
   if (!activeBaby) return null;
@@ -293,10 +287,20 @@ export default function LogFeedScreen() {
         ) : null}
 
         {editId != null ? (
-          <Pressable style={styles.deleteButton} onPress={onDelete}>
+          <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
             <Text style={styles.deleteText}>Delete feed</Text>
           </Pressable>
         ) : null}
+
+        <ConfirmDialog
+          visible={showDelete}
+          title="Delete feed?"
+          message="This cannot be undone."
+          confirmLabel="Delete"
+          destructive
+          onCancel={() => setShowDelete(false)}
+          onConfirm={doDelete}
+        />
       </ScrollView>
 
       <Pressable
