@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LullMark } from '@/src/components/LullMark';
 import { WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
@@ -46,6 +47,7 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
+          <LullMark size={84} />
           <Text style={styles.title}>Welcome to Lull</Text>
           <Text style={styles.subtitle}>Let&apos;s set up your baby.</Text>
         </View>
@@ -146,13 +148,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: { flex: 1 },
   container: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
-  header: { marginTop: spacing.xl, marginBottom: spacing.xl },
+  header: { alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.xl, gap: spacing.sm },
   title: { fontFamily: fonts.display, fontSize: 34, color: colors.text },
   subtitle: {
     fontFamily: fonts.ui,
     fontSize: 16,
     color: colors.dim,
-    marginTop: spacing.xs,
   },
   label: {
     fontFamily: fonts.uiBold,
