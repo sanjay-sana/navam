@@ -109,13 +109,17 @@ export function WheelDateTimeModal({
 }) {
   const [draft, setDraft] = useState(value);
 
+  // Reset only when the sheet opens (value can be a fresh `new Date()` each render).
   useEffect(() => {
     if (visible) setDraft(value);
-  }, [visible, value]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
-  const apply = (d: Date) => {
-    setDraft(maximumDate && d.getTime() > maximumDate.getTime() ? maximumDate : d);
-  };
+  // No clamping mid-edit — otherwise an intermediate future combo (e.g. picking
+  // a month before the year) snaps back to maximumDate. Clamp only on confirm.
+  const apply = (d: Date) => setDraft(d);
+  const confirm = () =>
+    onConfirm(maximumDate && draft.getTime() > maximumDate.getTime() ? maximumDate : draft);
 
   // shared parts
   const y = draft.getFullYear();
@@ -188,7 +192,7 @@ export function WheelDateTimeModal({
             <Text style={styles.cancel}>Cancel</Text>
           </Pressable>
           <Text style={styles.title}>{mode === 'date' ? 'Date' : 'Time'}</Text>
-          <Pressable onPress={() => onConfirm(draft)} hitSlop={10}>
+          <Pressable onPress={confirm} hitSlop={10}>
             <Text style={styles.done}>Done</Text>
           </Pressable>
         </View>
