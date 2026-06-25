@@ -149,6 +149,26 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Feed interval — always editable; drives the Today countdown + reminder. */}
+        <Text style={styles.section}>FEED INTERVAL</Text>
+        <View style={styles.card}>
+          <Text style={styles.everyLabel}>Time between feeds · used for the Today countdown</Text>
+          <View style={styles.intervals}>
+            {INTERVALS.map((iv) => {
+              const sel = iv.value === intervalMin;
+              return (
+                <Pressable
+                  key={iv.value}
+                  style={[styles.chip, sel && styles.chipSel]}
+                  onPress={() => pickInterval(iv.value)}
+                >
+                  <Text style={[styles.chipText, sel && styles.chipTextSel]}>{iv.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
         {/* Reminders */}
         <Text style={styles.section}>REMINDERS</Text>
         <View style={styles.card}>
@@ -161,26 +181,6 @@ export default function SettingsScreen() {
               thumbColor={colors.white}
             />
           </View>
-          {reminderOn ? (
-            <>
-              <View style={styles.divider} />
-              <Text style={styles.everyLabel}>Every</Text>
-              <View style={styles.intervals}>
-                {INTERVALS.map((iv) => {
-                  const sel = iv.value === intervalMin;
-                  return (
-                    <Pressable
-                      key={iv.value}
-                      style={[styles.chip, sel && styles.chipSel]}
-                      onPress={() => pickInterval(iv.value)}
-                    >
-                      <Text style={[styles.chipText, sel && styles.chipTextSel]}>{iv.label}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </>
-          ) : null}
         </View>
 
         {/* Export */}
