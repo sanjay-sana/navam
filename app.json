@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#17131D"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.sanjay.lull",
       "adaptiveIcon": {
@@ -21,7 +23,9 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png",
         "backgroundColor": "#17131D"
       },
-      "permissions": ["POST_NOTIFICATIONS"]
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.sanjay.lull",
@@ -37,6 +41,14 @@
         }
       ]
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "eee5afdf-ccb3-4663-ab22-de50be26bced"
+      }
+    }
   }
 }
