@@ -165,6 +165,7 @@ function ActivityView() {
           data={days.map((d) => ({ label: d.label, wet: d.wet, dirty: d.dirty }))}
           width={CHART_W}
           height={180}
+          segmentLabels
         />
       </View>
 
