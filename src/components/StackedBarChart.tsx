@@ -35,9 +35,9 @@ export function StackedBarChart({
   const slot = width / data.length;
   const barW = Math.min(slot * 0.55, 34);
   const showSegments = segmentLabels && barW >= 18; // hide on dense 14/30-day views
-  // Thin x-axis labels on dense ranges (e.g. 30d), anchored on the latest day.
+  // Thin x-axis labels on dense ranges (e.g. 30d); label the first bar, then every Nth.
   const labelStep = data.length <= 14 ? 1 : Math.ceil(data.length / 6);
-  const showLabel = (i: number) => (data.length - 1 - i) % labelStep === 0;
+  const showLabel = (i: number) => i % labelStep === 0;
 
   return (
     <Svg width={width} height={height}>
