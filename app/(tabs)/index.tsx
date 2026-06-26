@@ -88,7 +88,9 @@ export default function TodayScreen() {
         <View style={styles.ringWrap}>
           <CountdownRing progress={ring.kind === 'overdue' ? 1 : ring.kind === 'counting' ? ring.progress : 0}>
             {ring.kind === 'cold' ? (
-              <Text style={styles.coldPrompt}>Log your{'\n'}first feed</Text>
+              <Pressable onPress={() => router.push('/log-feed')} hitSlop={16}>
+                <Text style={styles.coldPrompt}>Log your{'\n'}first feed</Text>
+              </Pressable>
             ) : (
               <>
                 <Text style={styles.bigTime}>{formatElapsed(ring.sinceLastMs)}</Text>
@@ -122,7 +124,7 @@ export default function TodayScreen() {
             style={[styles.quickButton, styles.diaperButton]}
             onPress={() => router.push('/log-diaper')}
           >
-            <Ionicons name="water" size={22} color={colors.diaper} />
+            <Ionicons name="water" size={22} color={colors.bg} />
             <Text style={styles.diaperButtonText}>Diaper</Text>
           </Pressable>
         </View>
@@ -171,7 +173,7 @@ const styles = StyleSheet.create({
   coldPrompt: {
     fontFamily: fonts.display,
     fontSize: 24,
-    color: colors.text,
+    color: colors.accent,
     textAlign: 'center',
   },
 
@@ -200,12 +202,8 @@ const styles = StyleSheet.create({
   },
   feedButton: { backgroundColor: colors.accent },
   feedButtonText: { fontFamily: fonts.uiBold, fontSize: 18, color: colors.bg },
-  diaperButton: {
-    backgroundColor: colors.diaperSoft,
-    borderWidth: 1,
-    borderColor: colors.diaper,
-  },
-  diaperButtonText: { fontFamily: fonts.uiBold, fontSize: 18, color: colors.diaper },
+  diaperButton: { backgroundColor: colors.diaper },
+  diaperButtonText: { fontFamily: fonts.uiBold, fontSize: 18, color: colors.bg },
 
   countRow: { flexDirection: 'row', gap: spacing.md },
   countCard: {
