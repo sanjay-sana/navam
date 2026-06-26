@@ -10,14 +10,14 @@ export function PumpIcon({ size = 24, color }: { size?: number; color: string })
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {/* collection bottle */}
       <Path
-        d="M7.5 11.6 L16.5 11.6 L16.5 18.9 Q16.5 21.5 13.9 21.5 L10.1 21.5 Q7.5 21.5 7.5 18.9 Z"
+        d="M7.5 11.6 L16.5 11.6 L16.5 19.9 Q16.5 22.5 13.9 22.5 L10.1 22.5 Q7.5 22.5 7.5 19.9 Z"
         stroke={color}
         strokeWidth={sw}
         strokeLinejoin="round"
       />
       {/* graduated measurement ticks */}
       <Path
-        d="M9.2 14.3 H10.7 M9.2 16.1 H10.7 M9.2 17.9 H11.4 M9.2 19.7 H10.7"
+        d="M9.2 14.3 H10.7 M9.2 16.2 H10.7 M9.2 18.1 H11.4 M9.2 20 H10.7 M9.2 21.9 H10.7"
         stroke={color}
         strokeWidth={1.3}
         strokeLinecap="round"
