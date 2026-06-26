@@ -1,12 +1,14 @@
-// Shared wheel-column configs for entering weight + length/height in the user's
-// units. Display values: weight = kg or lb decimal; length = cm or total inches.
-// Used by the growth form and onboarding (birth weight).
+// Shared wheel-column configs for entering measurements in the user's units.
+// Display values: weight = kg/lb decimal, length = cm/total inches, volume =
+// ml/oz. Used by the growth form, onboarding (birth weight), and the feed form.
 import type { WheelColumnSpec } from '@/src/components/WheelPicker';
-import type { UnitLength, UnitMass } from '@/src/db/types';
+import type { UnitLength, UnitMass, UnitVolume } from '@/src/db/types';
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const nums = (a: number, b: number, step = 1): WheelColumnSpec['items'] =>
-  Array.from({ length: Math.floor((b - a) / step) + 1 }, (_, i) => ({ label: String(a + i * step) }));
+  Array.from({ length: Math.floor((b - a) / step) + 1 }, (_, i) => ({
+    label: String(Math.round((a + i * step) * 100) / 100),
+  }));
 
 export function weightColumns(unit: UnitMass): WheelColumnSpec[] {
   return unit === 'lb_oz'
@@ -48,4 +50,21 @@ export function lengthLabel(v: number, unit: UnitLength): string {
     return `${ft} ft ${Math.round(v - ft * 12)} in`;
   }
   return `${Math.round(v)} cm`;
+}
+
+// --- volume (display value: ml in 5s, or oz in 0.5s) ------------------------
+const volStep = (u: UnitVolume) => (u === 'oz' ? 0.5 : 5);
+const volMax = (u: UnitVolume) => (u === 'oz' ? 12 : 360);
+
+export function volumeColumns(unit: UnitVolume): WheelColumnSpec[] {
+  return [{ items: nums(0, volMax(unit), volStep(unit)), label: unit }];
+}
+export function volumeInitial(unit: UnitVolume, v: number): number[] {
+  const step = volStep(unit);
+  return [clamp(Math.round(v / step), 0, Math.round(volMax(unit) / step))];
+}
+export const volumeCompose = (unit: UnitVolume, i: number[]) =>
+  Math.round(i[0] * volStep(unit) * 100) / 100;
+export function volumeLabel(v: number, unit: UnitVolume): string {
+  return `${v} ${unit}`;
 }

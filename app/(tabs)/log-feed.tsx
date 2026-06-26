@@ -8,10 +8,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Segmented } from '@/src/components/Segmented';
 import { TimeField } from '@/src/components/TimeField';
+import { WheelCompoundModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import type { Contents, FeedEvent, FeedType, Side } from '@/src/db/types';
+import { volumeColumns, volumeCompose, volumeInitial, volumeLabel } from '@/src/lib/measurementWheels';
 import { validateFeedDraft, type FeedErrors } from '@/src/logic/feed';
-import { mlToUnit, volumeUnitLabel } from '@/src/logic/units';
+import { mlToUnit } from '@/src/logic/units';
 import { syncFeedReminder } from '@/src/notifications/feedReminder';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
@@ -56,7 +58,8 @@ export default function LogFeedScreen() {
 
   const [type, setType] = useState<FeedType>(pump === '1' ? 'pump' : 'breast');
   const [side, setSide] = useState<Side | null>('left');
-  const [volumeText, setVolumeText] = useState('');
+  const [volume, setVolume] = useState<number | null>(null); // display unit (ml/oz)
+  const [showVolume, setShowVolume] = useState(false);
   const [contents, setContents] = useState<Contents | null>(null);
   const [manualMinutes, setManualMinutes] = useState('');
   const [startTime, setStartTime] = useState<Date>(() => new Date());
@@ -83,7 +86,7 @@ export default function LogFeedScreen() {
       if (f.type === 'breast') {
         setTimerSeconds(feedTotalSeconds(f));
       } else {
-        if (f.volume_ml != null) setVolumeText(String(mlToUnit(f.volume_ml, unit)));
+        if (f.volume_ml != null) setVolume(mlToUnit(f.volume_ml, unit));
         setContents(f.contents);
         if (f.type === 'pump') setTimerSeconds(feedTotalSeconds(f));
       }
@@ -104,7 +107,7 @@ export default function LogFeedScreen() {
     setTimerSeconds(null);
     recordStartRef.current = null;
     setManualMinutes('');
-    setVolumeText('');
+    setVolume(null);
     setContents(null);
     setStartTime(new Date());
   }
@@ -118,7 +121,7 @@ export default function LogFeedScreen() {
     setTimerSeconds(null);
     recordStartRef.current = null;
     setManualMinutes('');
-    setVolumeText('');
+    setVolume(null);
     setContents(null);
     setStartTime(new Date());
   }
@@ -157,7 +160,7 @@ export default function LogFeedScreen() {
       startTime,
       side,
       durationSeconds: type === 'bottle' ? null : effectiveDurationSeconds(),
-      volumeText,
+      volumeText: volume != null ? String(volume) : '',
       contents,
       unitVolume: unit,
     });
@@ -215,16 +218,26 @@ export default function LogFeedScreen() {
           </>
         ) : (
           <>
-            <Label>VOLUME ({volumeUnitLabel(unit)})</Label>
-            <TextInput
-              style={styles.input}
-              value={volumeText}
-              onChangeText={setVolumeText}
-              placeholder={`Volume in ${volumeUnitLabel(unit)}`}
-              placeholderTextColor={colors.dim}
-              keyboardType="decimal-pad"
-            />
+            <Label>VOLUME</Label>
+            <Pressable style={styles.input} onPress={() => setShowVolume(true)}>
+              <Text style={volume != null ? styles.inputText : styles.inputPlaceholder}>
+                {volume != null ? volumeLabel(volume, unit) : 'Add volume'}
+              </Text>
+            </Pressable>
             {errors.volume ? <ErrorText>{errors.volume}</ErrorText> : null}
+
+            <WheelCompoundModal
+              visible={showVolume}
+              title="Volume"
+              columns={volumeColumns(unit)}
+              initial={volumeInitial(unit, volume ?? (unit === 'oz' ? 3 : 90))}
+              compose={(i) => volumeCompose(unit, i)}
+              onCancel={() => setShowVolume(false)}
+              onConfirm={(n) => {
+                setVolume(n);
+                setShowVolume(false);
+              }}
+            />
 
             {type === 'bottle' ? (
               <>
@@ -356,7 +369,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 17,
     color: colors.text,
+    justifyContent: 'center',
   },
+  inputText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
+  inputPlaceholder: { fontFamily: fonts.ui, fontSize: 17, color: colors.dim },
   timerCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
