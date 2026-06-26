@@ -1,4 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { PumpIcon } from '@/src/components/PumpIcon';
 import { useRouter, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,11 +12,12 @@ const OPTIONS: {
   hint: string;
   icon: string;
   lib?: 'mci'; // MaterialCommunityIcons (default Ionicons)
+  custom?: 'pump'; // custom SVG glyph
   color: string;
   href: Href;
 }[] = [
   { label: 'Feed', hint: 'Breast · bottle', icon: 'baby-bottle-outline', lib: 'mci', color: eventColors.feed, href: '/log-feed' },
-  { label: 'Pump', hint: 'Milk expressed', icon: 'flask-outline', color: eventColors.pump, href: { pathname: '/log-feed', params: { pump: '1' } } },
+  { label: 'Pump', hint: 'Milk expressed', icon: 'flask-outline', custom: 'pump', color: eventColors.pump, href: { pathname: '/log-feed', params: { pump: '1' } } },
   { label: 'Sleep', hint: 'Nap · night', icon: 'moon', color: eventColors.sleep, href: '/log-sleep' },
   { label: 'Diaper', hint: 'Wet · dirty · mixed', icon: 'diaper-outline', lib: 'mci', color: eventColors.diaper, href: '/log-diaper' },
   { label: 'Growth', hint: 'Weight · height', icon: 'trending-up', color: eventColors.growth, href: '/log-growth' },
@@ -33,7 +35,9 @@ export default function LogScreen() {
         {options.map((o) => (
           <Pressable key={o.label} style={styles.row} onPress={() => router.push(o.href)}>
             <View style={[styles.icon, { backgroundColor: `${o.color}24` }]}>
-              {o.lib === 'mci' ? (
+              {o.custom === 'pump' ? (
+                <PumpIcon size={24} color={o.color} />
+              ) : o.lib === 'mci' ? (
                 <MaterialCommunityIcons name={o.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={24} color={o.color} />
               ) : (
                 <Ionicons name={o.icon as keyof typeof Ionicons.glyphMap} size={24} color={o.color} />

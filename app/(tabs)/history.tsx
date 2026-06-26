@@ -1,4 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { PumpIcon } from '@/src/components/PumpIcon';
 import { format, isSameDay, subDays } from 'date-fns';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -124,27 +125,23 @@ function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => voi
           : entry.feedType === 'pump'
             ? eventColors.pump
             : eventColors.feed;
-  // Bottle feed + diaper use MaterialCommunityIcons; the rest are Ionicons.
+  // Pump uses a custom SVG; bottle feed + diaper use MCI; the rest are Ionicons.
+  const isPump = entry.kind === 'feed' && entry.feedType === 'pump';
   const mciName =
     entry.kind === 'feed' && entry.feedType !== 'pump'
       ? 'baby-bottle-outline'
       : entry.kind === 'diaper'
         ? 'diaper-outline'
         : null;
-  const ionName =
-    entry.kind === 'sleep'
-      ? 'moon'
-      : entry.kind === 'growth'
-        ? 'trending-up'
-        : entry.feedType === 'pump'
-          ? 'flask-outline'
-          : 'cafe';
+  const ionName = entry.kind === 'sleep' ? 'moon' : entry.kind === 'growth' ? 'trending-up' : 'cafe';
 
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <Text style={styles.rowTime}>{entry.hasClock ? format(new Date(entry.time), 'h:mm a') : ''}</Text>
       <View style={[styles.rowIcon, { backgroundColor: `${color}24` }]}>
-        {mciName ? (
+        {isPump ? (
+          <PumpIcon size={20} color={color} />
+        ) : mciName ? (
           <MaterialCommunityIcons name={mciName} size={20} color={color} />
         ) : (
           <Ionicons name={ionName} size={20} color={color} />
