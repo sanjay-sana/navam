@@ -42,8 +42,8 @@ export function PumpIcon({ size = 24, color }: { size?: number; color: string })
         strokeLinejoin="round"
       />
       {/* flange / horn to the right */}
-      <Ellipse cx={19.1} cy={6.1} rx={1.5} ry={3} stroke={color} strokeWidth={sw} />
-      <Path d="M13 6.8 L17.9 3.4 M13 8.4 L18 8.5" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+      <Ellipse cx={19.1} cy={6.1} rx={1.6} ry={3.6} stroke={color} strokeWidth={sw} />
+      <Path d="M13 6.6 L18.1 2.9 M13 8.6 L18.2 9.4" stroke={color} strokeWidth={sw} strokeLinecap="round" />
     </Svg>
   );
 }
