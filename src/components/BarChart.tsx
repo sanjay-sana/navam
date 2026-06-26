@@ -30,9 +30,9 @@ export function BarChart({
   const max = Math.max(...data.map((d) => d.value), 1);
   const slot = width / data.length;
   const barW = Math.min(slot * 0.55, 34);
-  // Thin x-axis labels on dense ranges (e.g. 30d); label the first bar, then every Nth.
+  // Thin x-axis labels on dense ranges (e.g. 30d); always keep the first + last bar.
   const labelStep = data.length <= 14 ? 1 : Math.ceil(data.length / 6);
-  const showLabel = (i: number) => i % labelStep === 0;
+  const showLabel = (i: number) => i % labelStep === 0 || i === data.length - 1;
 
   const yFor = (v: number) => topPad + plotH * (1 - v / max);
 
