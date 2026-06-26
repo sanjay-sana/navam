@@ -79,7 +79,7 @@ export async function syncFeedReminder(babyId: number): Promise<void> {
     content: {
       title: 'Time for a feed',
       body: 'It’s been a while since the last feed.',
-      data: { url: '/log' },
+      data: { url: '/log-feed' },
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,

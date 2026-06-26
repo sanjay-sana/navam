@@ -60,7 +60,7 @@ export default function HistoryScreen() {
 
   function openEntry(entry: TimelineEntry) {
     if (entry.kind === 'feed') {
-      router.push({ pathname: '/log', params: { id: String(entry.id) } });
+      router.push({ pathname: '/log-feed', params: { id: String(entry.id) } });
     } else if (entry.kind === 'diaper') {
       router.push({ pathname: '/log-diaper', params: { id: String(entry.id) } });
     } else {

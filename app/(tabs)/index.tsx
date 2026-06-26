@@ -113,7 +113,7 @@ export default function TodayScreen() {
         <View style={styles.quickRow}>
           <Pressable
             style={[styles.quickButton, styles.feedButton]}
-            onPress={() => router.navigate('/log')}
+            onPress={() => router.push('/log-feed')}
           >
             <Ionicons name="cafe" size={22} color={colors.bg} />
             <Text style={styles.feedButtonText}>Feed</Text>
