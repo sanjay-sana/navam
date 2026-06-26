@@ -172,7 +172,7 @@ function ActivityView() {
       <View style={styles.summaryRow}>
         <SummaryCard value={String(mlToUnit(summary.avgIntakeMl, unit))} label={`${volumeUnitLabel(unit)}/day in`} />
         <SummaryCard value={String(summary.avgDiapers)} label="diapers/day" />
-        <SummaryCard value={String(mlToUnit(summary.avgPumpMl, unit))} label={`${volumeUnitLabel(unit)} pumped`} />
+        <SummaryCard value={String(mlToUnit(summary.avgPumpMl, unit))} label={`${volumeUnitLabel(unit)}/day pumped`} />
       </View>
     </>
   );
