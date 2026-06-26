@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -74,24 +74,50 @@ export default function LogFeedScreen() {
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
 
-  // Load the event when editing.
-  useEffect(() => {
-    if (editId == null) return;
-    (async () => {
-      const f = await repo.getFeedEvent(editId);
-      if (!f) return;
-      setType(f.type);
-      setSide(f.side);
-      setStartTime(new Date(f.start_time));
-      if (f.type === 'breast') {
-        setTimerSeconds(feedTotalSeconds(f));
-      } else {
-        if (f.volume_ml != null) setVolume(mlToUnit(f.volume_ml, unit));
-        setContents(f.contents);
-        if (f.type === 'pump') setTimerSeconds(feedTotalSeconds(f));
-      }
-    })();
-  }, [editId, unit]);
+  // Load (edit) or reset (new) on focus. Persistent tab route won't remount per
+  // editId, so an editId effect won't re-fire when re-opening the same id.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        if (editId == null) {
+          const isPump = pump === '1';
+          setType(isPump ? 'pump' : 'breast');
+          setSide(isPump ? null : 'left');
+          setTiming(false);
+          setTimerSeconds(null);
+          recordStartRef.current = null;
+          setManualMinutes('');
+          setVolume(null);
+          setContents(null);
+          setStartTime(new Date());
+          setErrors({});
+          return;
+        }
+        const f = await repo.getFeedEvent(editId);
+        if (!active || !f) return;
+        setType(f.type);
+        setSide(f.side);
+        setStartTime(new Date(f.start_time));
+        setTiming(false);
+        recordStartRef.current = null;
+        setManualMinutes('');
+        if (f.type === 'breast') {
+          setTimerSeconds(feedTotalSeconds(f));
+          setVolume(null);
+          setContents(null);
+        } else {
+          setTimerSeconds(f.type === 'pump' ? feedTotalSeconds(f) : null);
+          setVolume(f.volume_ml != null ? mlToUnit(f.volume_ml, unit) : null);
+          setContents(f.contents);
+        }
+        setErrors({});
+      })();
+      return () => {
+        active = false;
+      };
+    }, [editId, unit, pump])
+  );
 
   useEffect(() => {
     if (!timing) return;

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -48,18 +48,34 @@ export default function LogDiaperScreen() {
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
 
-  useEffect(() => {
-    if (editId == null) return;
-    (async () => {
-      const d = await repo.getDiaperEvent(editId);
-      if (!d) return;
-      setType(d.type);
-      setTime(new Date(d.time));
-      setColor(d.color);
-      setConsistency(d.consistency);
-      setNotes(d.notes ?? '');
-    })();
-  }, [editId]);
+  // Load/reset on focus — persistent tab route won't remount per editId.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        if (editId == null) {
+          setType(null);
+          setTime(new Date());
+          setColor(null);
+          setConsistency(null);
+          setNotes('');
+          setErrors({});
+          return;
+        }
+        const d = await repo.getDiaperEvent(editId);
+        if (!active || !d) return;
+        setType(d.type);
+        setTime(new Date(d.time));
+        setColor(d.color);
+        setConsistency(d.consistency);
+        setNotes(d.notes ?? '');
+        setErrors({});
+      })();
+      return () => {
+        active = false;
+      };
+    }, [editId])
+  );
 
   const showStoolDetails = type === 'dirty' || type === 'both';
 
@@ -78,11 +94,6 @@ export default function LogDiaperScreen() {
       } else {
         await repo.createDiaperEvent(activeBaby.id, result.value);
       }
-      setType(null);
-      setTime(new Date());
-      setColor(null);
-      setConsistency(null);
-      setNotes('');
       router.back();
     } finally {
       setSaving(false);

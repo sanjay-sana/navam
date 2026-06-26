@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -46,17 +46,32 @@ export default function LogGrowthScreen() {
   const weightDefault = unitMass === 'lb_oz' ? 9 : 4;
   const lengthDefault = unitLength === 'in' ? 20 : 52;
 
-  useEffect(() => {
-    if (editId == null) return;
-    (async () => {
-      const m = await repo.getGrowthMeasurement(editId);
-      if (!m) return;
-      // Full precision (gramsToUnit/cmToUnit round to 1 dp, losing g/oz/in).
-      if (m.weight_g != null) setWeight(unitMass === 'lb_oz' ? m.weight_g / G_PER_LB : m.weight_g / 1000);
-      if (m.length_cm != null) setLength(unitLength === 'in' ? m.length_cm / CM_PER_IN : m.length_cm);
-      setDate(new Date(`${m.measured_at}T00:00:00`));
-    })();
-  }, [editId, unitMass, unitLength]);
+  // Load (or reset) every time the screen gains focus. These are persistent tab
+  // routes, so an editId-only effect won't re-run when re-opening the same id.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        if (editId == null) {
+          setWeight(null);
+          setLength(null);
+          setDate(new Date());
+          setErrors({});
+          return;
+        }
+        const m = await repo.getGrowthMeasurement(editId);
+        if (!active || !m) return;
+        // Full precision (gramsToUnit/cmToUnit round to 1 dp, losing g/oz/in).
+        setWeight(m.weight_g != null ? (unitMass === 'lb_oz' ? m.weight_g / G_PER_LB : m.weight_g / 1000) : null);
+        setLength(m.length_cm != null ? (unitLength === 'in' ? m.length_cm / CM_PER_IN : m.length_cm) : null);
+        setDate(new Date(`${m.measured_at}T00:00:00`));
+        setErrors({});
+      })();
+      return () => {
+        active = false;
+      };
+    }, [editId, unitMass, unitLength])
+  );
 
   async function onSave() {
     if (!activeBaby) return;
@@ -80,9 +95,6 @@ export default function LogGrowthScreen() {
       } else {
         await repo.createGrowthMeasurement(activeBaby.id, result.value);
       }
-      setWeight(null);
-      setLength(null);
-      setDate(new Date());
       router.back();
     } finally {
       setSaving(false);

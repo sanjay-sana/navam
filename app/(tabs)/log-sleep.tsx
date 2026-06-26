@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -50,23 +50,44 @@ export default function LogSleepScreen() {
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
 
-  useEffect(() => {
-    if (editId == null) return;
-    (async () => {
-      const s = await repo.getSleepEvent(editId);
-      if (!s) return;
-      const open = s.end_time == null;
-      setStart(new Date(s.start_time));
-      setEnd(s.end_time ? new Date(s.end_time) : new Date());
-      setOngoing(open);
-      setOriginallyOpen(open);
-      setKind(s.kind);
-      setKindTouched(true);
-      setLocation(s.location);
-      setHow(s.how);
-      setNotes(s.notes ?? '');
-    })();
-  }, [editId]);
+  // Load/reset on focus — persistent tab route won't remount per editId.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        if (editId == null) {
+          const fresh = new Date(Date.now() - 60 * 60_000);
+          setStart(fresh);
+          setEnd(new Date());
+          setKind(classifyKind(fresh));
+          setKindTouched(false);
+          setLocation(null);
+          setHow(null);
+          setNotes('');
+          setOngoing(false);
+          setOriginallyOpen(false);
+          setErrors({});
+          return;
+        }
+        const s = await repo.getSleepEvent(editId);
+        if (!active || !s) return;
+        const open = s.end_time == null;
+        setStart(new Date(s.start_time));
+        setEnd(s.end_time ? new Date(s.end_time) : new Date());
+        setOngoing(open);
+        setOriginallyOpen(open);
+        setKind(s.kind);
+        setKindTouched(true);
+        setLocation(s.location);
+        setHow(s.how);
+        setNotes(s.notes ?? '');
+        setErrors({});
+      })();
+      return () => {
+        active = false;
+      };
+    }, [editId])
+  );
 
   function onStartChange(d: Date) {
     setStart(d);
