@@ -1,29 +1,47 @@
-// Custom breast-pump glyph (no icon font has one): a collection bottle with a
-// tube running up to the flange/horn set at 45°. Outline style to match the
-// baby-bottle / diaper / flask set. Geometry verified by rendering at 24–180px.
-import Svg, { Ellipse, G, Path } from 'react-native-svg';
+// Custom manual-breast-pump glyph (no icon font has one): a graduated collection
+// bottle, a collar + plunger on top, a handle/lever to the left and a flange/
+// horn to the right. Traced from a reference and verified by rendering at
+// 24–150px. Outline style to match the rest of the icon set.
+import Svg, { Ellipse, Path } from 'react-native-svg';
 
 export function PumpIcon({ size = 24, color }: { size?: number; color: string }) {
-  const sw = 1.7;
+  const sw = 1.5;
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {/* collection bottle */}
       <Path
-        d="M3.5 9 L10 9 L10 18.6 Q10 21 7.5 21 L6 21 Q3.5 21 3.5 18.6 Z"
+        d="M7.5 11.6 L16.5 11.6 L16.5 18.9 Q16.5 21.5 13.9 21.5 L10.1 21.5 Q7.5 21.5 7.5 18.9 Z"
         stroke={color}
         strokeWidth={sw}
         strokeLinejoin="round"
       />
-      {/* measurement ticks */}
-      <Path d="M4.9 14.5 H6.9 M4.9 16.5 H6.9" stroke={color} strokeWidth={1.3} strokeLinecap="round" />
-      {/* tube from the bottle up to the flange */}
-      <Path d="M12.5 7.7 Q10.3 9.6 8 10.4" stroke={color} strokeWidth={sw} strokeLinecap="round" />
-      {/* flange / horn at 45° */}
-      <G transform="translate(12.6 7.6) rotate(45)">
-        <Ellipse cx={0} cy={-5.1} rx={3.4} ry={1.5} stroke={color} strokeWidth={sw} />
-        <Path d="M-3.4 -5.1 L-1.5 0" stroke={color} strokeWidth={sw} strokeLinecap="round" />
-        <Path d="M3.4 -5.1 L1.5 0" stroke={color} strokeWidth={sw} strokeLinecap="round" />
-      </G>
+      {/* graduated measurement ticks */}
+      <Path
+        d="M9.2 14.3 H10.7 M9.2 16.1 H10.7 M9.2 17.9 H11.4 M9.2 19.7 H10.7"
+        stroke={color}
+        strokeWidth={1.3}
+        strokeLinecap="round"
+      />
+      {/* collar where the pump screws onto the bottle */}
+      <Path d="M9.3 11.6 L10.8 9.5 L13.2 9.5 L14.7 11.6" stroke={color} strokeWidth={sw} strokeLinejoin="round" />
+      {/* plunger */}
+      <Path
+        d="M11.2 9.5 L11.2 7.3 Q11.2 6.3 12 6.3 Q12.8 6.3 12.8 7.3 L12.8 9.5"
+        stroke={color}
+        strokeWidth={sw}
+        strokeLinejoin="round"
+      />
+      {/* handle / lever to the left */}
+      <Path
+        d="M11 7.7 Q4.8 5.6 3.2 8.1 Q5.7 10 10.9 9.1"
+        stroke={color}
+        strokeWidth={sw}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* flange / horn to the right */}
+      <Ellipse cx={19.1} cy={6.7} rx={1.5} ry={3} stroke={color} strokeWidth={sw} />
+      <Path d="M13 7.4 L17.9 4 M13 9 L18 9.1" stroke={color} strokeWidth={sw} strokeLinecap="round" />
     </Svg>
   );
 }
