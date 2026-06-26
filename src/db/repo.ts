@@ -14,6 +14,9 @@ import type {
   GrowthInput,
   GrowthMeasurement,
   Settings,
+  SleepEvent,
+  SleepInput,
+  SleepKind,
 } from './types';
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -424,6 +427,129 @@ export async function getGrowthMeasurements(babyId: number): Promise<GrowthMeasu
   return db.getAllAsync<GrowthMeasurement>(
     'SELECT * FROM growth_measurements WHERE baby_id = ? ORDER BY measured_at ASC',
     [babyId]
+  );
+}
+
+// --- Sleep events -----------------------------------------------------------
+
+/** The in-progress sleep (end_time NULL), if any. */
+export async function getOpenSleep(babyId: number): Promise<SleepEvent | null> {
+  const db = await getDb();
+  return (
+    (await db.getFirstAsync<SleepEvent>(
+      `SELECT * FROM sleep_events WHERE baby_id = ? AND end_time IS NULL
+       ORDER BY start_time DESC LIMIT 1`,
+      [babyId]
+    )) ?? null
+  );
+}
+
+/** Most recent completed sleep (for the wake window). */
+export async function getLastEndedSleep(babyId: number): Promise<SleepEvent | null> {
+  const db = await getDb();
+  return (
+    (await db.getFirstAsync<SleepEvent>(
+      `SELECT * FROM sleep_events WHERE baby_id = ? AND end_time IS NOT NULL
+       ORDER BY end_time DESC LIMIT 1`,
+      [babyId]
+    )) ?? null
+  );
+}
+
+/** Start a sleep now. Auto-closes any open session first (one-open invariant). */
+export async function startSleep(
+  babyId: number,
+  startIso: string,
+  kind: SleepKind
+): Promise<number> {
+  const db = await getDb();
+  const ts = nowUtc();
+  let id = 0;
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `UPDATE sleep_events SET end_time = ?, updated_at = ? WHERE baby_id = ? AND end_time IS NULL`,
+      [startIso, ts, babyId]
+    );
+    const res = await db.runAsync(
+      `INSERT INTO sleep_events (baby_id, start_time, end_time, kind, created_at, updated_at)
+       VALUES (?, ?, NULL, ?, ?, ?)`,
+      [babyId, startIso, kind, ts, ts]
+    );
+    id = res.lastInsertRowId;
+  });
+  return id;
+}
+
+export async function endSleep(id: number, endIso: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('UPDATE sleep_events SET end_time = ?, updated_at = ? WHERE id = ?', [
+    endIso,
+    nowUtc(),
+    id,
+  ]);
+}
+
+export async function createSleepEvent(babyId: number, input: SleepInput): Promise<number> {
+  const db = await getDb();
+  const ts = nowUtc();
+  const res = await db.runAsync(
+    `INSERT INTO sleep_events (baby_id, start_time, end_time, kind, location, how, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      babyId,
+      input.start_time,
+      input.end_time ?? null,
+      input.kind,
+      input.location ?? null,
+      input.how ?? null,
+      input.notes ?? null,
+      ts,
+      ts,
+    ]
+  );
+  return res.lastInsertRowId;
+}
+
+export async function getSleepEvent(id: number): Promise<SleepEvent | null> {
+  const db = await getDb();
+  return (await db.getFirstAsync<SleepEvent>('SELECT * FROM sleep_events WHERE id = ?', [id])) ?? null;
+}
+
+export async function updateSleepEvent(id: number, input: SleepInput): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE sleep_events SET start_time = ?, end_time = ?, kind = ?, location = ?, how = ?, notes = ?, updated_at = ?
+     WHERE id = ?`,
+    [
+      input.start_time,
+      input.end_time ?? null,
+      input.kind,
+      input.location ?? null,
+      input.how ?? null,
+      input.notes ?? null,
+      nowUtc(),
+      id,
+    ]
+  );
+}
+
+export async function deleteSleepEvent(id: number): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM sleep_events WHERE id = ?', [id]);
+}
+
+/** Sleeps that STARTED in [startIso, endIso) — attribution by start day. */
+export async function getSleepEventsBetween(
+  babyId: number,
+  startIso: string,
+  endIso: string
+): Promise<SleepEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<SleepEvent>(
+    `SELECT * FROM sleep_events
+     WHERE baby_id = ? AND start_time >= ? AND start_time < ?
+     ORDER BY start_time DESC`,
+    [babyId, startIso, endIso]
   );
 }
 

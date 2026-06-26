@@ -19,16 +19,20 @@ export const colors = {
   growth: '#B98BDD',      // violet
   growthSoft: 'rgba(185,139,221,0.14)',
 
+  sleep: '#8B93E8',       // periwinkle indigo — night feel
+  sleepSoft: 'rgba(139,147,232,0.14)',
+
   good: '#7FC8A0',
   white: '#FFFFFF',
 } as const;
 
-// Semantic mapping for the three event domains.
+// Semantic mapping for the event domains.
 export const eventColors = {
   feed: colors.accent,
   diaper: colors.diaper,
   growth: colors.growth,
   pump: colors.growth, // pump shares the growth/violet hue in History
+  sleep: colors.sleep,
 } as const;
 
 export const fonts = {

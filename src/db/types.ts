@@ -7,6 +7,7 @@ export type FeedType = 'breast' | 'bottle' | 'pump';
 export type Side = 'left' | 'right' | 'both';
 export type Contents = 'breast_milk' | 'formula' | 'mixed';
 export type DiaperType = 'wet' | 'dirty' | 'both';
+export type SleepKind = 'nap' | 'night';
 
 export type UnitVolume = 'ml' | 'oz';
 export type UnitMass = 'g' | 'lb_oz';
@@ -119,5 +120,27 @@ export interface GrowthInput {
   weight_g?: number | null;
   length_cm?: number | null;
   head_circumference_cm?: number | null;
+  notes?: string | null;
+}
+
+export interface SleepEvent {
+  id: number;
+  baby_id: number;
+  start_time: string; // UTC ISO
+  end_time: string | null; // null = in progress (asleep now)
+  kind: SleepKind;
+  location: string | null;
+  how: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SleepInput {
+  start_time: string; // UTC ISO
+  end_time?: string | null;
+  kind: SleepKind;
+  location?: string | null;
+  how?: string | null;
   notes?: string | null;
 }

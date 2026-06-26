@@ -8,8 +8,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CountdownRing } from '@/src/components/CountdownRing';
 import { LullMark } from '@/src/components/LullMark';
 import * as repo from '@/src/db/repo';
+import type { SleepEvent } from '@/src/db/types';
 import { localDayBoundsIso } from '@/src/logic/day';
 import { computeFeedRing, formatElapsed, formatOverdue } from '@/src/logic/prediction';
+import { classifyKind, formatDuration, sleepDayStats, sleepState } from '@/src/logic/sleep';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 
@@ -20,6 +22,13 @@ interface TodayData {
   diapers: number;
 }
 
+interface SleepData {
+  open: SleepEvent | null;
+  lastEnded: SleepEvent | null;
+  naps: number;
+  totalMin: number;
+}
+
 const DEFAULT_DATA: TodayData = {
   intervalMinutes: 180,
   lastFeedStart: null,
@@ -27,10 +36,13 @@ const DEFAULT_DATA: TodayData = {
   diapers: 0,
 };
 
+const DEFAULT_SLEEP: SleepData = { open: null, lastEnded: null, naps: 0, totalMin: 0 };
+
 export default function TodayScreen() {
   const router = useRouter();
   const { activeBaby } = useAppData();
   const [data, setData] = useState<TodayData>(DEFAULT_DATA);
+  const [sleep, setSleep] = useState<SleepData>(DEFAULT_SLEEP);
   const [now, setNow] = useState(() => new Date());
 
   // Tick once a second so the ring + elapsed counter stay live.
@@ -42,11 +54,14 @@ export default function TodayScreen() {
   const load = useCallback(async () => {
     if (!activeBaby) return;
     const { startIso, endIso } = localDayBoundsIso(new Date());
-    const [reminder, lastStart, feeds, diapers] = await Promise.all([
+    const [reminder, lastStart, feeds, diapers, open, lastEnded, todaySleeps] = await Promise.all([
       repo.getFeedReminder(activeBaby.id),
       repo.getLatestQualifyingFeedStart(activeBaby.id),
       repo.countFeedsBetween(activeBaby.id, startIso, endIso),
       repo.countDiapersBetween(activeBaby.id, startIso, endIso),
+      repo.getOpenSleep(activeBaby.id),
+      repo.getLastEndedSleep(activeBaby.id),
+      repo.getSleepEventsBetween(activeBaby.id, startIso, endIso),
     ]);
     setData({
       intervalMinutes: reminder?.intervalMinutes ?? 180,
@@ -54,6 +69,8 @@ export default function TodayScreen() {
       feeds,
       diapers,
     });
+    const stats = sleepDayStats(todaySleeps, new Date());
+    setSleep({ open, lastEnded, naps: stats.naps, totalMin: stats.totalMin });
   }, [activeBaby]);
 
   // Reload whenever the tab regains focus (e.g. after logging an event).
@@ -63,6 +80,17 @@ export default function TodayScreen() {
     }, [load])
   );
 
+  async function toggleSleep() {
+    if (!activeBaby) return;
+    if (sleep.open) {
+      await repo.endSleep(sleep.open.id, new Date().toISOString());
+    } else {
+      const start = new Date();
+      await repo.startSleep(activeBaby.id, start.toISOString(), classifyKind(start));
+    }
+    await load();
+  }
+
   if (!activeBaby) return null; // route gate redirects to onboarding
 
   const ring = computeFeedRing({
@@ -70,6 +98,9 @@ export default function TodayScreen() {
     intervalMinutes: data.intervalMinutes,
     now,
   });
+
+  const sState = sleepState({ openSleep: sleep.open, lastEndedSleep: sleep.lastEnded, now });
+  const asleep = sState.kind === 'asleep';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -79,10 +110,18 @@ export default function TodayScreen() {
             <LullMark size={38} />
             <Text style={styles.brandText}>Lull</Text>
           </View>
-          <Pressable style={styles.historyButton} onPress={() => router.push('/history')}>
-            <Ionicons name="time-outline" size={16} color={colors.accent} />
-            <Text style={styles.historyButtonText}>History</Text>
-          </Pressable>
+          <View style={styles.headerRight}>
+            {asleep ? (
+              <View style={styles.asleepChip}>
+                <Ionicons name="moon" size={13} color={colors.sleep} />
+                <Text style={styles.asleepChipText}>Asleep · {formatDuration(sState.sinceMs)}</Text>
+              </View>
+            ) : null}
+            <Pressable style={styles.historyButton} onPress={() => router.push('/history')}>
+              <Ionicons name="time-outline" size={16} color={colors.accent} />
+              <Text style={styles.historyButtonText}>History</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.ringWrap}>
@@ -139,6 +178,26 @@ export default function TodayScreen() {
             <Text style={styles.countLabel}>diapers today</Text>
           </View>
         </View>
+
+        {/* Sleep */}
+        <View style={[styles.sleepCard, asleep && styles.sleepCardActive]}>
+          <View style={styles.sleepInfo}>
+            <Text style={styles.sleepState}>
+              {asleep
+                ? `Asleep · ${formatDuration(sState.sinceMs)}`
+                : sState.sinceMs != null
+                  ? `Awake · ${formatDuration(sState.sinceMs)}`
+                  : 'Awake'}
+            </Text>
+            <Text style={styles.sleepStats}>
+              {sleep.naps} {sleep.naps === 1 ? 'nap' : 'naps'} · {formatDuration(sleep.totalMin * 60_000)} slept today
+            </Text>
+          </View>
+          <Pressable style={[styles.sleepButton, asleep && styles.sleepButtonActive]} onPress={toggleSleep}>
+            <Ionicons name={asleep ? 'sunny' : 'moon'} size={18} color={colors.bg} />
+            <Text style={styles.sleepButtonText}>{asleep ? 'Wake' : 'Sleep'}</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -156,6 +215,17 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   brandText: { fontFamily: fonts.display, fontSize: 26, color: colors.text },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  asleepChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.sleepSoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 1,
+  },
+  asleepChipText: { fontFamily: fonts.uiBold, fontSize: 12, color: colors.sleep },
   historyButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -217,4 +287,32 @@ const styles = StyleSheet.create({
   },
   countNumber: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
   countLabel: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, marginTop: spacing.xs },
+
+  sleepCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+  },
+  sleepCardActive: { borderColor: colors.sleep, backgroundColor: colors.sleepSoft },
+  sleepInfo: { flex: 1 },
+  sleepState: { fontFamily: fonts.uiBold, fontSize: 18, color: colors.text },
+  sleepStats: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, marginTop: 2 },
+  sleepButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.sleep,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+  },
+  sleepButtonActive: { backgroundColor: colors.accent },
+  sleepButtonText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.bg },
 });

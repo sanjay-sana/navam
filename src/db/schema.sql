@@ -60,6 +60,20 @@ CREATE TABLE IF NOT EXISTS growth_measurements (
 );
 CREATE INDEX IF NOT EXISTS idx_growth_baby_at ON growth_measurements(baby_id, measured_at);
 
+CREATE TABLE IF NOT EXISTS sleep_events (                          -- v3
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  baby_id     INTEGER NOT NULL REFERENCES babies(id) ON DELETE CASCADE,
+  start_time  TEXT NOT NULL,                                       -- UTC ISO
+  end_time    TEXT,                                                -- NULL = in progress (asleep)
+  kind        TEXT NOT NULL CHECK (kind IN ('nap','night')),
+  location    TEXT,                                                -- optional, off fast path
+  how         TEXT,                                                -- optional
+  notes       TEXT,
+  created_at  TEXT NOT NULL,
+  updated_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sleep_baby_start ON sleep_events(baby_id, start_time);
+
 CREATE TABLE IF NOT EXISTS reminder_configs (
   id               INTEGER PRIMARY KEY AUTOINCREMENT,
   baby_id          INTEGER NOT NULL REFERENCES babies(id) ON DELETE CASCADE,

@@ -90,6 +90,23 @@ ALTER TABLE babies ADD COLUMN last_name TEXT;
 UPDATE babies SET first_name = name WHERE first_name IS NULL;
 `;
 
+// v3: sleep tracking. A row with end_time NULL is an in-progress sleep.
+const MIGRATION_3 = `
+CREATE TABLE IF NOT EXISTS sleep_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  baby_id INTEGER NOT NULL REFERENCES babies(id) ON DELETE CASCADE,
+  start_time TEXT NOT NULL,
+  end_time TEXT,
+  kind TEXT NOT NULL CHECK (kind IN ('nap','night')),
+  location TEXT,
+  how TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sleep_baby_start ON sleep_events(baby_id, start_time);
+`;
+
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('lull.db');
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -117,5 +134,12 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
       await db.execAsync(MIGRATION_2);
     });
     await db.execAsync('PRAGMA user_version = 2');
+  }
+
+  if (version < 3) {
+    await db.withTransactionAsync(async () => {
+      await db.execAsync(MIGRATION_3);
+    });
+    await db.execAsync('PRAGMA user_version = 3');
   }
 }

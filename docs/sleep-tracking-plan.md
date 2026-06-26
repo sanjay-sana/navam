@@ -19,7 +19,7 @@ dialogs). The genuinely new pieces are the **persisted open-session model** and
    sleep card below the daily counts** with the Start/End toggle, the state line,
    and naps/total-sleep stats. The card is **highlighted (accent border) while a
    sleep is in progress**. No hero-flip — both feed and sleep stay visible.
-2. **Nap vs. night** — Auto-infer by start hour: **night = starts 19:00–05:00
+2. **Nap vs. night** — Auto-infer by start hour: **night = starts 20:00–06:00
    local, otherwise nap**, with a manual toggle to override on the log screen.
 3. **Overnight attribution (Trends)** — Attribute a session's full duration to the
    local day it **started** (v1). Midnight-splitting is a documented v1.1 refinement.
@@ -74,7 +74,7 @@ sleep while one is open auto-closes the previous at the new start time.
 - `validateSleepDraft(draft, now)` → `SleepInput` (end ≥ start, no future, kind set).
 - `sleepState({ openSleep, lastEndedSleep, now })` → `{ kind:'asleep'|'awake', sinceMs }`
   — drives the Today display (parallels `computeFeedRing`).
-- `classifyKind(start)` → `'nap' | 'night'` (19:00–05:00 → night).
+- `classifyKind(start)` → `'nap' | 'night'` (20:00–06:00 → night).
 - `buildSleepDays(sessions, range, now)` → per-day
   `{ totalMin, nightMin, dayMin, naps, longestMin }` (parallels `buildTrendDays`).
 - `formatDuration(ms)` → `"7h 20m"`.
