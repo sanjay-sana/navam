@@ -134,7 +134,7 @@ function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => voi
         : entry.kind === 'diaper'
           ? 'water'
           : entry.feedType === 'pump'
-            ? 'arrow-down'
+            ? 'flask-outline'
             : 'cafe';
 
   return (

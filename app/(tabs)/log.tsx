@@ -15,7 +15,7 @@ const OPTIONS: {
   href: Href;
 }[] = [
   { label: 'Feed', hint: 'Breast · bottle', icon: 'baby-bottle', lib: 'mci', color: eventColors.feed, href: '/log-feed' },
-  { label: 'Pump', hint: 'Milk expressed', icon: 'arrow-down', color: eventColors.pump, href: { pathname: '/log-feed', params: { pump: '1' } } },
+  { label: 'Pump', hint: 'Milk expressed', icon: 'flask-outline', color: eventColors.pump, href: { pathname: '/log-feed', params: { pump: '1' } } },
   { label: 'Sleep', hint: 'Nap · night', icon: 'moon', color: eventColors.sleep, href: '/log-sleep' },
   { label: 'Diaper', hint: 'Wet · dirty · mixed', icon: 'water', color: eventColors.diaper, href: '/log-diaper' },
   { label: 'Growth', hint: 'Weight · height', icon: 'trending-up', color: eventColors.growth, href: '/log-growth' },
