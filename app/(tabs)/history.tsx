@@ -127,7 +127,7 @@ function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => voi
   // Bottle feed + diaper use MaterialCommunityIcons; the rest are Ionicons.
   const mciName =
     entry.kind === 'feed' && entry.feedType !== 'pump'
-      ? 'baby-bottle'
+      ? 'baby-bottle-outline'
       : entry.kind === 'diaper'
         ? 'diaper-outline'
         : null;

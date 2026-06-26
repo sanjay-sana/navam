@@ -157,7 +157,7 @@ export default function TodayScreen() {
             style={[styles.quickButton, styles.feedButton]}
             onPress={() => router.push('/log-feed')}
           >
-            <MaterialCommunityIcons name="baby-bottle" size={22} color={colors.bg} />
+            <MaterialCommunityIcons name="baby-bottle-outline" size={22} color={colors.bg} />
             <Text style={styles.feedButtonText}>Feed</Text>
           </Pressable>
           <Pressable
