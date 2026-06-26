@@ -23,25 +23,27 @@ export function PumpIcon({ size = 24, color }: { size?: number; color: string })
         strokeLinecap="round"
       />
       {/* collar where the pump screws onto the bottle */}
-      <Path d="M9.3 11.6 L10.8 9.5 L13.2 9.5 L14.7 11.6" stroke={color} strokeWidth={sw} strokeLinejoin="round" />
+      <Path d="M9.3 11.6 L10.9 10.3 L13.1 10.3 L14.7 11.6" stroke={color} strokeWidth={sw} strokeLinejoin="round" />
+      {/* neck */}
+      <Path d="M10.9 10.3 L10.9 8.9 M13.1 10.3 L13.1 8.9" stroke={color} strokeWidth={sw} strokeLinecap="round" />
       {/* plunger */}
       <Path
-        d="M11.2 9.5 L11.2 7.3 Q11.2 6.3 12 6.3 Q12.8 6.3 12.8 7.3 L12.8 9.5"
+        d="M11.2 8.9 L11.2 6.8 Q11.2 5.8 12 5.8 Q12.8 5.8 12.8 6.8 L12.8 8.9"
         stroke={color}
         strokeWidth={sw}
         strokeLinejoin="round"
       />
       {/* handle / lever to the left */}
       <Path
-        d="M11 7.7 Q4.8 5.6 3.2 8.1 Q5.7 10 10.9 9.1"
+        d="M11 7.1 Q4.8 5 3.2 7.5 Q5.7 9.4 10.9 8.5"
         stroke={color}
         strokeWidth={sw}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       {/* flange / horn to the right */}
-      <Ellipse cx={19.1} cy={6.7} rx={1.5} ry={3} stroke={color} strokeWidth={sw} />
-      <Path d="M13 7.4 L17.9 4 M13 9 L18 9.1" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+      <Ellipse cx={19.1} cy={6.1} rx={1.5} ry={3} stroke={color} strokeWidth={sw} />
+      <Path d="M13 6.8 L17.9 3.4 M13 8.4 L18 8.5" stroke={color} strokeWidth={sw} strokeLinecap="round" />
     </Svg>
   );
 }
