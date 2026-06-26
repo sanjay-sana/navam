@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LullMark } from '@/src/components/LullMark';
+import { Segmented } from '@/src/components/Segmented';
 import { WheelCompoundModal, WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import { weightColumns, weightCompose, weightInitial, weightLabel } from '@/src/lib/measurementWheels';
@@ -12,7 +13,7 @@ import { unitToGrams } from '@/src/logic/units';
 import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
-import type { Sex } from '@/src/db/types';
+import type { Sex, UnitMass } from '@/src/db/types';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -29,6 +30,13 @@ export default function OnboardingScreen() {
   const [showWeight, setShowWeight] = useState(false);
   const [errors, setErrors] = useState<BabyDraftErrors>({});
   const [saving, setSaving] = useState(false);
+
+  async function changeMassUnit(u: UnitMass) {
+    if (u === unitMass) return;
+    await repo.updateSettings({ unit_mass: u });
+    await refresh();
+    setBirthWeight(null); // value's unit changed; re-enter
+  }
 
   async function onSave() {
     const result = validateBabyDraft({ firstName, middleName, lastName, sex, dob });
@@ -126,7 +134,19 @@ export default function OnboardingScreen() {
         />
 
         {/* Birth weight (optional) → seeds the growth chart */}
-        <Text style={styles.label}>BIRTH WEIGHT (OPTIONAL)</Text>
+        <View style={styles.fieldHeader}>
+          <Text style={styles.fieldHeaderLabel}>BIRTH WEIGHT (OPTIONAL)</Text>
+          <View style={styles.unitToggle}>
+            <Segmented
+              options={[
+                { label: 'kg', value: 'g' },
+                { label: 'lb', value: 'lb_oz' },
+              ]}
+              value={unitMass}
+              onChange={(u) => changeMassUnit(u as UnitMass)}
+            />
+          </View>
+        </View>
         <Pressable style={styles.input} onPress={() => setShowWeight(true)}>
           <Text style={birthWeight != null ? styles.inputText : styles.inputPlaceholder}>
             {birthWeight != null ? weightLabel(birthWeight, unitMass) : 'Add birth weight'}
@@ -196,6 +216,15 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
+  fieldHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  fieldHeaderLabel: { fontFamily: fonts.uiBold, fontSize: 12, letterSpacing: 1, color: colors.dim },
+  unitToggle: { width: 96 },
   input: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
