@@ -124,27 +124,30 @@ function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => voi
           : entry.feedType === 'pump'
             ? eventColors.pump
             : eventColors.feed;
-  // breast/bottle feed uses a baby-bottle (MaterialCommunityIcons); the rest are Ionicons.
-  const isBottleFeed = entry.kind === 'feed' && entry.feedType !== 'pump';
-  const icon =
+  // Bottle feed + diaper use MaterialCommunityIcons; the rest are Ionicons.
+  const mciName =
+    entry.kind === 'feed' && entry.feedType !== 'pump'
+      ? 'baby-bottle'
+      : entry.kind === 'diaper'
+        ? 'diaper-outline'
+        : null;
+  const ionName =
     entry.kind === 'sleep'
       ? 'moon'
       : entry.kind === 'growth'
         ? 'trending-up'
-        : entry.kind === 'diaper'
-          ? 'water'
-          : entry.feedType === 'pump'
-            ? 'flask-outline'
-            : 'cafe';
+        : entry.feedType === 'pump'
+          ? 'flask-outline'
+          : 'cafe';
 
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <Text style={styles.rowTime}>{entry.hasClock ? format(new Date(entry.time), 'h:mm a') : ''}</Text>
       <View style={[styles.rowIcon, { backgroundColor: `${color}24` }]}>
-        {isBottleFeed ? (
-          <MaterialCommunityIcons name="baby-bottle" size={20} color={color} />
+        {mciName ? (
+          <MaterialCommunityIcons name={mciName} size={20} color={color} />
         ) : (
-          <Ionicons name={icon} size={20} color={color} />
+          <Ionicons name={ionName} size={20} color={color} />
         )}
       </View>
       <View style={styles.rowBody}>

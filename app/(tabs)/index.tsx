@@ -164,7 +164,7 @@ export default function TodayScreen() {
             style={[styles.quickButton, styles.diaperButton]}
             onPress={() => router.push('/log-diaper')}
           >
-            <Ionicons name="water" size={22} color={colors.bg} />
+            <MaterialCommunityIcons name="diaper-outline" size={22} color={colors.bg} />
             <Text style={styles.diaperButtonText}>Diaper</Text>
           </Pressable>
         </View>
