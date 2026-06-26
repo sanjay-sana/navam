@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,11 +9,12 @@ import { colors, eventColors, fonts, radius, spacing } from '@/src/theme/theme';
 const OPTIONS: {
   label: string;
   hint: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
+  lib?: 'mci'; // MaterialCommunityIcons (default Ionicons)
   color: string;
   href: Href;
 }[] = [
-  { label: 'Feed', hint: 'Breast · bottle', icon: 'cafe', color: eventColors.feed, href: '/log-feed' },
+  { label: 'Feed', hint: 'Breast · bottle', icon: 'baby-bottle', lib: 'mci', color: eventColors.feed, href: '/log-feed' },
   { label: 'Pump', hint: 'Milk expressed', icon: 'arrow-down', color: eventColors.pump, href: { pathname: '/log-feed', params: { pump: '1' } } },
   { label: 'Sleep', hint: 'Nap · night', icon: 'moon', color: eventColors.sleep, href: '/log-sleep' },
   { label: 'Diaper', hint: 'Wet · dirty · mixed', icon: 'water', color: eventColors.diaper, href: '/log-diaper' },
@@ -32,7 +33,11 @@ export default function LogScreen() {
         {options.map((o) => (
           <Pressable key={o.label} style={styles.row} onPress={() => router.push(o.href)}>
             <View style={[styles.icon, { backgroundColor: `${o.color}24` }]}>
-              <Ionicons name={o.icon} size={24} color={o.color} />
+              {o.lib === 'mci' ? (
+                <MaterialCommunityIcons name={o.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={24} color={o.color} />
+              ) : (
+                <Ionicons name={o.icon as keyof typeof Ionicons.glyphMap} size={24} color={o.color} />
+              )}
             </View>
             <View style={styles.rowBody}>
               <Text style={styles.rowLabel}>{o.label}</Text>
