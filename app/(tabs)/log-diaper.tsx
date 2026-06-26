@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ChipSelect, type ChipOption } from '@/src/components/ChipSelect';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { TimeField } from '@/src/components/TimeField';
 import * as repo from '@/src/db/repo';
@@ -17,6 +18,20 @@ const TYPES: { label: string; value: DiaperType }[] = [
   { label: 'Dirty', value: 'dirty' },
   { label: 'Mixed', value: 'both' },
 ];
+const COLOR_OPTIONS: ChipOption[] = [
+  { label: 'Yellow', value: 'yellow', dot: '#E3C567' },
+  { label: 'Green', value: 'green', dot: '#7FB069' },
+  { label: 'Brown', value: 'brown', dot: '#8B5E3C' },
+  { label: 'Black', value: 'black', dot: '#3A3A3A' },
+  { label: 'Red', value: 'red', dot: '#C75D55' },
+];
+const CONSISTENCY_OPTIONS: ChipOption[] = [
+  { label: 'Runny', value: 'runny' },
+  { label: 'Soft', value: 'soft' },
+  { label: 'Seedy', value: 'seedy' },
+  { label: 'Formed', value: 'formed' },
+  { label: 'Hard', value: 'hard' },
+];
 
 export default function LogDiaperScreen() {
   const router = useRouter();
@@ -26,6 +41,9 @@ export default function LogDiaperScreen() {
 
   const [type, setType] = useState<DiaperType | null>(null);
   const [time, setTime] = useState<Date>(() => new Date());
+  const [color, setColor] = useState<string | null>(null);
+  const [consistency, setConsistency] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<DiaperErrors>({});
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -37,12 +55,17 @@ export default function LogDiaperScreen() {
       if (!d) return;
       setType(d.type);
       setTime(new Date(d.time));
+      setColor(d.color);
+      setConsistency(d.consistency);
+      setNotes(d.notes ?? '');
     })();
   }, [editId]);
 
+  const showStoolDetails = type === 'dirty' || type === 'both';
+
   async function onSave() {
     if (!activeBaby) return;
-    const result = validateDiaperDraft({ type, time });
+    const result = validateDiaperDraft({ type, time, color, consistency, notes });
     if (!result.ok) {
       setErrors(result.errors);
       return;
@@ -57,6 +80,9 @@ export default function LogDiaperScreen() {
       }
       setType(null);
       setTime(new Date());
+      setColor(null);
+      setConsistency(null);
+      setNotes('');
       router.back();
     } finally {
       setSaving(false);
@@ -106,6 +132,25 @@ export default function LogDiaperScreen() {
         {errors.type ? <Text style={styles.error}>{errors.type}</Text> : null}
 
         <TimeField label="TIME" value={time} onChange={setTime} error={errors.time} />
+
+        {showStoolDetails ? (
+          <>
+            <Text style={styles.optLabel}>COLOR (OPTIONAL)</Text>
+            <ChipSelect options={COLOR_OPTIONS} value={color} onChange={setColor} color={colors.diaper} />
+            <Text style={styles.optLabel}>CONSISTENCY (OPTIONAL)</Text>
+            <ChipSelect options={CONSISTENCY_OPTIONS} value={consistency} onChange={setConsistency} color={colors.diaper} />
+          </>
+        ) : null}
+
+        <Text style={styles.optLabel}>NOTES (OPTIONAL)</Text>
+        <TextInput
+          style={styles.notes}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Anything to note"
+          placeholderTextColor={colors.dim}
+          multiline
+        />
 
         {editId != null ? (
           <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
@@ -158,6 +203,27 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     color: colors.dim,
     marginBottom: spacing.sm,
+  },
+  optLabel: {
+    fontFamily: fonts.uiBold,
+    fontSize: 12,
+    letterSpacing: 1,
+    color: colors.dim,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  notes: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.text,
+    minHeight: 56,
+    textAlignVertical: 'top',
   },
   typeCard: {
     flexDirection: 'row',

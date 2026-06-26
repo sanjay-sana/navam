@@ -5,6 +5,9 @@ import type { DiaperInput, DiaperType } from '@/src/db/types';
 export interface DiaperDraft {
   type: DiaperType | null;
   time: Date;
+  color?: string | null;
+  consistency?: string | null;
+  notes?: string;
 }
 
 export interface DiaperErrors {
@@ -29,5 +32,16 @@ export function validateDiaperDraft(draft: DiaperDraft, now: Date = new Date()):
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
-  return { ok: true, value: { type: draft.type as DiaperType, time: draft.time.toISOString() } };
+  // Colour/consistency only apply to stool (dirty/both); ignore them for wet.
+  const hasStool = draft.type === 'dirty' || draft.type === 'both';
+  return {
+    ok: true,
+    value: {
+      type: draft.type as DiaperType,
+      time: draft.time.toISOString(),
+      color: hasStool ? draft.color ?? null : null,
+      consistency: hasStool ? draft.consistency ?? null : null,
+      notes: draft.notes?.trim() || null,
+    },
+  };
 }

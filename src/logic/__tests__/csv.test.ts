@@ -29,9 +29,9 @@ describe('buildCsv', () => {
     expect(lines[3]).toContain(',90,formula,');
   });
 
-  it('keeps a fixed 12-column shape with blank cells', () => {
-    expect(lines[0].split(',')).toHaveLength(12);
-    expect(lines[3].split(',')).toHaveLength(12);
+  it('keeps a fixed 14-column shape with blank cells', () => {
+    expect(lines[0].split(',')).toHaveLength(14);
+    expect(lines[3].split(',')).toHaveLength(14);
   });
 
   it('escapes commas and quotes (RFC-4180)', () => {

@@ -60,7 +60,12 @@ export function feedEntry(f: FeedEvent, unit: UnitVolume): TimelineEntry {
   return { ...base, title: 'Pump', subtitle: vol ? `${vol} expressed` : 'expressed' };
 }
 
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export function diaperEntry(d: DiaperEvent): TimelineEntry {
+  const parts = [DIAPER_LABEL[d.type], d.color ? cap(d.color) : null, d.consistency ? cap(d.consistency) : null]
+    .filter(Boolean)
+    .join(' · ');
   return {
     key: `diaper-${d.id}`,
     id: d.id,
@@ -68,7 +73,7 @@ export function diaperEntry(d: DiaperEvent): TimelineEntry {
     time: d.time,
     hasClock: true,
     title: 'Diaper',
-    subtitle: DIAPER_LABEL[d.type],
+    subtitle: parts,
   };
 }
 
