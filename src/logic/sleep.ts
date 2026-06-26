@@ -58,7 +58,7 @@ export function formatDuration(ms: number): string {
 
 export interface SleepDraft {
   startTime: Date;
-  endTime: Date;
+  endTime: Date | null; // null = ongoing (still asleep)
   kind: SleepKind;
   location?: string | null;
   how?: string | null;
@@ -81,12 +81,14 @@ export function validateSleepDraft(draft: SleepDraft, now: Date = new Date()): S
     errors.time = "Start can't be in the future";
   }
 
-  if (Number.isNaN(draft.endTime.getTime())) {
-    errors.end = 'Invalid time';
-  } else if (draft.endTime.getTime() > now.getTime()) {
-    errors.end = "End can't be in the future";
-  } else if (draft.endTime.getTime() <= draft.startTime.getTime()) {
-    errors.end = 'End must be after start';
+  if (draft.endTime !== null) {
+    if (Number.isNaN(draft.endTime.getTime())) {
+      errors.end = 'Invalid time';
+    } else if (draft.endTime.getTime() > now.getTime()) {
+      errors.end = "End can't be in the future";
+    } else if (draft.endTime.getTime() <= draft.startTime.getTime()) {
+      errors.end = 'End must be after start';
+    }
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
@@ -95,7 +97,7 @@ export function validateSleepDraft(draft: SleepDraft, now: Date = new Date()): S
     ok: true,
     value: {
       start_time: draft.startTime.toISOString(),
-      end_time: draft.endTime.toISOString(),
+      end_time: draft.endTime ? draft.endTime.toISOString() : null,
       kind: draft.kind,
       location: draft.location ?? null,
       how: draft.how ?? null,

@@ -102,4 +102,12 @@ describe('validateSleepDraft', () => {
     expect(validateSleepDraft({ startTime: future, endTime: future, kind: 'nap' }, now).ok).toBe(false);
     expect(validateSleepDraft({ startTime: start, endTime: future, kind: 'nap' }, now).ok).toBe(false);
   });
+
+  it('allows an ongoing sleep (null end) and only checks the start', () => {
+    const r = validateSleepDraft({ startTime: start, endTime: null, kind: 'night' }, now);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value.end_time).toBeNull();
+    // start still can't be in the future
+    expect(validateSleepDraft({ startTime: new Date(now.getTime() + 60_000), endTime: null, kind: 'night' }, now).ok).toBe(false);
+  });
 });

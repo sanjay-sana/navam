@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChipSelect, type ChipOption } from '@/src/components/ChipSelect';
@@ -44,6 +44,8 @@ export default function LogSleepScreen() {
   const [location, setLocation] = useState<string | null>(null);
   const [how, setHow] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [ongoing, setOngoing] = useState(false); // still asleep (end_time null)
+  const [originallyOpen, setOriginallyOpen] = useState(false);
   const [errors, setErrors] = useState<SleepErrors>({});
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -53,8 +55,11 @@ export default function LogSleepScreen() {
     (async () => {
       const s = await repo.getSleepEvent(editId);
       if (!s) return;
+      const open = s.end_time == null;
       setStart(new Date(s.start_time));
       setEnd(s.end_time ? new Date(s.end_time) : new Date());
+      setOngoing(open);
+      setOriginallyOpen(open);
       setKind(s.kind);
       setKindTouched(true);
       setLocation(s.location);
@@ -70,7 +75,7 @@ export default function LogSleepScreen() {
 
   async function onSave() {
     if (!activeBaby) return;
-    const result = validateSleepDraft({ startTime: start, endTime: end, kind, location, how, notes });
+    const result = validateSleepDraft({ startTime: start, endTime: ongoing ? null : end, kind, location, how, notes });
     if (!result.ok) {
       setErrors(result.errors);
       return;
@@ -120,7 +125,22 @@ export default function LogSleepScreen() {
         />
 
         <TimeField label="FELL ASLEEP" value={start} onChange={onStartChange} error={errors.time} />
-        <TimeField label="WOKE UP" value={end} onChange={setEnd} error={errors.end} />
+
+        {originallyOpen ? (
+          <View style={styles.ongoingRow}>
+            <Text style={styles.ongoingLabel}>Still sleeping</Text>
+            <Switch
+              value={ongoing}
+              onValueChange={setOngoing}
+              trackColor={{ true: colors.sleep, false: colors.surface2 }}
+              thumbColor={colors.white}
+            />
+          </View>
+        ) : null}
+
+        {!ongoing ? (
+          <TimeField label="WOKE UP" value={end} onChange={setEnd} error={errors.end} />
+        ) : null}
 
         <Text style={styles.label}>WHERE (OPTIONAL)</Text>
         <ChipSelect options={LOCATION_OPTIONS} value={location} onChange={setLocation} color={colors.sleep} />
@@ -168,6 +188,13 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm, marginBottom: spacing.lg },
   title: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
   label: { fontFamily: fonts.uiBold, fontSize: 12, letterSpacing: 1, color: colors.dim, marginTop: spacing.lg, marginBottom: spacing.sm },
+  ongoingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.lg,
+  },
+  ongoingLabel: { fontFamily: fonts.uiBold, fontSize: 17, color: colors.text },
   notes: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
