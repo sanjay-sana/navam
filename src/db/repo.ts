@@ -489,6 +489,15 @@ export async function endSleep(id: number, endIso: string): Promise<void> {
   ]);
 }
 
+/** Close any other in-progress sleep, keeping the one-open-session invariant. */
+export async function closeOtherOpenSleeps(babyId: number, exceptId: number, endIso: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE sleep_events SET end_time = ?, updated_at = ? WHERE baby_id = ? AND end_time IS NULL AND id != ?`,
+    [endIso, nowUtc(), babyId, exceptId]
+  );
+}
+
 export async function createSleepEvent(babyId: number, input: SleepInput): Promise<number> {
   const db = await getDb();
   const ts = nowUtc();

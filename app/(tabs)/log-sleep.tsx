@@ -45,7 +45,6 @@ export default function LogSleepScreen() {
   const [how, setHow] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [ongoing, setOngoing] = useState(false); // still asleep (end_time null)
-  const [originallyOpen, setOriginallyOpen] = useState(false);
   const [errors, setErrors] = useState<SleepErrors>({});
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -65,17 +64,14 @@ export default function LogSleepScreen() {
           setHow(null);
           setNotes('');
           setOngoing(false);
-          setOriginallyOpen(false);
           setErrors({});
           return;
         }
         const s = await repo.getSleepEvent(editId);
         if (!active || !s) return;
-        const open = s.end_time == null;
         setStart(new Date(s.start_time));
         setEnd(s.end_time ? new Date(s.end_time) : new Date());
-        setOngoing(open);
-        setOriginallyOpen(open);
+        setOngoing(s.end_time == null);
         setKind(s.kind);
         setKindTouched(true);
         setLocation(s.location);
@@ -104,11 +100,12 @@ export default function LogSleepScreen() {
     setErrors({});
     setSaving(true);
     try {
-      if (editId != null) {
-        await repo.updateSleepEvent(editId, result.value);
-      } else {
-        await repo.createSleepEvent(activeBaby.id, result.value);
-      }
+      const savedId =
+        editId != null
+          ? (await repo.updateSleepEvent(editId, result.value), editId)
+          : await repo.createSleepEvent(activeBaby.id, result.value);
+      // An ongoing sleep must be the only open one.
+      if (ongoing) await repo.closeOtherOpenSleeps(activeBaby.id, savedId, new Date().toISOString());
       router.back();
     } finally {
       setSaving(false);
@@ -148,17 +145,15 @@ export default function LogSleepScreen() {
 
         <TimeField label="FELL ASLEEP" value={start} onChange={onStartChange} error={errors.time} />
 
-        {originallyOpen ? (
-          <View style={styles.ongoingRow}>
-            <Text style={styles.ongoingLabel}>Still sleeping</Text>
-            <Switch
-              value={ongoing}
-              onValueChange={setOngoing}
-              trackColor={{ true: colors.sleep, false: colors.surface2 }}
-              thumbColor={colors.white}
-            />
-          </View>
-        ) : null}
+        <View style={styles.ongoingRow}>
+          <Text style={styles.ongoingLabel}>Still sleeping</Text>
+          <Switch
+            value={ongoing}
+            onValueChange={setOngoing}
+            trackColor={{ true: colors.sleep, false: colors.surface2 }}
+            thumbColor={colors.white}
+          />
+        </View>
 
         {!ongoing ? (
           <TimeField label="WOKE UP" value={end} onChange={setEnd} error={errors.end} />
