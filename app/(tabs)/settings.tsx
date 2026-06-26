@@ -149,6 +149,23 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Tracking toggles */}
+        <Text style={styles.section}>TRACKING</Text>
+        <View style={styles.card}>
+          <View style={styles.cardRow}>
+            <Text style={styles.rowLabel}>Sleep</Text>
+            <Switch
+              value={settings.track_sleep === 1}
+              onValueChange={async (on) => {
+                await repo.updateSettings({ track_sleep: on ? 1 : 0 });
+                await refresh();
+              }}
+              trackColor={{ true: colors.accent, false: colors.surface2 }}
+              thumbColor={colors.white}
+            />
+          </View>
+        </View>
+
         {/* Feed interval — always editable; drives the Today countdown + reminder. */}
         <Text style={styles.section}>FEED INTERVAL</Text>
         <View style={styles.card}>

@@ -3,6 +3,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, eventColors, fonts, radius, spacing } from '@/src/theme/theme';
 
 const OPTIONS: {
@@ -21,11 +22,14 @@ const OPTIONS: {
 
 export default function LogScreen() {
   const router = useRouter();
+  const { settings } = useAppData();
+  const trackSleep = (settings?.track_sleep ?? 1) === 1;
+  const options = OPTIONS.filter((o) => o.label !== 'Sleep' || trackSleep);
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.content}>
         <Text style={styles.title}>Log</Text>
-        {OPTIONS.map((o) => (
+        {options.map((o) => (
           <Pressable key={o.label} style={styles.row} onPress={() => router.push(o.href)}>
             <View style={[styles.icon, { backgroundColor: `${o.color}24` }]}>
               <Ionicons name={o.icon} size={24} color={o.color} />

@@ -40,7 +40,8 @@ const DEFAULT_SLEEP: SleepData = { open: null, lastEnded: null, naps: 0, totalMi
 
 export default function TodayScreen() {
   const router = useRouter();
-  const { activeBaby } = useAppData();
+  const { activeBaby, settings } = useAppData();
+  const trackSleep = (settings?.track_sleep ?? 1) === 1;
   const [data, setData] = useState<TodayData>(DEFAULT_DATA);
   const [sleep, setSleep] = useState<SleepData>(DEFAULT_SLEEP);
   const [now, setNow] = useState(() => new Date());
@@ -111,7 +112,7 @@ export default function TodayScreen() {
             <Text style={styles.brandText}>Lull</Text>
           </View>
           <View style={styles.headerRight}>
-            {asleep ? (
+            {trackSleep && asleep ? (
               <View style={styles.asleepChip}>
                 <Ionicons name="moon" size={13} color={colors.sleep} />
                 <Text style={styles.asleepChipText}>Asleep · {formatDuration(sState.sinceMs)}</Text>
@@ -180,6 +181,7 @@ export default function TodayScreen() {
         </View>
 
         {/* Sleep */}
+        {trackSleep ? (
         <View style={[styles.sleepCard, asleep && styles.sleepCardActive]}>
           <View style={styles.sleepInfo}>
             <Text style={styles.sleepState}>
@@ -198,6 +200,7 @@ export default function TodayScreen() {
             <Text style={styles.sleepButtonText}>{asleep ? 'Wake' : 'Sleep'}</Text>
           </Pressable>
         </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

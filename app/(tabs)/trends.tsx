@@ -45,7 +45,10 @@ import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 const CHART_W = Dimensions.get('window').width - spacing.lg * 2 - spacing.md * 2;
 
 export default function TrendsScreen() {
+  const { settings } = useAppData();
+  const trackSleep = (settings?.track_sleep ?? 1) === 1;
   const [view, setView] = useState<'activity' | 'sleep' | 'growth'>('activity');
+  const effectiveView = view === 'sleep' && !trackSleep ? 'activity' : view;
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -53,13 +56,13 @@ export default function TrendsScreen() {
         <Segmented
           options={[
             { label: 'Activity', value: 'activity' },
-            { label: 'Sleep', value: 'sleep' },
+            ...(trackSleep ? [{ label: 'Sleep', value: 'sleep' as const }] : []),
             { label: 'Growth', value: 'growth' },
           ]}
-          value={view}
+          value={effectiveView}
           onChange={setView}
         />
-        {view === 'activity' ? <ActivityView /> : view === 'sleep' ? <SleepView /> : <GrowthView />}
+        {effectiveView === 'activity' ? <ActivityView /> : effectiveView === 'sleep' ? <SleepView /> : <GrowthView />}
       </ScrollView>
     </SafeAreaView>
   );

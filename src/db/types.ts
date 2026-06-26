@@ -41,6 +41,7 @@ export interface Settings {
   unit_length: UnitLength;
   active_baby_id: number | null;
   theme: string;
+  track_sleep: number; // 1 = show sleep tracking, 0 = hide
   updated_at: string;
 }
 
