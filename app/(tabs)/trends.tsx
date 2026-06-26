@@ -22,9 +22,13 @@ import {
   mlToUnit,
   volumeUnitLabel,
 } from '@/src/logic/units';
+import { formatDuration } from '@/src/logic/sleep';
 import {
+  buildSleepDays,
   buildTrendDays,
+  sleepTrendSummary,
   trendSummary,
+  type SleepDay,
   type TrendDay,
   type TrendRange,
 } from '@/src/logic/trends';
@@ -41,7 +45,7 @@ import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 const CHART_W = Dimensions.get('window').width - spacing.lg * 2 - spacing.md * 2;
 
 export default function TrendsScreen() {
-  const [view, setView] = useState<'activity' | 'growth'>('activity');
+  const [view, setView] = useState<'activity' | 'sleep' | 'growth'>('activity');
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -49,12 +53,13 @@ export default function TrendsScreen() {
         <Segmented
           options={[
             { label: 'Activity', value: 'activity' },
+            { label: 'Sleep', value: 'sleep' },
             { label: 'Growth', value: 'growth' },
           ]}
           value={view}
           onChange={setView}
         />
-        {view === 'activity' ? <ActivityView /> : <GrowthView />}
+        {view === 'activity' ? <ActivityView /> : view === 'sleep' ? <SleepView /> : <GrowthView />}
       </ScrollView>
     </SafeAreaView>
   );
@@ -165,6 +170,81 @@ function ActivityView() {
         <SummaryCard value={String(mlToUnit(summary.avgIntakeMl, unit))} label={`${volumeUnitLabel(unit)}/day in`} />
         <SummaryCard value={String(summary.avgDiapers)} label="diapers/day" />
         <SummaryCard value={String(mlToUnit(summary.avgPumpMl, unit))} label={`${volumeUnitLabel(unit)} pumped`} />
+      </View>
+    </>
+  );
+}
+
+// --- Sleep ------------------------------------------------------------------
+
+function fmtHours(min: number): string {
+  return `${Math.round((min / 60) * 10) / 10}h`;
+}
+
+function SleepView() {
+  const { activeBaby } = useAppData();
+  const [range, setRange] = useState<TrendRange>(7);
+  const [days, setDays] = useState<SleepDay[]>([]);
+
+  const load = useCallback(async () => {
+    if (!activeBaby) return;
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (range - 1));
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const sleeps = await repo.getSleepEventsBetween(activeBaby.id, start.toISOString(), end.toISOString());
+    setDays(buildSleepDays(sleeps, range, now));
+  }, [activeBaby, range]);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const summary = sleepTrendSummary(days);
+
+  return (
+    <>
+      <View style={styles.rangeRow}>
+        <Segmented
+          options={[
+            { label: '7d', value: '7' },
+            { label: '14d', value: '14' },
+            { label: '30d', value: '30' },
+          ]}
+          value={String(range)}
+          onChange={(v) => setRange(Number(v) as TrendRange)}
+        />
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>SLEEP PER DAY</Text>
+          <View style={styles.legend}>
+            <Legend color={colors.sleep} label="night" />
+            <Legend color={colors.accent} label="day" />
+          </View>
+        </View>
+        <StackedBarChart
+          data={days.map((d) => ({ label: d.label, wet: d.nightMin, dirty: d.dayMin }))}
+          width={CHART_W}
+          height={180}
+          wetColor={colors.sleep}
+          dirtyColor={colors.accent}
+          valueFormat={fmtHours}
+        />
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>NAPS PER DAY</Text>
+        <BarChart
+          data={days.map((d) => ({ label: d.label, value: d.naps }))}
+          width={CHART_W}
+          height={160}
+          color={colors.sleep}
+        />
+      </View>
+
+      <View style={styles.summaryRow}>
+        <SummaryCard value={fmtHours(summary.avgTotalMin)} label="sleep/day" />
+        <SummaryCard value={String(summary.avgNaps)} label="naps/day" />
+        <SummaryCard value={formatDuration(summary.longestMin * 60_000)} label="longest" />
       </View>
     </>
   );

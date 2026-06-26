@@ -1,5 +1,5 @@
 import type { SleepEvent } from '@/src/db/types';
-import { classifyKind, formatDuration, sleepDayStats, sleepState } from '@/src/logic/sleep';
+import { classifyKind, formatDuration, sleepDayStats, sleepState, validateSleepDraft } from '@/src/logic/sleep';
 
 function sleep(p: Partial<SleepEvent>): SleepEvent {
   return {
@@ -72,5 +72,34 @@ describe('formatDuration', () => {
     expect(formatDuration(7 * 3600_000 + 20 * 60_000)).toBe('7h 20m');
     expect(formatDuration(45 * 60_000)).toBe('45m');
     expect(formatDuration(0)).toBe('0m');
+  });
+});
+
+describe('validateSleepDraft', () => {
+  const now = new Date('2026-06-26T15:00:00.000Z');
+  const start = new Date('2026-06-26T13:00:00.000Z');
+  const end = new Date('2026-06-26T14:00:00.000Z');
+
+  it('accepts a completed sleep', () => {
+    const r = validateSleepDraft({ startTime: start, endTime: end, kind: 'nap', notes: '  cozy ' }, now);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.start_time).toBe(start.toISOString());
+      expect(r.value.end_time).toBe(end.toISOString());
+      expect(r.value.kind).toBe('nap');
+      expect(r.value.notes).toBe('cozy');
+    }
+  });
+
+  it('rejects end before start', () => {
+    const r = validateSleepDraft({ startTime: end, endTime: start, kind: 'nap' }, now);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.end).toBeDefined();
+  });
+
+  it('rejects future start / end', () => {
+    const future = new Date(now.getTime() + 60_000);
+    expect(validateSleepDraft({ startTime: future, endTime: future, kind: 'nap' }, now).ok).toBe(false);
+    expect(validateSleepDraft({ startTime: start, endTime: future, kind: 'nap' }, now).ok).toBe(false);
   });
 });

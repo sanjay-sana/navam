@@ -1,7 +1,14 @@
-import type { DiaperEvent, FeedEvent, GrowthMeasurement } from '@/src/db/types';
-import { buildTimeline, daySummary, diaperEntry, feedEntry, growthEntry } from '@/src/logic/history';
+import type { DiaperEvent, FeedEvent, GrowthMeasurement, SleepEvent } from '@/src/db/types';
+import { buildTimeline, daySummary, diaperEntry, feedEntry, growthEntry, sleepEntry } from '@/src/logic/history';
 
 const units = { volume: 'ml', mass: 'g', length: 'cm' } as const;
+
+function sleepEv(p: Partial<SleepEvent>): SleepEvent {
+  return {
+    id: 1, baby_id: 1, start_time: '2026-06-20T13:00:00.000Z', end_time: '2026-06-20T14:00:00.000Z',
+    kind: 'nap', location: null, how: null, notes: null, created_at: '', updated_at: '', ...p,
+  };
+}
 
 function feed(p: Partial<FeedEvent>): FeedEvent {
   return {
@@ -53,32 +60,46 @@ describe('growthEntry', () => {
   });
 });
 
+describe('sleepEntry', () => {
+  it('formats nap/night with duration; ongoing when no end', () => {
+    expect(sleepEntry(sleepEv({ kind: 'nap' })).title).toBe('Nap');
+    expect(sleepEntry(sleepEv({ kind: 'nap' })).subtitle).toBe('1h 0m');
+    expect(sleepEntry(sleepEv({ kind: 'night' })).title).toBe('Night sleep');
+    expect(sleepEntry(sleepEv({ end_time: null })).subtitle).toBe('ongoing');
+  });
+});
+
 describe('buildTimeline', () => {
-  it('merges newest-first with growth ordered at midday', () => {
+  it('merges newest-first with growth at midday and sleep by start', () => {
     const tl = buildTimeline(
       [feed({ id: 1, start_time: '2026-06-20T04:00:00.000Z' }), feed({ id: 2, start_time: '2026-06-20T20:00:00.000Z' })],
       [],
       [growth({ id: 9, weight_g: 5900 })],
+      [sleepEv({ id: 5, start_time: '2026-06-20T13:00:00.000Z', end_time: '2026-06-20T14:00:00.000Z' })],
       units
     );
-    expect(tl.map((e) => e.key)).toEqual(['feed-2', 'growth-9', 'feed-1']);
+    expect(tl.map((e) => e.key)).toEqual(['feed-2', 'sleep-5', 'growth-9', 'feed-1']);
   });
 });
 
 describe('daySummary', () => {
-  it('counts feeds excluding pump, bottle-only volume, and weigh-ins', () => {
+  it('counts feeds excluding pump, bottle-only volume, weigh-ins, and total sleep', () => {
     const s = daySummary(
       [feed({ type: 'breast' }), feed({ type: 'bottle', volume_ml: 90 }), feed({ type: 'pump', volume_ml: 110 })],
       [diaper({}), diaper({ id: 2 })],
       [growth({}), growth({ id: 2 })],
+      [sleepEv({ start_time: '2026-06-20T13:00:00.000Z', end_time: '2026-06-20T15:30:00.000Z' })],
       'ml'
     );
     expect(s.feeds).toBe(2);
     expect(s.diapers).toBe(2);
     expect(s.volume).toBe('90 ml');
     expect(s.weighIns).toBe(2);
+    expect(s.sleep).toBe('2h 30m');
   });
-  it('reports null volume when there are no bottles', () => {
-    expect(daySummary([feed({ type: 'breast' })], [], [], 'ml').volume).toBeNull();
+  it('reports null volume/sleep when none', () => {
+    const s = daySummary([feed({ type: 'breast' })], [], [], [], 'ml');
+    expect(s.volume).toBeNull();
+    expect(s.sleep).toBeNull();
   });
 });

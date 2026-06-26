@@ -2,7 +2,7 @@
 // N local calendar days (empty days kept as zero). No React/DB.
 import { format } from 'date-fns';
 
-import type { DiaperEvent, FeedEvent } from '@/src/db/types';
+import type { DiaperEvent, FeedEvent, SleepEvent } from '@/src/db/types';
 
 export type TrendRange = 7 | 14 | 30;
 
@@ -88,5 +88,67 @@ export function trendSummary(days: TrendDay[]): TrendSummary {
     avgDiapers: Math.round((sum((d) => d.diaperCount) / n) * 10) / 10,
     avgPumpMl: Math.round(sum((d) => d.pumpMl) / n),
     hasBottle: days.some((d) => d.bottleMl > 0),
+  };
+}
+
+// --- Sleep -----------------------------------------------------------------
+
+export interface SleepDay {
+  key: string;
+  label: string;
+  nightMin: number;
+  dayMin: number; // nap minutes
+  naps: number;
+  longestMin: number;
+}
+
+/** Per-day sleep, bucketed by the session's local START day (decision #3). */
+export function buildSleepDays(
+  sessions: SleepEvent[],
+  range: TrendRange,
+  now: Date = new Date()
+): SleepDay[] {
+  const labelFmt = range <= 7 ? 'EEE' : 'd';
+  const buckets: SleepDay[] = [];
+  const index = new Map<string, SleepDay>();
+
+  for (let i = range - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const day: SleepDay = { key: localDayKey(d), label: format(d, labelFmt), nightMin: 0, dayMin: 0, naps: 0, longestMin: 0 };
+    buckets.push(day);
+    index.set(day.key, day);
+  }
+
+  for (const s of sessions) {
+    const day = index.get(localDayKey(new Date(s.start_time)));
+    if (!day) continue;
+    const end = s.end_time ? new Date(s.end_time).getTime() : now.getTime();
+    const min = Math.max(0, Math.round((end - new Date(s.start_time).getTime()) / 60_000));
+    if (s.kind === 'night') day.nightMin += min;
+    else {
+      day.dayMin += min;
+      day.naps += 1;
+    }
+    day.longestMin = Math.max(day.longestMin, min);
+  }
+
+  return buckets;
+}
+
+export interface SleepTrendSummary {
+  avgTotalMin: number;
+  avgNaps: number;
+  longestMin: number;
+  hasSleep: boolean;
+}
+
+export function sleepTrendSummary(days: SleepDay[]): SleepTrendSummary {
+  const n = days.length || 1;
+  const total = days.reduce((a, d) => a + d.nightMin + d.dayMin, 0);
+  return {
+    avgTotalMin: Math.round(total / n),
+    avgNaps: Math.round((days.reduce((a, d) => a + d.naps, 0) / n) * 10) / 10,
+    longestMin: days.reduce((a, d) => Math.max(a, d.longestMin), 0),
+    hasSleep: total > 0,
   };
 }

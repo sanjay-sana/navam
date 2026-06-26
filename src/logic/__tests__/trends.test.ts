@@ -1,5 +1,5 @@
-import type { DiaperEvent, FeedEvent } from '@/src/db/types';
-import { buildTrendDays, trendSummary } from '@/src/logic/trends';
+import type { DiaperEvent, FeedEvent, SleepEvent } from '@/src/db/types';
+import { buildSleepDays, buildTrendDays, sleepTrendSummary, trendSummary } from '@/src/logic/trends';
 
 const now = new Date(2026, 5, 21, 12, 0, 0);
 
@@ -93,5 +93,41 @@ describe('trendSummary', () => {
   it('reports hasBottle=false when there are no bottle feeds', () => {
     const days = buildTrendDays([feed({ type: 'breast' })], [], 7, now);
     expect(trendSummary(days).hasBottle).toBe(false);
+  });
+});
+
+function sleepEv(p: Partial<SleepEvent>): SleepEvent {
+  return {
+    id: 1, baby_id: 1, start_time: now.toISOString(), end_time: now.toISOString(),
+    kind: 'nap', location: null, how: null, notes: null, created_at: '', updated_at: '', ...p,
+  };
+}
+
+describe('buildSleepDays', () => {
+  it('buckets by start day, splits night/nap, counts naps + longest', () => {
+    const sessions = [
+      sleepEv({ kind: 'nap', start_time: new Date(2026, 5, 21, 9, 0).toISOString(), end_time: new Date(2026, 5, 21, 10, 0).toISOString() }), // 60m nap
+      sleepEv({ kind: 'nap', start_time: new Date(2026, 5, 21, 13, 0).toISOString(), end_time: new Date(2026, 5, 21, 13, 30).toISOString() }), // 30m nap
+      sleepEv({ kind: 'night', start_time: new Date(2026, 5, 21, 21, 0).toISOString(), end_time: new Date(2026, 5, 21, 23, 0).toISOString() }), // 120m night
+    ];
+    const days = buildSleepDays(sessions, 7, now);
+    const today = days[6];
+    expect(today.naps).toBe(2);
+    expect(today.dayMin).toBe(90);
+    expect(today.nightMin).toBe(120);
+    expect(today.longestMin).toBe(120);
+    expect(days[0].naps).toBe(0); // empty day
+  });
+
+  it('summary averages total + naps and reports hasSleep', () => {
+    const days = buildSleepDays(
+      [sleepEv({ kind: 'nap', start_time: new Date(2026, 5, 21, 9, 0).toISOString(), end_time: new Date(2026, 5, 21, 10, 0).toISOString() })],
+      7,
+      now
+    );
+    const s = sleepTrendSummary(days);
+    expect(s.avgTotalMin).toBe(Math.round(60 / 7));
+    expect(s.hasSleep).toBe(true);
+    expect(sleepTrendSummary(buildSleepDays([], 7, now)).hasSleep).toBe(false);
   });
 });

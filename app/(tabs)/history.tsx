@@ -33,7 +33,7 @@ export default function HistoryScreen() {
 
   const [day, setDay] = useState<Date>(() => localDayStart(new Date()));
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
-  const [summary, setSummary] = useState<DaySummary>({ feeds: 0, diapers: 0, volume: null, weighIns: 0 });
+  const [summary, setSummary] = useState<DaySummary>({ feeds: 0, diapers: 0, volume: null, weighIns: 0, sleep: null });
 
   const now = new Date();
   const isToday = isSameDay(day, now);
@@ -41,15 +41,16 @@ export default function HistoryScreen() {
   const load = useCallback(async () => {
     if (!activeBaby) return;
     const { startIso, endIso } = localDayBoundsIso(day);
-    const [feeds, diapers, allGrowth] = await Promise.all([
+    const [feeds, diapers, allGrowth, sleeps] = await Promise.all([
       repo.getFeedEventsBetween(activeBaby.id, startIso, endIso),
       repo.getDiaperEventsBetween(activeBaby.id, startIso, endIso),
       repo.getGrowthMeasurements(activeBaby.id),
+      repo.getSleepEventsBetween(activeBaby.id, startIso, endIso),
     ]);
     // Growth is date-only, so match on the local day key rather than ISO range.
     const growth = allGrowth.filter((m) => m.measured_at === dayKey(day));
-    setEntries(buildTimeline(feeds, diapers, growth, units));
-    setSummary(daySummary(feeds, diapers, growth, units.volume));
+    setEntries(buildTimeline(feeds, diapers, growth, sleeps, units));
+    setSummary(daySummary(feeds, diapers, growth, sleeps, units.volume));
   }, [activeBaby, day, units.volume, units.mass, units.length]);
 
   useFocusEffect(
@@ -59,19 +60,22 @@ export default function HistoryScreen() {
   );
 
   function openEntry(entry: TimelineEntry) {
-    if (entry.kind === 'feed') {
-      router.push({ pathname: '/log-feed', params: { id: String(entry.id) } });
-    } else if (entry.kind === 'diaper') {
-      router.push({ pathname: '/log-diaper', params: { id: String(entry.id) } });
-    } else {
-      router.push({ pathname: '/log-growth', params: { id: String(entry.id) } });
-    }
+    const path =
+      entry.kind === 'feed'
+        ? '/log-feed'
+        : entry.kind === 'diaper'
+          ? '/log-diaper'
+          : entry.kind === 'sleep'
+            ? '/log-sleep'
+            : '/log-growth';
+    router.push({ pathname: path, params: { id: String(entry.id) } });
   }
 
   const summaryParts = [
     `${summary.feeds} feeds`,
     `${summary.diapers} diapers`,
     ...(summary.volume ? [summary.volume] : []),
+    ...(summary.sleep ? [`${summary.sleep} sleep`] : []),
     ...(summary.weighIns > 0 ? [`${summary.weighIns} weigh-in${summary.weighIns > 1 ? 's' : ''}`] : []),
   ];
 
@@ -111,21 +115,25 @@ export default function HistoryScreen() {
 
 function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => void }) {
   const color =
-    entry.kind === 'growth'
-      ? eventColors.growth
-      : entry.kind === 'diaper'
-        ? eventColors.diaper
-        : entry.feedType === 'pump'
-          ? eventColors.pump
-          : eventColors.feed;
+    entry.kind === 'sleep'
+      ? eventColors.sleep
+      : entry.kind === 'growth'
+        ? eventColors.growth
+        : entry.kind === 'diaper'
+          ? eventColors.diaper
+          : entry.feedType === 'pump'
+            ? eventColors.pump
+            : eventColors.feed;
   const icon =
-    entry.kind === 'growth'
-      ? 'trending-up'
-      : entry.kind === 'diaper'
-        ? 'water'
-        : entry.feedType === 'pump'
-          ? 'arrow-down'
-          : 'cafe';
+    entry.kind === 'sleep'
+      ? 'moon'
+      : entry.kind === 'growth'
+        ? 'trending-up'
+        : entry.kind === 'diaper'
+          ? 'water'
+          : entry.feedType === 'pump'
+            ? 'arrow-down'
+            : 'cafe';
 
   return (
     <Pressable style={styles.row} onPress={onPress}>

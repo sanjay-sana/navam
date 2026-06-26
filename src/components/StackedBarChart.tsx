@@ -16,12 +16,14 @@ export function StackedBarChart({
   height,
   wetColor = colors.diaper,
   dirtyColor = colors.accent,
+  valueFormat = (v) => String(v),
 }: {
   data: StackedDatum[];
   width: number;
   height: number;
   wetColor?: string;
   dirtyColor?: string;
+  valueFormat?: (total: number) => string;
 }) {
   const topPad = 22;
   const bottomPad = 22;
@@ -58,7 +60,7 @@ export function StackedBarChart({
         const y = topPad + plotH - (total / max) * plotH;
         return (
           <SvgText key={`t${i}`} x={cx} y={y - 6} fill={colors.text} fontSize={12} fontFamily={fonts.uiBold} textAnchor="middle">
-            {total > 0 ? String(total) : ''}
+            {total > 0 ? valueFormat(total) : ''}
           </SvgText>
         );
       })}

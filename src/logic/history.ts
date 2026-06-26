@@ -6,10 +6,12 @@ import type {
   FeedEvent,
   FeedType,
   GrowthMeasurement,
+  SleepEvent,
   UnitLength,
   UnitMass,
   UnitVolume,
 } from '@/src/db/types';
+import { formatDuration } from './sleep';
 import { formatLength, formatMass, formatVolume } from './units';
 
 export interface DisplayUnits {
@@ -21,7 +23,7 @@ export interface DisplayUnits {
 export interface TimelineEntry {
   key: string;
   id: number;
-  kind: 'feed' | 'diaper' | 'growth';
+  kind: 'feed' | 'diaper' | 'growth' | 'sleep';
   feedType?: FeedType;
   time: string; // UTC ISO (growth uses midday of its date for ordering)
   /** False for growth (date-only) — the row hides the clock time. */
@@ -95,17 +97,34 @@ export function growthEntry(m: GrowthMeasurement, units: DisplayUnits): Timeline
   };
 }
 
-/** Merge feeds + diapers + growth into one timeline, newest first. */
+export function sleepEntry(s: SleepEvent): TimelineEntry {
+  const subtitle = s.end_time
+    ? formatDuration(new Date(s.end_time).getTime() - new Date(s.start_time).getTime())
+    : 'ongoing';
+  return {
+    key: `sleep-${s.id}`,
+    id: s.id,
+    kind: 'sleep',
+    time: s.start_time,
+    hasClock: true,
+    title: s.kind === 'night' ? 'Night sleep' : 'Nap',
+    subtitle,
+  };
+}
+
+/** Merge feeds + diapers + growth + sleep into one timeline, newest first. */
 export function buildTimeline(
   feeds: FeedEvent[],
   diapers: DiaperEvent[],
   growth: GrowthMeasurement[],
+  sleeps: SleepEvent[],
   units: DisplayUnits
 ): TimelineEntry[] {
   const items = [
     ...feeds.map((f) => feedEntry(f, units.volume)),
     ...diapers.map(diaperEntry),
     ...growth.map((m) => growthEntry(m, units)),
+    ...sleeps.map(sleepEntry),
   ];
   items.sort((a, b) => b.time.localeCompare(a.time));
   return items;
@@ -116,22 +135,30 @@ export interface DaySummary {
   diapers: number;
   volume: string | null; // bottle-only ml/oz, null when no bottles
   weighIns: number;
+  sleep: string | null; // total sleep that day, null when none
 }
 
 export function daySummary(
   feeds: FeedEvent[],
   diapers: DiaperEvent[],
   growth: GrowthMeasurement[],
-  unit: UnitVolume
+  sleeps: SleepEvent[],
+  unit: UnitVolume,
+  now: Date = new Date()
 ): DaySummary {
   const feedCount = feeds.filter((f) => f.type !== 'pump').length;
   const volMl = feeds
     .filter((f) => f.type === 'bottle')
     .reduce((sum, f) => sum + (f.volume_ml ?? 0), 0);
+  const sleepMs = sleeps.reduce((sum, s) => {
+    const end = s.end_time ? new Date(s.end_time).getTime() : now.getTime();
+    return sum + Math.max(0, end - new Date(s.start_time).getTime());
+  }, 0);
   return {
     feeds: feedCount,
     diapers: diapers.length,
     volume: volMl > 0 ? formatVolume(volMl, unit) : null,
     weighIns: growth.length,
+    sleep: sleepMs > 0 ? formatDuration(sleepMs) : null,
   };
 }

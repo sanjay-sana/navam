@@ -1,6 +1,6 @@
-// Pure sleep logic for the Today screen. No React/DB.
+// Pure sleep logic. No React/DB.
 // A sleep with end_time === null is in progress (baby asleep now).
-import type { SleepEvent, SleepKind } from '@/src/db/types';
+import type { SleepEvent, SleepInput, SleepKind } from '@/src/db/types';
 
 const MS_PER_MIN = 60_000;
 
@@ -52,4 +52,54 @@ export function formatDuration(ms: number): string {
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+// --- Log-sleep form (completed sessions; ongoing is started from Today) ------
+
+export interface SleepDraft {
+  startTime: Date;
+  endTime: Date;
+  kind: SleepKind;
+  location?: string | null;
+  how?: string | null;
+  notes?: string;
+}
+
+export interface SleepErrors {
+  time?: string;
+  end?: string;
+}
+
+export type SleepResult = { ok: true; value: SleepInput } | { ok: false; errors: SleepErrors };
+
+export function validateSleepDraft(draft: SleepDraft, now: Date = new Date()): SleepResult {
+  const errors: SleepErrors = {};
+
+  if (Number.isNaN(draft.startTime.getTime())) {
+    errors.time = 'Invalid time';
+  } else if (draft.startTime.getTime() > now.getTime()) {
+    errors.time = "Start can't be in the future";
+  }
+
+  if (Number.isNaN(draft.endTime.getTime())) {
+    errors.end = 'Invalid time';
+  } else if (draft.endTime.getTime() > now.getTime()) {
+    errors.end = "End can't be in the future";
+  } else if (draft.endTime.getTime() <= draft.startTime.getTime()) {
+    errors.end = 'End must be after start';
+  }
+
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+
+  return {
+    ok: true,
+    value: {
+      start_time: draft.startTime.toISOString(),
+      end_time: draft.endTime.toISOString(),
+      kind: draft.kind,
+      location: draft.location ?? null,
+      how: draft.how ?? null,
+      notes: draft.notes?.trim() || null,
+    },
+  };
 }
