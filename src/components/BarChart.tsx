@@ -30,6 +30,9 @@ export function BarChart({
   const max = Math.max(...data.map((d) => d.value), 1);
   const slot = width / data.length;
   const barW = Math.min(slot * 0.55, 34);
+  // Thin x-axis labels on dense ranges (e.g. 30d), anchored on the latest day.
+  const labelStep = data.length <= 14 ? 1 : Math.ceil(data.length / 6);
+  const showLabel = (i: number) => (data.length - 1 - i) % labelStep === 0;
 
   const yFor = (v: number) => topPad + plotH * (1 - v / max);
 
@@ -75,14 +78,13 @@ export function BarChart({
         );
       })}
 
-      {data.map((d, i) => {
-        const cx = i * slot + slot / 2;
-        return (
-          <SvgText key={`l${i}`} x={cx} y={height - 6} fill={colors.dim} fontSize={11} fontFamily={fonts.ui} textAnchor="middle">
+      {data.map((d, i) =>
+        showLabel(i) ? (
+          <SvgText key={`l${i}`} x={i * slot + slot / 2} y={height - 6} fill={colors.dim} fontSize={11} fontFamily={fonts.ui} textAnchor="middle">
             {d.label}
           </SvgText>
-        );
-      })}
+        ) : null
+      )}
     </Svg>
   );
 }
