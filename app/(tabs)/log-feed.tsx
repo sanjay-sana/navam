@@ -16,10 +16,10 @@ import { syncFeedReminder } from '@/src/notifications/feedReminder';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 
+// Pump is its own chooser entry, so the feed type selector is breast/bottle only.
 const TYPE_OPTIONS = [
   { label: 'Breast', value: 'breast' as const },
   { label: 'Bottle', value: 'bottle' as const },
-  { label: 'Pump', value: 'pump' as const },
 ];
 const SIDE_OPTIONS = [
   { label: 'Left', value: 'left' as const },
@@ -49,12 +49,12 @@ function feedTotalSeconds(f: FeedEvent): number | null {
 
 export default function LogFeedScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, pump } = useLocalSearchParams<{ id?: string; pump?: string }>();
   const editId = id ? Number(id) : null;
   const { activeBaby, settings } = useAppData();
   const unit = settings?.unit_volume ?? 'ml';
 
-  const [type, setType] = useState<FeedType>('breast');
+  const [type, setType] = useState<FeedType>(pump === '1' ? 'pump' : 'breast');
   const [side, setSide] = useState<Side | null>('left');
   const [volumeText, setVolumeText] = useState('');
   const [contents, setContents] = useState<Contents | null>(null);
@@ -203,7 +203,9 @@ export default function LogFeedScreen() {
           </Text>
         </View>
 
-        <Segmented options={TYPE_OPTIONS} value={type} onChange={switchType} />
+        {type !== 'pump' ? (
+          <Segmented options={TYPE_OPTIONS} value={type} onChange={switchType} />
+        ) : null}
 
         {type === 'breast' ? (
           <>
