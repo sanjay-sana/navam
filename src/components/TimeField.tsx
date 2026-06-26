@@ -1,6 +1,8 @@
-// Editable event time. Tapping the row opens the custom wheel picker (date,
-// then time); "Now" snaps to the current time. Used by feed and diaper logs.
-import { format } from 'date-fns';
+// Editable event time. Tapping the row opens the time wheel directly (the common
+// "happened a bit ago, today" case); the date is shown as a secondary label and
+// only changes via "Change date" (for backfilling older days). "Now" snaps to
+// the current time. Used by the feed and diaper log screens.
+import { format, isToday } from 'date-fns';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -20,32 +22,19 @@ export function TimeField({
 }) {
   const [step, setStep] = useState<'date' | 'time' | null>(null);
 
-  const applyPreset = (minutesAgo: number) => onChange(new Date(Date.now() - minutesAgo * 60_000));
-
   return (
     <View style={styles.block}>
       <Text style={styles.label}>{label}</Text>
-      <Pressable style={styles.timeRow} onPress={() => setStep('date')}>
-        <Text style={styles.timeText}>{format(value, 'EEE d MMM · h:mm a')}</Text>
+      <Pressable style={styles.timeRow} onPress={() => setStep('time')}>
+        <Text style={styles.timeText}>{format(value, 'h:mm a')}</Text>
+        <Text style={styles.dateText}>{isToday(value) ? 'Today' : format(value, 'EEE d MMM')}</Text>
       </Pressable>
       <View style={styles.whenRow}>
-        <Chip label="Now" onPress={() => applyPreset(0)} />
+        <Chip label="Now" onPress={() => onChange(new Date())} />
+        <Chip label="Change date" onPress={() => setStep('date')} />
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <WheelDateTimeModal
-        visible={step === 'date'}
-        mode="date"
-        value={value}
-        maximumDate={new Date()}
-        onCancel={() => setStep(null)}
-        onConfirm={(d) => {
-          const merged = new Date(value);
-          merged.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
-          onChange(merged);
-          setStep('time');
-        }}
-      />
       <WheelDateTimeModal
         visible={step === 'time'}
         mode="time"
@@ -55,6 +44,19 @@ export function TimeField({
         onConfirm={(d) => {
           const merged = new Date(value);
           merged.setHours(d.getHours(), d.getMinutes(), 0, 0);
+          onChange(merged);
+          setStep(null);
+        }}
+      />
+      <WheelDateTimeModal
+        visible={step === 'date'}
+        mode="date"
+        value={value}
+        maximumDate={new Date()}
+        onCancel={() => setStep(null)}
+        onConfirm={(d) => {
+          const merged = new Date(value);
+          merged.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
           onChange(merged);
           setStep(null);
         }}
@@ -81,6 +83,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -89,6 +94,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   timeText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
+  dateText: { fontFamily: fonts.ui, fontSize: 15, color: colors.dim },
   whenRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   chip: {
     backgroundColor: colors.surface2,
