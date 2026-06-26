@@ -5,8 +5,10 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LullMark } from '@/src/components/LullMark';
-import { WheelDateTimeModal } from '@/src/components/WheelPicker';
+import { WheelCompoundModal, WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
+import { weightColumns, weightCompose, weightInitial, weightLabel } from '@/src/lib/measurementWheels';
+import { unitToGrams } from '@/src/logic/units';
 import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
@@ -14,14 +16,17 @@ import type { Sex } from '@/src/db/types';
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { refresh } = useAppData();
+  const { settings, refresh } = useAppData();
+  const unitMass = settings?.unit_mass ?? 'g';
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [sex, setSex] = useState<Sex | null>(null);
   const [dob, setDob] = useState<Date | null>(null);
+  const [birthWeight, setBirthWeight] = useState<number | null>(null);
   const [showPicker, setShowPicker] = useState(false);
+  const [showWeight, setShowWeight] = useState(false);
   const [errors, setErrors] = useState<BabyDraftErrors>({});
   const [saving, setSaving] = useState(false);
 
@@ -34,7 +39,14 @@ export default function OnboardingScreen() {
     setErrors({});
     setSaving(true);
     try {
-      await repo.createBaby(result.value);
+      const baby = await repo.createBaby(result.value);
+      // Optional birth weight → seed an initial growth measurement at the DOB.
+      if (birthWeight != null) {
+        await repo.createGrowthMeasurement(baby.id, {
+          measured_at: result.value.date_of_birth,
+          weight_g: unitToGrams(birthWeight, unitMass),
+        });
+      }
       await refresh();
       router.replace('/');
     } catch (e) {
@@ -110,6 +122,27 @@ export default function OnboardingScreen() {
           onConfirm={(d) => {
             setDob(d);
             setShowPicker(false);
+          }}
+        />
+
+        {/* Birth weight (optional) → seeds the growth chart */}
+        <Text style={styles.label}>BIRTH WEIGHT (OPTIONAL)</Text>
+        <Pressable style={styles.input} onPress={() => setShowWeight(true)}>
+          <Text style={birthWeight != null ? styles.inputText : styles.inputPlaceholder}>
+            {birthWeight != null ? weightLabel(birthWeight, unitMass) : 'Add birth weight'}
+          </Text>
+        </Pressable>
+
+        <WheelCompoundModal
+          visible={showWeight}
+          title="Birth weight"
+          columns={weightColumns(unitMass)}
+          initial={weightInitial(unitMass, birthWeight ?? (unitMass === 'lb_oz' ? 7 : 3))}
+          compose={(i) => weightCompose(unitMass, i)}
+          onCancel={() => setShowWeight(false)}
+          onConfirm={(n) => {
+            setBirthWeight(n);
+            setShowWeight(false);
           }}
         />
       </ScrollView>
