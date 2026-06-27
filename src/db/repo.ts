@@ -49,8 +49,8 @@ type SettingsPatch = Partial<
     | 'active_baby_id'
     | 'theme'
     | 'track_sleep'
-    | 'night_start_hour'
-    | 'night_end_hour'
+    | 'night_start_min'
+    | 'night_end_min'
   >
 >;
 

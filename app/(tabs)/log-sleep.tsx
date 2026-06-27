@@ -36,8 +36,8 @@ export default function LogSleepScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const editId = id ? Number(id) : null;
   const { activeBaby, settings } = useAppData();
-  const nightStart = settings?.night_start_hour;
-  const nightEnd = settings?.night_end_hour;
+  const nightStart = settings?.night_start_min;
+  const nightEnd = settings?.night_end_min;
 
   const [start, setStart] = useState<Date>(() => new Date(Date.now() - 60 * 60_000));
   const [end, setEnd] = useState<Date>(() => new Date());

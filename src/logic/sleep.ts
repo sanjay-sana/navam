@@ -5,16 +5,16 @@ import type { SleepEvent, SleepInput, SleepKind } from '@/src/db/types';
 const MS_PER_MIN = 60_000;
 
 /**
- * Night if the start hour falls in the configured night window (default
- * 20:00–06:00, which wraps midnight); otherwise a nap (decision #2). The window
- * is user-configurable in Settings.
+ * Night if the start time falls in the configured night window (minutes since
+ * midnight; default 1200–360 = 20:00–06:00, which wraps midnight); otherwise a
+ * nap (decision #2). The window is user-configurable in Settings.
  */
-export function classifyKind(start: Date, nightStartHour = 20, nightEndHour = 6): SleepKind {
-  const h = start.getHours();
+export function classifyKind(start: Date, nightStartMin = 1200, nightEndMin = 360): SleepKind {
+  const t = start.getHours() * 60 + start.getMinutes();
   const inNight =
-    nightStartHour <= nightEndHour
-      ? h >= nightStartHour && h < nightEndHour // same-day window (unusual)
-      : h >= nightStartHour || h < nightEndHour; // wraps midnight (the normal case)
+    nightStartMin <= nightEndMin
+      ? t >= nightStartMin && t < nightEndMin // same-day window (unusual)
+      : t >= nightStartMin || t < nightEndMin; // wraps midnight (the normal case)
   return inNight ? 'night' : 'nap';
 }
 

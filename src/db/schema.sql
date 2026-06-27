@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS settings (
   active_baby_id INTEGER REFERENCES babies(id),
   theme            TEXT NOT NULL DEFAULT 'dark',
   track_sleep      INTEGER NOT NULL DEFAULT 1,                     -- v4: show/hide sleep
-  night_start_hour INTEGER NOT NULL DEFAULT 20,                    -- v5: night window
-  night_end_hour   INTEGER NOT NULL DEFAULT 6,
+  night_start_min  INTEGER NOT NULL DEFAULT 1200,                 -- v5: night window (min since midnight)
+  night_end_min    INTEGER NOT NULL DEFAULT 360,
   updated_at       TEXT NOT NULL
 );

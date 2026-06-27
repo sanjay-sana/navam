@@ -90,7 +90,7 @@ export default function TodayScreen() {
       await repo.startSleep(
         activeBaby.id,
         start.toISOString(),
-        classifyKind(start, settings?.night_start_hour, settings?.night_end_hour)
+        classifyKind(start, settings?.night_start_min, settings?.night_end_min)
       );
     }
     await load();

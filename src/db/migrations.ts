@@ -110,10 +110,11 @@ CREATE INDEX IF NOT EXISTS idx_sleep_baby_start ON sleep_events(baby_id, start_t
 // v4: per-user toggle to show/hide sleep tracking.
 const MIGRATION_4 = `ALTER TABLE settings ADD COLUMN track_sleep INTEGER NOT NULL DEFAULT 1;`;
 
-// v5: configurable night-sleep window (hours). Default 20:00–06:00.
+// v5: configurable night-sleep window, stored as minutes-since-midnight
+// (30-min granularity). Default 20:00 (1200) – 06:00 (360).
 const MIGRATION_5 = `
-ALTER TABLE settings ADD COLUMN night_start_hour INTEGER NOT NULL DEFAULT 20;
-ALTER TABLE settings ADD COLUMN night_end_hour INTEGER NOT NULL DEFAULT 6;
+ALTER TABLE settings ADD COLUMN night_start_min INTEGER NOT NULL DEFAULT 1200;
+ALTER TABLE settings ADD COLUMN night_end_min INTEGER NOT NULL DEFAULT 360;
 `;
 
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {

@@ -24,12 +24,18 @@ const INTERVALS = [
   { label: '4h', value: 240 },
 ];
 
-function formatHour(h: number): string {
+// Night window is stored as minutes-since-midnight; the picker steps every 30 min.
+const STEP_MIN = 30;
+function formatTime(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
   const period = h < 12 ? 'AM' : 'PM';
   const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:00 ${period}`;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
 }
-const HOUR_COLUMNS = [{ items: Array.from({ length: 24 }, (_, h) => ({ label: formatHour(h) })) }];
+const TIME_COLUMNS = [
+  { items: Array.from({ length: (24 * 60) / STEP_MIN }, (_, i) => ({ label: formatTime(i * STEP_MIN) })) },
+];
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -184,13 +190,13 @@ export default function SettingsScreen() {
               <View style={styles.cardRow}>
                 <Text style={styles.rowLabel}>Starts</Text>
                 <Pressable style={styles.hourField} onPress={() => setNightPicker('start')}>
-                  <Text style={styles.hourText}>{formatHour(settings.night_start_hour)}</Text>
+                  <Text style={styles.hourText}>{formatTime(settings.night_start_min)}</Text>
                 </Pressable>
               </View>
               <View style={[styles.cardRow, { marginTop: spacing.md }]}>
                 <Text style={styles.rowLabel}>Ends</Text>
                 <Pressable style={styles.hourField} onPress={() => setNightPicker('end')}>
-                  <Text style={styles.hourText}>{formatHour(settings.night_end_hour)}</Text>
+                  <Text style={styles.hourText}>{formatTime(settings.night_end_min)}</Text>
                 </Pressable>
               </View>
             </View>
@@ -267,12 +273,12 @@ export default function SettingsScreen() {
         <WheelCompoundModal
           visible={nightPicker === 'start'}
           title="Night starts"
-          columns={HOUR_COLUMNS}
-          initial={[settings.night_start_hour]}
-          compose={(i) => i[0]}
+          columns={TIME_COLUMNS}
+          initial={[Math.round(settings.night_start_min / STEP_MIN)]}
+          compose={(i) => i[0] * STEP_MIN}
           onCancel={() => setNightPicker(null)}
-          onConfirm={async (h) => {
-            await repo.updateSettings({ night_start_hour: h });
+          onConfirm={async (min) => {
+            await repo.updateSettings({ night_start_min: min });
             await refresh();
             setNightPicker(null);
           }}
@@ -280,12 +286,12 @@ export default function SettingsScreen() {
         <WheelCompoundModal
           visible={nightPicker === 'end'}
           title="Night ends"
-          columns={HOUR_COLUMNS}
-          initial={[settings.night_end_hour]}
-          compose={(i) => i[0]}
+          columns={TIME_COLUMNS}
+          initial={[Math.round(settings.night_end_min / STEP_MIN)]}
+          compose={(i) => i[0] * STEP_MIN}
           onCancel={() => setNightPicker(null)}
-          onConfirm={async (h) => {
-            await repo.updateSettings({ night_end_hour: h });
+          onConfirm={async (min) => {
+            await repo.updateSettings({ night_end_min: min });
             await refresh();
             setNightPicker(null);
           }}
