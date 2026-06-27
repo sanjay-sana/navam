@@ -1,5 +1,9 @@
+import { format } from 'date-fns';
+
 import type { DiaperEvent, FeedEvent, GrowthMeasurement } from '@/src/db/types';
 import { buildCsv } from '@/src/logic/csv';
+
+const local = (iso: string) => format(new Date(iso), 'yyyy-MM-dd HH:mm');
 
 function feed(p: Partial<FeedEvent>): FeedEvent {
   return {
@@ -19,14 +23,19 @@ describe('buildCsv', () => {
   const lines = buildCsv([feed({})], [diaper({})], [growth({})]).split('\n');
 
   it('has a header and one row per event', () => {
-    expect(lines[0].startsWith('event_type,time,subtype')).toBe(true);
+    expect(lines[0].startsWith('event_type,time_local,subtype')).toBe(true);
     expect(lines).toHaveLength(4);
   });
 
-  it('sorts by time (date-only growth sorts before full ISO timestamps)', () => {
+  it('sorts by the stored instant (date-only growth sorts before same-day timestamps)', () => {
     expect(lines[1].startsWith('growth,2026-06-20,')).toBe(true);
-    expect(lines[2].startsWith('diaper,2026-06-20T01:15')).toBe(true);
+    expect(lines[2].startsWith('diaper,')).toBe(true);
     expect(lines[3]).toContain(',90,formula,');
+  });
+
+  it('renders event times in local time (not raw UTC ISO)', () => {
+    expect(lines[2]).toContain(local('2026-06-20T01:15:00.000Z'));
+    expect(lines[2]).not.toContain('T01:15:00.000Z');
   });
 
   it('keeps a fixed 14-column shape with blank cells', () => {
