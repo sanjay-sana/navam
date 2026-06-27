@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LullMark } from '@/src/components/LullMark';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Segmented } from '@/src/components/Segmented';
+import { WheelCompoundModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import type { UnitLength, UnitMass, UnitVolume } from '@/src/db/types';
 import { exportCsv } from '@/src/lib/exportCsv';
@@ -23,6 +24,13 @@ const INTERVALS = [
   { label: '4h', value: 240 },
 ];
 
+function formatHour(h: number): string {
+  const period = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:00 ${period}`;
+}
+const HOUR_COLUMNS = [{ items: Array.from({ length: 24 }, (_, h) => ({ label: formatHour(h) })) }];
+
 export default function SettingsScreen() {
   const router = useRouter();
   const { activeBaby, settings, refresh } = useAppData();
@@ -30,6 +38,7 @@ export default function SettingsScreen() {
   const [reminderOn, setReminderOn] = useState(false);
   const [intervalMin, setIntervalMin] = useState(180);
   const [exporting, setExporting] = useState(false);
+  const [nightPicker, setNightPicker] = useState<'start' | 'end' | null>(null);
   const [showReset, setShowReset] = useState(false);
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
 
@@ -166,6 +175,28 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Night-sleep window — only relevant when sleep tracking is on. */}
+        {settings.track_sleep === 1 ? (
+          <>
+            <Text style={styles.section}>NIGHT TIME</Text>
+            <View style={styles.card}>
+              <Text style={styles.everyLabel}>Sleeps that start in this window are logged as night sleep</Text>
+              <View style={styles.cardRow}>
+                <Text style={styles.rowLabel}>Starts</Text>
+                <Pressable style={styles.hourField} onPress={() => setNightPicker('start')}>
+                  <Text style={styles.hourText}>{formatHour(settings.night_start_hour)}</Text>
+                </Pressable>
+              </View>
+              <View style={[styles.cardRow, { marginTop: spacing.md }]}>
+                <Text style={styles.rowLabel}>Ends</Text>
+                <Pressable style={styles.hourField} onPress={() => setNightPicker('end')}>
+                  <Text style={styles.hourText}>{formatHour(settings.night_end_hour)}</Text>
+                </Pressable>
+              </View>
+            </View>
+          </>
+        ) : null}
+
         {/* Feed interval — always editable; drives the Today countdown + reminder. */}
         <Text style={styles.section}>FEED INTERVAL</Text>
         <View style={styles.card}>
@@ -232,6 +263,33 @@ export default function SettingsScreen() {
           onCancel={() => setNotice(null)}
           onConfirm={() => setNotice(null)}
         />
+
+        <WheelCompoundModal
+          visible={nightPicker === 'start'}
+          title="Night starts"
+          columns={HOUR_COLUMNS}
+          initial={[settings.night_start_hour]}
+          compose={(i) => i[0]}
+          onCancel={() => setNightPicker(null)}
+          onConfirm={async (h) => {
+            await repo.updateSettings({ night_start_hour: h });
+            await refresh();
+            setNightPicker(null);
+          }}
+        />
+        <WheelCompoundModal
+          visible={nightPicker === 'end'}
+          title="Night ends"
+          columns={HOUR_COLUMNS}
+          initial={[settings.night_end_hour]}
+          compose={(i) => i[0]}
+          onCancel={() => setNightPicker(null)}
+          onConfirm={async (h) => {
+            await repo.updateSettings({ night_end_hour: h });
+            await refresh();
+            setNightPicker(null);
+          }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -289,6 +347,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   cardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  hourField: { backgroundColor: colors.surface2, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  hourText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.text },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.md },
   everyLabel: { fontFamily: fonts.ui, fontSize: 14, color: colors.dim, marginBottom: spacing.sm },
   intervals: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },

@@ -27,6 +27,14 @@ describe('classifyKind', () => {
     expect(classifyKind(new Date(2026, 5, 26, 19, 59))).toBe('nap');
     expect(classifyKind(new Date(2026, 5, 26, 20, 0))).toBe('night'); // 8pm boundary
   });
+
+  it('honours a custom night window', () => {
+    // night 19:00–07:00
+    expect(classifyKind(new Date(2026, 5, 26, 19, 0), 19, 7)).toBe('night');
+    expect(classifyKind(new Date(2026, 5, 26, 6, 30), 19, 7)).toBe('night');
+    expect(classifyKind(new Date(2026, 5, 26, 7, 0), 19, 7)).toBe('nap');
+    expect(classifyKind(new Date(2026, 5, 26, 18, 0), 19, 7)).toBe('nap');
+  });
 });
 
 describe('sleepState', () => {

@@ -42,6 +42,8 @@ export interface Settings {
   active_baby_id: number | null;
   theme: string;
   track_sleep: number; // 1 = show sleep tracking, 0 = hide
+  night_start_hour: number; // sleeps starting in the night window → night (default 20)
+  night_end_hour: number; // default 6
   updated_at: string;
 }
 

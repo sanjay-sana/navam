@@ -35,7 +35,9 @@ export default function LogSleepScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const editId = id ? Number(id) : null;
-  const { activeBaby } = useAppData();
+  const { activeBaby, settings } = useAppData();
+  const nightStart = settings?.night_start_hour;
+  const nightEnd = settings?.night_end_hour;
 
   const [start, setStart] = useState<Date>(() => new Date(Date.now() - 60 * 60_000));
   const [end, setEnd] = useState<Date>(() => new Date());
@@ -58,7 +60,7 @@ export default function LogSleepScreen() {
           const fresh = new Date(Date.now() - 60 * 60_000);
           setStart(fresh);
           setEnd(new Date());
-          setKind(classifyKind(fresh));
+          setKind(classifyKind(fresh, nightStart, nightEnd));
           setKindTouched(false);
           setLocation(null);
           setHow(null);
@@ -82,12 +84,12 @@ export default function LogSleepScreen() {
       return () => {
         active = false;
       };
-    }, [editId])
+    }, [editId, nightStart, nightEnd])
   );
 
   function onStartChange(d: Date) {
     setStart(d);
-    if (!kindTouched) setKind(classifyKind(d));
+    if (!kindTouched) setKind(classifyKind(d, nightStart, nightEnd));
   }
 
   async function onSave() {

@@ -87,7 +87,11 @@ export default function TodayScreen() {
       await repo.endSleep(sleep.open.id, new Date().toISOString());
     } else {
       const start = new Date();
-      await repo.startSleep(activeBaby.id, start.toISOString(), classifyKind(start));
+      await repo.startSleep(
+        activeBaby.id,
+        start.toISOString(),
+        classifyKind(start, settings?.night_start_hour, settings?.night_end_hour)
+      );
     }
     await load();
   }

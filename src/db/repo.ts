@@ -41,7 +41,17 @@ export async function getSettings(): Promise<Settings> {
 }
 
 type SettingsPatch = Partial<
-  Pick<Settings, 'unit_volume' | 'unit_mass' | 'unit_length' | 'active_baby_id' | 'theme' | 'track_sleep'>
+  Pick<
+    Settings,
+    | 'unit_volume'
+    | 'unit_mass'
+    | 'unit_length'
+    | 'active_baby_id'
+    | 'theme'
+    | 'track_sleep'
+    | 'night_start_hour'
+    | 'night_end_hour'
+  >
 >;
 
 export async function updateSettings(patch: SettingsPatch): Promise<void> {

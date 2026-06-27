@@ -90,7 +90,9 @@ CREATE TABLE IF NOT EXISTS settings (
   unit_mass      TEXT NOT NULL DEFAULT 'g'   CHECK (unit_mass   IN ('g','lb_oz')),
   unit_length    TEXT NOT NULL DEFAULT 'cm'  CHECK (unit_length IN ('cm','in')),
   active_baby_id INTEGER REFERENCES babies(id),
-  theme          TEXT NOT NULL DEFAULT 'dark',
-  track_sleep    INTEGER NOT NULL DEFAULT 1,                       -- v4: show/hide sleep
-  updated_at     TEXT NOT NULL
+  theme            TEXT NOT NULL DEFAULT 'dark',
+  track_sleep      INTEGER NOT NULL DEFAULT 1,                     -- v4: show/hide sleep
+  night_start_hour INTEGER NOT NULL DEFAULT 20,                    -- v5: night window
+  night_end_hour   INTEGER NOT NULL DEFAULT 6,
+  updated_at       TEXT NOT NULL
 );

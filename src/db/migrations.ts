@@ -110,6 +110,12 @@ CREATE INDEX IF NOT EXISTS idx_sleep_baby_start ON sleep_events(baby_id, start_t
 // v4: per-user toggle to show/hide sleep tracking.
 const MIGRATION_4 = `ALTER TABLE settings ADD COLUMN track_sleep INTEGER NOT NULL DEFAULT 1;`;
 
+// v5: configurable night-sleep window (hours). Default 20:00–06:00.
+const MIGRATION_5 = `
+ALTER TABLE settings ADD COLUMN night_start_hour INTEGER NOT NULL DEFAULT 20;
+ALTER TABLE settings ADD COLUMN night_end_hour INTEGER NOT NULL DEFAULT 6;
+`;
+
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('lull.db');
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -151,5 +157,12 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
       await db.execAsync(MIGRATION_4);
     });
     await db.execAsync('PRAGMA user_version = 4');
+  }
+
+  if (version < 5) {
+    await db.withTransactionAsync(async () => {
+      await db.execAsync(MIGRATION_5);
+    });
+    await db.execAsync('PRAGMA user_version = 5');
   }
 }
