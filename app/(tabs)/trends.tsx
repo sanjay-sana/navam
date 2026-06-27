@@ -258,7 +258,7 @@ function SleepView() {
 
 const METRICS: { label: string; value: GrowthMetric }[] = [
   { label: 'Weight', value: 'weight' },
-  { label: 'Height', value: 'length' },
+  { label: 'Length', value: 'length' },
 ];
 
 function GrowthView() {
