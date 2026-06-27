@@ -142,6 +142,9 @@ export default function LogSleepScreen() {
           }}
           color={colors.sleep}
         />
+        <Text style={styles.kindHint}>
+          Night = the main overnight sleep. Nap = a daytime sleep. Auto-set from the start time — tap to change.
+        </Text>
 
         <TimeField label="FELL ASLEEP" value={start} onChange={onStartChange} error={errors.time} />
 
@@ -207,6 +210,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm, marginBottom: spacing.lg },
   title: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
   label: { fontFamily: fonts.uiBold, fontSize: 12, letterSpacing: 1, color: colors.dim, marginTop: spacing.lg, marginBottom: spacing.sm },
+  kindHint: { fontFamily: fonts.ui, fontSize: 13, color: colors.dim, marginTop: spacing.sm, lineHeight: 18 },
   ongoingRow: {
     flexDirection: 'row',
     alignItems: 'center',

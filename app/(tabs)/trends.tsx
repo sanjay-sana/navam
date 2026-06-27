@@ -222,9 +222,10 @@ function SleepView() {
           <Text style={styles.cardTitle}>SLEEP PER DAY</Text>
           <View style={styles.legend}>
             <Legend color={colors.sleep} label="night" />
-            <Legend color={colors.accent} label="day" />
+            <Legend color={colors.accent} label="naps" />
           </View>
         </View>
+        <Text style={styles.cardCaption}>Total hours slept each day — overnight sleep plus daytime naps.</Text>
         <StackedBarChart
           data={days.map((d) => ({ label: d.label, wet: d.nightMin, dirty: d.dayMin }))}
           width={CHART_W}
@@ -237,6 +238,7 @@ function SleepView() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>NAPS PER DAY</Text>
+        <Text style={styles.cardCaption}>How many daytime sleeps (naps) you logged each day.</Text>
         <BarChart
           data={days.map((d) => ({ label: d.label, value: d.naps }))}
           width={CHART_W}
@@ -446,6 +448,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm, gap: spacing.md },
   cardTitle: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 0.5, color: colors.dim, flexShrink: 1 },
+  cardCaption: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: 4, marginBottom: spacing.sm, lineHeight: 16 },
   headerToggle: { width: 168 },
   note: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim },
   noteRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
