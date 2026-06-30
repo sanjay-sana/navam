@@ -8,17 +8,27 @@ import { LullMark } from '@/src/components/LullMark';
 import { Segmented } from '@/src/components/Segmented';
 import { WheelCompoundModal, WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
-import { weightColumns, weightCompose, weightInitial, weightLabel } from '@/src/lib/measurementWheels';
-import { unitToGrams } from '@/src/logic/units';
+import {
+  lengthColumns,
+  lengthCompose,
+  lengthInitial,
+  lengthLabel,
+  weightColumns,
+  weightCompose,
+  weightInitial,
+  weightLabel,
+} from '@/src/lib/measurementWheels';
+import { unitToCm, unitToGrams } from '@/src/logic/units';
 import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
-import type { Sex, UnitMass } from '@/src/db/types';
+import type { Sex, UnitLength, UnitMass } from '@/src/db/types';
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const { settings, refresh } = useAppData();
   const unitMass = settings?.unit_mass ?? 'g';
+  const unitLength = settings?.unit_length ?? 'cm';
 
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -26,8 +36,10 @@ export default function OnboardingScreen() {
   const [sex, setSex] = useState<Sex | null>(null);
   const [dob, setDob] = useState<Date | null>(null);
   const [birthWeight, setBirthWeight] = useState<number | null>(null);
+  const [birthLength, setBirthLength] = useState<number | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [showWeight, setShowWeight] = useState(false);
+  const [showLength, setShowLength] = useState(false);
   const [errors, setErrors] = useState<BabyDraftErrors>({});
   const [saving, setSaving] = useState(false);
 
@@ -36,6 +48,13 @@ export default function OnboardingScreen() {
     await repo.updateSettings({ unit_mass: u });
     await refresh();
     setBirthWeight(null); // value's unit changed; re-enter
+  }
+
+  async function changeLengthUnit(u: UnitLength) {
+    if (u === unitLength) return;
+    await repo.updateSettings({ unit_length: u });
+    await refresh();
+    setBirthLength(null); // value's unit changed; re-enter
   }
 
   async function onSave() {
@@ -48,11 +67,12 @@ export default function OnboardingScreen() {
     setSaving(true);
     try {
       const baby = await repo.createBaby(result.value);
-      // Optional birth weight → seed an initial growth measurement at the DOB.
-      if (birthWeight != null) {
+      // Optional birth weight/length → seed an initial growth measurement at the DOB.
+      if (birthWeight != null || birthLength != null) {
         await repo.createGrowthMeasurement(baby.id, {
           measured_at: result.value.date_of_birth,
-          weight_g: unitToGrams(birthWeight, unitMass),
+          weight_g: birthWeight != null ? unitToGrams(birthWeight, unitMass) : null,
+          length_cm: birthLength != null ? unitToCm(birthLength, unitLength) : null,
         });
       }
       await refresh();
@@ -163,6 +183,39 @@ export default function OnboardingScreen() {
           onConfirm={(n) => {
             setBirthWeight(n);
             setShowWeight(false);
+          }}
+        />
+
+        {/* Birth length (optional) → seeds the growth chart */}
+        <View style={styles.fieldHeader}>
+          <Text style={styles.fieldHeaderLabel}>BIRTH LENGTH (OPTIONAL)</Text>
+          <View style={styles.unitToggle}>
+            <Segmented
+              options={[
+                { label: 'cm', value: 'cm' },
+                { label: 'in', value: 'in' },
+              ]}
+              value={unitLength}
+              onChange={(u) => changeLengthUnit(u as UnitLength)}
+            />
+          </View>
+        </View>
+        <Pressable style={styles.input} onPress={() => setShowLength(true)}>
+          <Text style={birthLength != null ? styles.inputText : styles.inputPlaceholder}>
+            {birthLength != null ? lengthLabel(birthLength, unitLength) : 'Add birth length'}
+          </Text>
+        </Pressable>
+
+        <WheelCompoundModal
+          visible={showLength}
+          title="Birth length"
+          columns={lengthColumns(unitLength)}
+          initial={lengthInitial(unitLength, birthLength ?? (unitLength === 'in' ? 20 : 50))}
+          compose={(i) => lengthCompose(unitLength, i)}
+          onCancel={() => setShowLength(false)}
+          onConfirm={(n) => {
+            setBirthLength(n);
+            setShowLength(false);
           }}
         />
       </ScrollView>
