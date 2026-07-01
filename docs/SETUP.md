@@ -1,4 +1,4 @@
-# Lull — Setup & Build Guide
+# Navam — Setup & Build Guide
 
 This kit holds the decision-bearing scaffolding. Drop these files into a fresh
 Expo project, install the dependencies, and you're ready to build the screens.

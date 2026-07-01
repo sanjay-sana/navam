@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LullMark } from '@/src/components/LullMark';
+import { BrandMark } from '@/src/components/BrandMark';
 import { Segmented } from '@/src/components/Segmented';
 import { WheelCompoundModal, WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
@@ -87,8 +87,8 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <LullMark size={84} />
-          <Text style={styles.title}>Welcome to Lull</Text>
+          <BrandMark size={84} />
+          <Text style={styles.title}>Welcome to Navam</Text>
           <Text style={styles.subtitle}>Let&apos;s set up your baby.</Text>
         </View>
 

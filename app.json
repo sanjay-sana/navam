@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Lull",
+    "name": "Navam",
     "slug": "lull",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "lull",
+    "scheme": "navam",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#17131D",
     "icon": "./assets/images/icon.png",

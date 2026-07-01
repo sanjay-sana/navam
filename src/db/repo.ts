@@ -1,4 +1,4 @@
-// Lull — the single point of all database access (per CLAUDE.md conventions).
+// Navam — the single point of all database access (per CLAUDE.md conventions).
 // Screens and state never touch expo-sqlite directly; they call these functions.
 // The DB is opened + migrated lazily, once, and memoised.
 import * as SQLite from 'expo-sqlite';

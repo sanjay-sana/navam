@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LullMark } from '@/src/components/LullMark';
+import { BrandMark } from '@/src/components/BrandMark';
 import { colors, fonts } from '@/src/theme/theme';
 
 // 4 tabs: Today / Log / Trends / Settings (per CLAUDE.md). Dark-only.
@@ -30,7 +30,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Today',
-          tabBarIcon: ({ focused }) => <LullMark size={28} dimmed={!focused} />,
+          tabBarIcon: ({ focused }) => <BrandMark size={28} dimmed={!focused} />,
         }}
       />
       <Tabs.Screen

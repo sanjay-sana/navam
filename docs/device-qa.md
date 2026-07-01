@@ -1,4 +1,4 @@
-# Lull — Device QA Checklist
+# Navam — Device QA Checklist
 
 Manual test plan for things the unit tests **can't** cover (they only test
 `src/logic`). Run on a real Android build, not Expo Go — **notifications and
@@ -84,14 +84,14 @@ Legend: ☐ todo · ✅ pass · ❌ fail (note the issue)
 ## 9. Settings
 - ☐ Profile card shows name/DOB/sex; tap → edit-profile; changes persist & propagate.
 - ☐ Unit toggles (volume/weight/length) persist and update other screens.
-- ☐ Export data → share sheet with a `lull-<name>-<date>.csv`; open it and verify
+- ☐ Export data → share sheet with a `navam-<name>-<date>.csv`; open it and verify
       feeds/diapers/growth rows + correct escaping.
 
 ## 10. Platform / resilience
 - ☐ SafeAreaView: no clipping under the status bar / nav bar / notch.
 - ☐ Rotate / background-and-resume doesn't crash or lose the in-progress timer unexpectedly.
-- ☐ App icon on the home screen is the Lull crescent-baby (not the Expo placeholder);
-      splash shows the mark + "Lull".
+- ☐ App icon on the home screen is the Navam crescent-baby (not the Expo placeholder);
+      splash shows the mark + "Navam".
 - ☐ Adaptive icon (long-press / themed icons) looks correct.
 
 ---

@@ -16,14 +16,14 @@ export async function exportCsv(babyId: number, babyName: string): Promise<void>
 
   const stamp = new Date().toISOString().slice(0, 10);
   const safeName = babyName.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'baby';
-  const file = new File(Paths.cache, `lull-${safeName}-${stamp}.csv`);
+  const file = new File(Paths.cache, `navam-${safeName}-${stamp}.csv`);
   file.create({ overwrite: true });
   file.write(csv);
 
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(file.uri, {
       mimeType: 'text/csv',
-      dialogTitle: 'Export Lull data',
+      dialogTitle: 'Export Navam data',
       UTI: 'public.comma-separated-values-text',
     });
   }

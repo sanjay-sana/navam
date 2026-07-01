@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LullMark } from '@/src/components/LullMark';
+import { BrandMark } from '@/src/components/BrandMark';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Segmented } from '@/src/components/Segmented';
 import { WheelCompoundModal } from '@/src/components/WheelPicker';
@@ -120,7 +120,7 @@ export default function SettingsScreen() {
         {/* Profile */}
         <Pressable style={styles.profile} onPress={() => router.push('/edit-profile')}>
           <View style={styles.avatar}>
-            <LullMark size={42} />
+            <BrandMark size={42} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.profileName}>{activeBaby.name}</Text>

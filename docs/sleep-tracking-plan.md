@@ -1,11 +1,11 @@
 # Sleep Tracking — v1 Design Plan
 
-Design sketch for adding sleep to Lull. Follows existing conventions (event
+Design sketch for adding sleep to Navam. Follows existing conventions (event
 tables keyed by `baby_id`, UTC-store / local-render, all DB access via
 `src/db/repo.ts`, pure logic in `src/logic/`, the prediction-ring + timeline +
 trends architecture). No code yet — this is the build-ready design.
 
-Sleep maps cleanly onto Lull: a sleep is an event with a start and end (like the
+Sleep maps cleanly onto Navam: a sleep is an event with a start and end (like the
 breast-feed timer), so ~70% reuses existing patterns (wheel pickers, event /
 History / Trends architecture, the prediction ring, stacked charts, themed
 dialogs). The genuinely new pieces are the **persisted open-session model** and

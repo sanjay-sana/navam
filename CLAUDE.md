@@ -1,4 +1,4 @@
-# Lull — baby tracker
+# Navam — baby tracker
 
 ## WHY
 A personal baby tracker built for fast, one-handed logging at 3am, because existing

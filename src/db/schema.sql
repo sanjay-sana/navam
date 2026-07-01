@@ -1,4 +1,4 @@
--- Lull — canonical schema (reference copy of migration v1).
+-- Navam — canonical schema (reference copy of migration v1).
 -- All timestamps stored as UTC ISO-8601 text; rendered in device-local time.
 -- Canonical units: ml (volume), grams (mass), cm (length).
 -- The executable copy lives in db/migrations.ts (keep the two in sync).

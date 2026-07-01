@@ -1,6 +1,6 @@
-# Lull — Build Kit
+# Navam — Build Kit
 
-Seed scaffolding for the Lull baby tracker, generated from the approved design
+Seed scaffolding for the Navam baby tracker, generated from the approved design
 spec (`baby-tracker-requirements.md`). Everything here encodes a decision already
 made, so the build starts spec-accurate instead of from scratch.
 

@@ -1,4 +1,4 @@
-// Lull — database open + migration runner (expo-sqlite, modern async API).
+// Navam — database open + migration runner (expo-sqlite, modern async API).
 // Versioned via PRAGMA user_version. Add a new migration block per schema change;
 // never edit an already-shipped migration.
 import * as SQLite from 'expo-sqlite';
@@ -118,6 +118,8 @@ ALTER TABLE settings ADD COLUMN night_end_min INTEGER NOT NULL DEFAULT 360;
 `;
 
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
+  // Keep the original filename after the Lull→Navam rebrand; renaming it would
+  // orphan existing on-device data.
   const db = await SQLite.openDatabaseAsync('lull.db');
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   await migrate(db);

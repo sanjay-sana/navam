@@ -1,4 +1,4 @@
-// Lull — design tokens (the "nightlight" dark theme from the approved mockups).
+// Navam — design tokens (the "nightlight" dark theme from the approved mockups).
 // Single source of truth for colour, type, spacing, radius. v1 is dark-only.
 
 export const colors = {

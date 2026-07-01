@@ -1,4 +1,4 @@
-// The Lull logo mark — a yawning baby cradled in a honey crescent moon, as an
+// The Navam logo mark — a yawning baby cradled in a honey crescent moon, as an
 // SVG so it stays crisp at any size and follows the theme. Same geometry as the
 // app icon (composition B).
 import { memo } from 'react';
@@ -32,7 +32,7 @@ const MOON = lune({ x: 512, y: 560 }, 380, { x: 512, y: 360 }, 355);
 const HC = { x: 512, y: 455 };
 const HR = 170;
 
-export const LullMark = memo(function LullMark({
+export const BrandMark = memo(function BrandMark({
   size = 30,
   dimmed = false,
 }: {

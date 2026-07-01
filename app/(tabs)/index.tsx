@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CountdownRing } from '@/src/components/CountdownRing';
-import { LullMark } from '@/src/components/LullMark';
+import { BrandMark } from '@/src/components/BrandMark';
 import * as repo from '@/src/db/repo';
 import type { SleepEvent } from '@/src/db/types';
 import { localDayBoundsIso } from '@/src/logic/day';
@@ -112,8 +112,8 @@ export default function TodayScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.brand}>
-            <LullMark size={38} />
-            <Text style={styles.brandText}>Lull</Text>
+            <BrandMark size={38} />
+            <Text style={styles.brandText}>Navam</Text>
           </View>
           <View style={styles.headerRight}>
             {trackSleep && asleep ? (
