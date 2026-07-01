@@ -8,6 +8,7 @@ const OZ_PER_LB = 16;
 const CM_PER_IN = 2.54;
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Canonical ml → a number in the user's unit (not formatted). */
 export function mlToUnit(ml: number, unit: UnitVolume): number {
@@ -30,9 +31,9 @@ export function formatVolume(ml: number, unit: UnitVolume): string {
 
 // --- Mass (canonical grams) -------------------------------------------------
 
-/** Grams → canonical display value: kg (1 dp) or lb (1 dp). */
+/** Grams → display value: kg (2 dp, preserves the 10 g wheel step) or lb (1 dp). */
 export function gramsToUnit(grams: number, unit: UnitMass): number {
-  return unit === 'lb_oz' ? round1(grams / G_PER_LB) : round1(grams / 1000);
+  return unit === 'lb_oz' ? round1(grams / G_PER_LB) : round2(grams / 1000);
 }
 
 /** A weight entered in the user's unit → canonical grams. */

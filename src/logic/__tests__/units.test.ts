@@ -34,6 +34,11 @@ describe('mass (canonical grams)', () => {
     expect(unitToGrams(5.9, 'g')).toBeCloseTo(5900, 6);
     expect(gramsToUnit(5900, 'g')).toBe(5.9);
   });
+  it('preserves 10 g precision in kg display (2 dp)', () => {
+    expect(gramsToUnit(3070, 'g')).toBe(3.07); // was 3.1 with 1 dp
+    expect(formatMass(3070, 'g')).toBe('3.07 kg');
+    expect(gramsToUnit(3075, 'g')).toBe(3.08); // rounds to nearest 10 g in display
+  });
 });
 
 describe('length (canonical cm)', () => {
