@@ -118,9 +118,7 @@ ALTER TABLE settings ADD COLUMN night_end_min INTEGER NOT NULL DEFAULT 360;
 `;
 
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
-  // Keep the original filename after the Lull→Navam rebrand; renaming it would
-  // orphan existing on-device data.
-  const db = await SQLite.openDatabaseAsync('lull.db');
+  const db = await SQLite.openDatabaseAsync('navam.db');
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   await migrate(db);
   return db;

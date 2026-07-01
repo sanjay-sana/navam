@@ -12,7 +12,7 @@
       "**/*"
     ],
     "android": {
-      "package": "com.sanjay.lull",
+      "package": "com.sanjay.navam",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png",
@@ -23,7 +23,7 @@
       ]
     },
     "ios": {
-      "bundleIdentifier": "com.sanjay.lull",
+      "bundleIdentifier": "com.sanjay.navam",
       "supportsTablet": false
     },
     "plugins": [
