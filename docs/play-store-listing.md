@@ -71,8 +71,8 @@ pumping tracker, growth chart, WHO percentile, offline, private
 - Expected rating: **Everyone / PEGI 3**.
 
 ## Other listing fields
-- **Privacy policy URL:** _host `docs/privacy-policy.md` and paste the URL_
-- **Contact email:** _[SUPPORT_EMAIL]_
+- **Privacy policy URL:** `https://sanjay-sana.github.io/navam/privacy.html`
+- **Contact email:** _sanjay0691@gmail.com_
 - **Ads:** No
 - **In-app purchases:** No
 

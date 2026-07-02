@@ -1,6 +1,6 @@
 # Navam — Privacy Policy
 
-**Effective date:** _[fill in on publish, e.g. 1 July 2026]_
+**Effective date:** 2 July 2026
 
 Navam is a personal baby tracker. **All of your data stays on your device.**
 Navam has no account system, no servers, and does not collect, transmit, sell,
@@ -58,4 +58,4 @@ If this policy changes, the updated version will be posted at this URL with a ne
 effective date.
 
 ## Contact
-Questions about privacy? Contact: **[SUPPORT_EMAIL]**
+Questions about privacy? Contact: **sanjay0691@gmail.com**
