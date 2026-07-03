@@ -58,4 +58,4 @@ If this policy changes, the updated version will be posted at this URL with a ne
 effective date.
 
 ## Contact
-Questions about privacy? Contact: **sanjay0691@gmail.com**
+Questions about privacy? Contact: **navambabytracker@gmail.com**

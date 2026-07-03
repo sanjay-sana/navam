@@ -72,7 +72,7 @@ pumping tracker, growth chart, WHO percentile, offline, private
 
 ## Other listing fields
 - **Privacy policy URL:** `https://sanjay-sana.github.io/navam/privacy.html`
-- **Contact email:** _sanjay0691@gmail.com_
+- **Contact email:** _navambabytracker@gmail.com_
 - **Ads:** No
 - **In-app purchases:** No
 
