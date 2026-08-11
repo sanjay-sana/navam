@@ -67,6 +67,7 @@ export default function LogFeedScreen() {
   const [activeSide, setActiveSide] = useState<'left' | 'right' | null>(null);
   const activeStartRef = useRef<number | null>(null);
   const [showSidePicker, setShowSidePicker] = useState<'left' | 'right' | null>(null);
+  const [showPumpPicker, setShowPumpPicker] = useState(false);
   const [lastBreastSide, setLastBreastSide] = useState<Side | null>(null);
 
   // Pump: single timer + manual minutes
@@ -82,6 +83,7 @@ export default function LogFeedScreen() {
     setActiveSide(null);
     activeStartRef.current = null;
     setShowSidePicker(null);
+    setShowPumpPicker(false);
     setTiming(false);
     setTimerSeconds(null);
     recordStartRef.current = null;
@@ -312,6 +314,7 @@ export default function LogFeedScreen() {
                 label="Left"
                 seconds={liveLeft}
                 active={activeSide === 'left'}
+                editing={editId != null}
                 onToggle={() => toggleSide('left')}
                 onEdit={() => setShowSidePicker('left')}
                 onReset={() => setLeftSec(0)}
@@ -320,12 +323,15 @@ export default function LogFeedScreen() {
                 label="Right"
                 seconds={liveRight}
                 active={activeSide === 'right'}
+                editing={editId != null}
                 onToggle={() => toggleSide('right')}
                 onEdit={() => setShowSidePicker('right')}
                 onReset={() => setRightSec(0)}
               />
             </View>
-            <Text style={styles.sideHint}>Tap a side to start/stop · tap its time to set it manually</Text>
+            <Text style={styles.sideHint}>
+              {editId != null ? 'Tap a side’s time to adjust it' : 'Tap a side to start/stop · tap its time to set it manually'}
+            </Text>
             {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
 
             <WheelCompoundModal
@@ -376,8 +382,32 @@ export default function LogFeedScreen() {
           </>
         )}
 
-        {/* Pump duration — record with the timer OR enter minutes. */}
-        {type === 'pump' ? (
+        {/* Pump duration. Editing → just an adjustable value; new → live timer. */}
+        {type === 'pump' && editId != null ? (
+          <>
+            <Label>DURATION</Label>
+            <Pressable style={styles.input} onPress={() => setShowPumpPicker(true)}>
+              <View style={styles.rowBetween}>
+                <Text style={styles.inputText}>{formatMMSS(timerSeconds ?? 0)}</Text>
+                <Ionicons name="pencil" size={14} color={colors.dim} />
+              </View>
+            </Pressable>
+            {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
+            <WheelCompoundModal
+              visible={showPumpPicker}
+              title="Minutes"
+              columns={MINUTE_COLUMNS}
+              initial={[Math.min(90, Math.round((timerSeconds ?? 0) / 60))]}
+              compose={(i) => i[0]}
+              onCancel={() => setShowPumpPicker(false)}
+              onConfirm={(min) => {
+                setTimerSeconds(min * 60);
+                if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+                setShowPumpPicker(false);
+              }}
+            />
+          </>
+        ) : type === 'pump' ? (
           <>
             <Label>TIMER</Label>
             <View style={styles.timerCard}>
@@ -461,6 +491,7 @@ function SideTimer({
   label,
   seconds,
   active,
+  editing,
   onToggle,
   onEdit,
   onReset,
@@ -468,6 +499,8 @@ function SideTimer({
   label: string;
   seconds: number;
   active: boolean;
+  /** Editing an existing feed → no live timer, just the editable value. */
+  editing: boolean;
   onToggle: () => void;
   onEdit: () => void;
   onReset: () => void;
@@ -492,10 +525,12 @@ function SideTimer({
           <Ionicons name="pencil" size={13} color={colors.dim} />
         </Pressable>
       )}
-      <Pressable style={[styles.sideBtn, active && styles.sideBtnActive]} onPress={onToggle}>
-        <Ionicons name={active ? 'stop' : 'play'} size={14} color={active ? colors.bg : colors.accent} />
-        <Text style={[styles.sideBtnText, active && styles.sideBtnTextActive]}>{active ? 'Stop' : 'Start'}</Text>
-      </Pressable>
+      {editing ? null : (
+        <Pressable style={[styles.sideBtn, active && styles.sideBtnActive]} onPress={onToggle}>
+          <Ionicons name={active ? 'stop' : 'play'} size={14} color={active ? colors.bg : colors.accent} />
+          <Text style={[styles.sideBtnText, active && styles.sideBtnTextActive]}>{active ? 'Stop' : 'Start'}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -537,6 +572,7 @@ const styles = StyleSheet.create({
   },
   inputText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
   inputPlaceholder: { fontFamily: fonts.ui, fontSize: 17, color: colors.dim },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sideRow: { flexDirection: 'row', gap: spacing.md },
   sideHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: spacing.sm, textAlign: 'center' },
   hintPill: {
