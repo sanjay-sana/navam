@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -131,11 +132,23 @@ export default function LogFeedScreen() {
     }, [editId, unit, pump, activeBaby])
   );
 
+  const timerRunning = timing || activeSide != null;
+
   useEffect(() => {
-    if (!timing && activeSide == null) return;
+    if (!timerRunning) return;
     const t = setInterval(() => setTick((n) => n + 1), 250);
     return () => clearInterval(t);
-  }, [timing, activeSide]);
+  }, [timerRunning]);
+
+  // Keep the screen awake while a feed/pump timer is running.
+  useEffect(() => {
+    if (!timerRunning) return;
+    const TAG = 'navam-feed-timer';
+    activateKeepAwakeAsync(TAG);
+    return () => {
+      deactivateKeepAwake(TAG);
+    };
+  }, [timerRunning]);
 
   function switchType(next: FeedType) {
     setType(next);
