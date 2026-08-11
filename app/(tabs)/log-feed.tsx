@@ -459,10 +459,18 @@ function SideTimer({
   return (
     <View style={[styles.sideTimer, active && styles.sideTimerActive]}>
       <Text style={[styles.sideLabel, active && styles.sideLabelActive]}>{label}</Text>
-      {/* Tap the time to set it manually (disabled while this side is running). */}
-      <Pressable onPress={active ? undefined : onEdit} disabled={active} hitSlop={10}>
-        <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
-      </Pressable>
+      {/* When stopped, the time is an editable field (bordered + pencil). While
+          running, it's just the live clock. */}
+      {active ? (
+        <View style={styles.sideClockPlain}>
+          <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
+        </View>
+      ) : (
+        <Pressable style={styles.sideClockBox} onPress={onEdit} hitSlop={8}>
+          <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
+          <Ionicons name="pencil" size={13} color={colors.dim} />
+        </Pressable>
+      )}
       <Pressable style={[styles.sideBtn, active && styles.sideBtnActive]} onPress={onToggle}>
         <Ionicons name={active ? 'stop' : 'play'} size={14} color={active ? colors.bg : colors.accent} />
         <Text style={[styles.sideBtnText, active && styles.sideBtnTextActive]}>{active ? 'Stop' : 'Start'}</Text>
@@ -534,7 +542,19 @@ const styles = StyleSheet.create({
   sideTimerActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   sideLabel: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 1, color: colors.dim },
   sideLabelActive: { color: colors.accent },
-  sideClock: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
+  sideClock: { fontFamily: fonts.display, fontSize: 26, color: colors.text },
+  sideClockBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 1,
+  },
+  sideClockPlain: { paddingVertical: spacing.xs + 2 },
   sideBtn: {
     flexDirection: 'row',
     alignItems: 'center',
