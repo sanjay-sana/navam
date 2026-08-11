@@ -29,6 +29,8 @@ const CONTENTS_OPTIONS = [
   { label: 'Formula', value: 'formula' as const },
   { label: 'Mixed', value: 'mixed' as const },
 ];
+// 0–90 minutes, for tap-to-edit of a breast side's time.
+const MINUTE_COLUMNS = [{ items: Array.from({ length: 91 }, (_, i) => ({ label: String(i) })), label: 'min' }];
 
 function formatMMSS(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -64,8 +66,7 @@ export default function LogFeedScreen() {
   const [rightSec, setRightSec] = useState(0);
   const [activeSide, setActiveSide] = useState<'left' | 'right' | null>(null);
   const activeStartRef = useRef<number | null>(null);
-  const [leftMin, setLeftMin] = useState('');
-  const [rightMin, setRightMin] = useState('');
+  const [showSidePicker, setShowSidePicker] = useState<'left' | 'right' | null>(null);
   const [lastBreastSide, setLastBreastSide] = useState<Side | null>(null);
 
   // Pump: single timer + manual minutes
@@ -80,8 +81,7 @@ export default function LogFeedScreen() {
     setRightSec(0);
     setActiveSide(null);
     activeStartRef.current = null;
-    setLeftMin('');
-    setRightMin('');
+    setShowSidePicker(null);
     setTiming(false);
     setTimerSeconds(null);
     recordStartRef.current = null;
@@ -220,24 +220,13 @@ export default function LogFeedScreen() {
   const runExtra = activeStartRef.current != null ? Math.floor((Date.now() - activeStartRef.current) / 1000) : 0;
   const liveLeft = leftSec + (activeSide === 'left' ? runExtra : 0);
   const liveRight = rightSec + (activeSide === 'right' ? runExtra : 0);
-  // A side is "timed" once it's active or has recorded seconds → its manual
-  // minutes input is disabled (the timer wins); the other side stays editable.
-  const leftTimed = activeSide === 'left' || leftSec > 0;
-  const rightTimed = activeSide === 'right' || rightSec > 0;
-  /** Effective per-side seconds for saving: running side folded in, else manual minutes. */
+  /** Per-side seconds for saving (running side folded in). */
   function breastSeconds(): { l: number; r: number } {
     const extra = activeStartRef.current != null ? Math.floor((Date.now() - activeStartRef.current) / 1000) : 0;
-    let l = leftSec + (activeSide === 'left' ? extra : 0);
-    let r = rightSec + (activeSide === 'right' ? extra : 0);
-    if (l === 0) {
-      const m = Number(leftMin.trim());
-      if (Number.isFinite(m) && m > 0) l = Math.round(m * 60);
-    }
-    if (r === 0) {
-      const m = Number(rightMin.trim());
-      if (Number.isFinite(m) && m > 0) r = Math.round(m * 60);
-    }
-    return { l, r };
+    return {
+      l: leftSec + (activeSide === 'left' ? extra : 0),
+      r: rightSec + (activeSide === 'right' ? extra : 0),
+    };
   }
 
   async function onSave() {
@@ -319,42 +308,26 @@ export default function LogFeedScreen() {
 
             <Label>SIDES</Label>
             <View style={styles.sideRow}>
-              <SideTimer label="Left" seconds={liveLeft} active={activeSide === 'left'} onPress={() => toggleSide('left')} />
-              <SideTimer label="Right" seconds={liveRight} active={activeSide === 'right'} onPress={() => toggleSide('right')} />
+              <SideTimer label="Left" seconds={liveLeft} active={activeSide === 'left'} onToggle={() => toggleSide('left')} onEdit={() => setShowSidePicker('left')} />
+              <SideTimer label="Right" seconds={liveRight} active={activeSide === 'right'} onToggle={() => toggleSide('right')} onEdit={() => setShowSidePicker('right')} />
             </View>
+            <Text style={styles.sideHint}>Tap a side to start/stop · tap its time to set it manually</Text>
             {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
 
-            {!(leftTimed && rightTimed) ? (
-              <>
-                <Text style={styles.orDivider}>or enter minutes for a side you didn’t time</Text>
-                <View style={styles.sideRow}>
-                  <TextInput
-                    style={[styles.input, styles.half, leftTimed && styles.inputDisabled]}
-                    value={leftTimed ? '' : leftMin}
-                    editable={!leftTimed}
-                    onChangeText={(t) => {
-                      setLeftMin(t);
-                      if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
-                    }}
-                    placeholder={leftTimed ? 'Timed' : 'Left min'}
-                    placeholderTextColor={colors.dim}
-                    keyboardType="number-pad"
-                  />
-                  <TextInput
-                    style={[styles.input, styles.half, rightTimed && styles.inputDisabled]}
-                    value={rightTimed ? '' : rightMin}
-                    editable={!rightTimed}
-                    onChangeText={(t) => {
-                      setRightMin(t);
-                      if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
-                    }}
-                    placeholder={rightTimed ? 'Timed' : 'Right min'}
-                    placeholderTextColor={colors.dim}
-                    keyboardType="number-pad"
-                  />
-                </View>
-              </>
-            ) : null}
+            <WheelCompoundModal
+              visible={showSidePicker !== null}
+              title={showSidePicker === 'right' ? 'Right minutes' : 'Left minutes'}
+              columns={MINUTE_COLUMNS}
+              initial={[Math.min(90, Math.round((showSidePicker === 'right' ? rightSec : leftSec) / 60))]}
+              compose={(i) => i[0]}
+              onCancel={() => setShowSidePicker(null)}
+              onConfirm={(min) => {
+                if (showSidePicker === 'left') setLeftSec(min * 60);
+                else if (showSidePicker === 'right') setRightSec(min * 60);
+                if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+                setShowSidePicker(null);
+              }}
+            />
           </>
         ) : (
           <>
@@ -474,22 +447,27 @@ function SideTimer({
   label,
   seconds,
   active,
-  onPress,
+  onToggle,
+  onEdit,
 }: {
   label: string;
   seconds: number;
   active: boolean;
-  onPress: () => void;
+  onToggle: () => void;
+  onEdit: () => void;
 }) {
   return (
-    <Pressable style={[styles.sideTimer, active && styles.sideTimerActive]} onPress={onPress}>
+    <View style={[styles.sideTimer, active && styles.sideTimerActive]}>
       <Text style={[styles.sideLabel, active && styles.sideLabelActive]}>{label}</Text>
-      <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
-      <View style={[styles.sideBtn, active && styles.sideBtnActive]}>
+      {/* Tap the time to set it manually (disabled while this side is running). */}
+      <Pressable onPress={active ? undefined : onEdit} disabled={active} hitSlop={10}>
+        <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
+      </Pressable>
+      <Pressable style={[styles.sideBtn, active && styles.sideBtnActive]} onPress={onToggle}>
         <Ionicons name={active ? 'stop' : 'play'} size={14} color={active ? colors.bg : colors.accent} />
         <Text style={[styles.sideBtnText, active && styles.sideBtnTextActive]}>{active ? 'Stop' : 'Start'}</Text>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 
@@ -530,9 +508,8 @@ const styles = StyleSheet.create({
   },
   inputText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
   inputPlaceholder: { fontFamily: fonts.ui, fontSize: 17, color: colors.dim },
-  inputDisabled: { opacity: 0.45 },
   sideRow: { flexDirection: 'row', gap: spacing.md },
-  half: { flex: 1 },
+  sideHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: spacing.sm, textAlign: 'center' },
   hintPill: {
     flexDirection: 'row',
     alignItems: 'center',
