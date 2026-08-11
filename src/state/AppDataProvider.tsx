@@ -5,6 +5,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import * as repo from '@/src/db/repo';
 import type { Baby, Settings } from '@/src/db/types';
+import { deviceRegion } from '@/src/lib/deviceRegion';
+import { defaultUnitsForRegion } from '@/src/logic/regionUnits';
 
 interface AppData {
   ready: boolean;
@@ -30,6 +32,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // First launch: seed unit defaults from the device region (once).
+      const s = await repo.getSettings();
+      if (s.units_auto_set === 0) {
+        await repo.updateSettings({ ...defaultUnitsForRegion(deviceRegion()), units_auto_set: 1 });
+      }
       await refresh();
       if (!cancelled) setReady(true);
     })();

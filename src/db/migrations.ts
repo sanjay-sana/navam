@@ -117,6 +117,10 @@ ALTER TABLE settings ADD COLUMN night_start_min INTEGER NOT NULL DEFAULT 1200;
 ALTER TABLE settings ADD COLUMN night_end_min INTEGER NOT NULL DEFAULT 360;
 `;
 
+// v6: flag so region-based unit defaults are applied exactly once on first
+// launch (0 = not yet applied). Never overrides a later manual choice.
+const MIGRATION_6 = `ALTER TABLE settings ADD COLUMN units_auto_set INTEGER NOT NULL DEFAULT 0;`;
+
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('navam.db');
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -165,5 +169,12 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
       await db.execAsync(MIGRATION_5);
     });
     await db.execAsync('PRAGMA user_version = 5');
+  }
+
+  if (version < 6) {
+    await db.withTransactionAsync(async () => {
+      await db.execAsync(MIGRATION_6);
+    });
+    await db.execAsync('PRAGMA user_version = 6');
   }
 }

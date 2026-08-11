@@ -44,6 +44,7 @@ export interface Settings {
   track_sleep: number; // 1 = show sleep tracking, 0 = hide
   night_start_min: number; // night window, minutes since midnight (default 1200 = 20:00)
   night_end_min: number; // default 360 = 06:00
+  units_auto_set: number; // 1 once region-based unit defaults have been applied
   updated_at: string;
 }
 

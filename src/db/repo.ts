@@ -51,6 +51,7 @@ type SettingsPatch = Partial<
     | 'track_sleep'
     | 'night_start_min'
     | 'night_end_min'
+    | 'units_auto_set'
   >
 >;
 

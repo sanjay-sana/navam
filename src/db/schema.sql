@@ -94,5 +94,6 @@ CREATE TABLE IF NOT EXISTS settings (
   track_sleep      INTEGER NOT NULL DEFAULT 1,                     -- v4: show/hide sleep
   night_start_min  INTEGER NOT NULL DEFAULT 1200,                 -- v5: night window (min since midnight)
   night_end_min    INTEGER NOT NULL DEFAULT 360,
+  units_auto_set   INTEGER NOT NULL DEFAULT 0,                     -- v6: region unit defaults applied?
   updated_at       TEXT NOT NULL
 );
