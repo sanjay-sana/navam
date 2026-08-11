@@ -220,6 +220,10 @@ export default function LogFeedScreen() {
   const runExtra = activeStartRef.current != null ? Math.floor((Date.now() - activeStartRef.current) / 1000) : 0;
   const liveLeft = leftSec + (activeSide === 'left' ? runExtra : 0);
   const liveRight = rightSec + (activeSide === 'right' ? runExtra : 0);
+  // A side is "timed" once it's active or has recorded seconds → its manual
+  // minutes input is disabled (the timer wins); the other side stays editable.
+  const leftTimed = activeSide === 'left' || leftSec > 0;
+  const rightTimed = activeSide === 'right' || rightSec > 0;
   /** Effective per-side seconds for saving: running side folded in, else manual minutes. */
   function breastSeconds(): { l: number; r: number } {
     const extra = activeStartRef.current != null ? Math.floor((Date.now() - activeStartRef.current) / 1000) : 0;
@@ -320,29 +324,31 @@ export default function LogFeedScreen() {
             </View>
             {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
 
-            {activeSide === null && leftSec === 0 && rightSec === 0 ? (
+            {!(leftTimed && rightTimed) ? (
               <>
-                <Text style={styles.orDivider}>or enter minutes</Text>
+                <Text style={styles.orDivider}>or enter minutes for a side you didn’t time</Text>
                 <View style={styles.sideRow}>
                   <TextInput
-                    style={[styles.input, styles.half]}
-                    value={leftMin}
+                    style={[styles.input, styles.half, leftTimed && styles.inputDisabled]}
+                    value={leftTimed ? '' : leftMin}
+                    editable={!leftTimed}
                     onChangeText={(t) => {
                       setLeftMin(t);
                       if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
                     }}
-                    placeholder="Left min"
+                    placeholder={leftTimed ? 'Timed' : 'Left min'}
                     placeholderTextColor={colors.dim}
                     keyboardType="number-pad"
                   />
                   <TextInput
-                    style={[styles.input, styles.half]}
-                    value={rightMin}
+                    style={[styles.input, styles.half, rightTimed && styles.inputDisabled]}
+                    value={rightTimed ? '' : rightMin}
+                    editable={!rightTimed}
                     onChangeText={(t) => {
                       setRightMin(t);
                       if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
                     }}
-                    placeholder="Right min"
+                    placeholder={rightTimed ? 'Timed' : 'Right min'}
                     placeholderTextColor={colors.dim}
                     keyboardType="number-pad"
                   />
@@ -524,6 +530,7 @@ const styles = StyleSheet.create({
   },
   inputText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
   inputPlaceholder: { fontFamily: fonts.ui, fontSize: 17, color: colors.dim },
+  inputDisabled: { opacity: 0.45 },
   sideRow: { flexDirection: 'row', gap: spacing.md },
   half: { flex: 1 },
   hintPill: {
