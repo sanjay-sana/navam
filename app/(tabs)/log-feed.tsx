@@ -23,11 +23,6 @@ const TYPE_OPTIONS = [
   { label: 'Breast', value: 'breast' as const },
   { label: 'Bottle', value: 'bottle' as const },
 ];
-const SIDE_OPTIONS = [
-  { label: 'Left', value: 'left' as const },
-  { label: 'Both', value: 'both' as const },
-  { label: 'Right', value: 'right' as const },
-];
 const CONTENTS_OPTIONS = [
   { label: 'Breast milk', value: 'breast_milk' as const },
   { label: 'Formula', value: 'formula' as const },
@@ -57,18 +52,40 @@ export default function LogFeedScreen() {
   const unit = settings?.unit_volume ?? 'ml';
 
   const [type, setType] = useState<FeedType>(pump === '1' ? 'pump' : 'breast');
-  const [side, setSide] = useState<Side | null>('left');
   const [volume, setVolume] = useState<number | null>(null); // display unit (ml/oz)
   const [showVolume, setShowVolume] = useState(false);
   const [contents, setContents] = useState<Contents | null>(null);
-  const [manualMinutes, setManualMinutes] = useState('');
   const [startTime, setStartTime] = useState<Date>(() => new Date());
 
-  // Live timer (breast)
+  // Breast: two independent side timers (accumulated seconds each); side is
+  // derived from which side(s) were timed. Manual minutes for backfill.
+  const [leftSec, setLeftSec] = useState(0);
+  const [rightSec, setRightSec] = useState(0);
+  const [activeSide, setActiveSide] = useState<'left' | 'right' | null>(null);
+  const activeStartRef = useRef<number | null>(null);
+  const [leftMin, setLeftMin] = useState('');
+  const [rightMin, setRightMin] = useState('');
+  const [lastBreastSide, setLastBreastSide] = useState<Side | null>(null);
+
+  // Pump: single timer + manual minutes
   const [timing, setTiming] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
   const recordStartRef = useRef<number | null>(null);
+  const [manualMinutes, setManualMinutes] = useState('');
   const [, setTick] = useState(0);
+
+  function resetTimers() {
+    setLeftSec(0);
+    setRightSec(0);
+    setActiveSide(null);
+    activeStartRef.current = null;
+    setLeftMin('');
+    setRightMin('');
+    setTiming(false);
+    setTimerSeconds(null);
+    recordStartRef.current = null;
+    setManualMinutes('');
+  }
 
   const [errors, setErrors] = useState<FeedErrors>({});
   const [saving, setSaving] = useState(false);
@@ -83,27 +100,22 @@ export default function LogFeedScreen() {
         if (editId == null) {
           const isPump = pump === '1';
           setType(isPump ? 'pump' : 'breast');
-          setSide(isPump ? null : 'left');
-          setTiming(false);
-          setTimerSeconds(null);
-          recordStartRef.current = null;
-          setManualMinutes('');
+          resetTimers();
           setVolume(null);
           setContents(null);
           setStartTime(new Date());
           setErrors({});
+          setLastBreastSide(activeBaby ? await repo.getLastBreastSide(activeBaby.id) : null);
           return;
         }
         const f = await repo.getFeedEvent(editId);
         if (!active || !f) return;
         setType(f.type);
-        setSide(f.side);
         setStartTime(new Date(f.start_time));
-        setTiming(false);
-        recordStartRef.current = null;
-        setManualMinutes('');
+        resetTimers();
         if (f.type === 'breast') {
-          setTimerSeconds(feedTotalSeconds(f));
+          setLeftSec(f.duration_left_s ?? 0);
+          setRightSec(f.duration_right_s ?? 0);
           setVolume(null);
           setContents(null);
         } else {
@@ -116,23 +128,19 @@ export default function LogFeedScreen() {
       return () => {
         active = false;
       };
-    }, [editId, unit, pump])
+    }, [editId, unit, pump, activeBaby])
   );
 
   useEffect(() => {
-    if (!timing) return;
+    if (!timing && activeSide == null) return;
     const t = setInterval(() => setTick((n) => n + 1), 250);
     return () => clearInterval(t);
-  }, [timing]);
+  }, [timing, activeSide]);
 
   function switchType(next: FeedType) {
-    setSide(next === 'breast' ? 'left' : null);
     setType(next);
     setErrors({});
-    setTiming(false);
-    setTimerSeconds(null);
-    recordStartRef.current = null;
-    setManualMinutes('');
+    resetTimers();
     setVolume(null);
     setContents(null);
     setStartTime(new Date());
@@ -141,12 +149,8 @@ export default function LogFeedScreen() {
   // Clear back to a fresh "new feed" form (called after a successful save).
   function resetForm() {
     setType('breast');
-    setSide('left');
     setErrors({});
-    setTiming(false);
-    setTimerSeconds(null);
-    recordStartRef.current = null;
-    setManualMinutes('');
+    resetTimers();
     setVolume(null);
     setContents(null);
     setStartTime(new Date());
@@ -179,13 +183,56 @@ export default function LogFeedScreen() {
       ? Math.floor((Date.now() - recordStartRef.current) / 1000)
       : 0;
 
+  // --- Breast side timers ---
+  function foldActiveSide() {
+    if (activeSide && activeStartRef.current != null) {
+      const elapsed = Math.max(0, Math.round((Date.now() - activeStartRef.current) / 1000));
+      if (activeSide === 'left') setLeftSec((s) => s + elapsed);
+      else setRightSec((s) => s + elapsed);
+    }
+    activeStartRef.current = null;
+  }
+  function toggleSide(sideKey: 'left' | 'right') {
+    if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+    if (activeSide === sideKey) {
+      foldActiveSide();
+      setActiveSide(null);
+    } else {
+      if (activeSide === null && leftSec === 0 && rightSec === 0) setStartTime(new Date());
+      foldActiveSide(); // stop the other side if it was running
+      activeStartRef.current = Date.now();
+      setActiveSide(sideKey);
+    }
+  }
+  const runExtra = activeStartRef.current != null ? Math.floor((Date.now() - activeStartRef.current) / 1000) : 0;
+  const liveLeft = leftSec + (activeSide === 'left' ? runExtra : 0);
+  const liveRight = rightSec + (activeSide === 'right' ? runExtra : 0);
+  /** Effective per-side seconds for saving: running side folded in, else manual minutes. */
+  function breastSeconds(): { l: number; r: number } {
+    const extra = activeStartRef.current != null ? Math.floor((Date.now() - activeStartRef.current) / 1000) : 0;
+    let l = leftSec + (activeSide === 'left' ? extra : 0);
+    let r = rightSec + (activeSide === 'right' ? extra : 0);
+    if (l === 0) {
+      const m = Number(leftMin.trim());
+      if (Number.isFinite(m) && m > 0) l = Math.round(m * 60);
+    }
+    if (r === 0) {
+      const m = Number(rightMin.trim());
+      if (Number.isFinite(m) && m > 0) r = Math.round(m * 60);
+    }
+    return { l, r };
+  }
+
   async function onSave() {
     if (!activeBaby) return;
+    const breast = breastSeconds();
     const result = validateFeedDraft({
       type,
       startTime,
-      side,
-      durationSeconds: type === 'bottle' ? null : effectiveDurationSeconds(),
+      side: null,
+      durationSeconds: type === 'pump' ? effectiveDurationSeconds() : null,
+      leftSeconds: type === 'breast' ? breast.l : null,
+      rightSeconds: type === 'breast' ? breast.r : null,
       volumeText: volume != null ? String(volume) : '',
       contents,
       unitVolume: unit,
@@ -238,9 +285,57 @@ export default function LogFeedScreen() {
 
         {type === 'breast' ? (
           <>
-            <Label>SIDE</Label>
-            <Segmented options={SIDE_OPTIONS} value={side} onChange={setSide} />
-            {errors.side ? <ErrorText>{errors.side}</ErrorText> : null}
+            {editId == null &&
+            lastBreastSide &&
+            lastBreastSide !== 'both' &&
+            activeSide === null &&
+            leftSec === 0 &&
+            rightSec === 0 ? (
+              <View style={styles.hintPill}>
+                <Ionicons name="information-circle-outline" size={16} color={colors.accent} />
+                <Text style={styles.hintText}>
+                  Start on {lastBreastSide === 'left' ? 'Right' : 'Left'} — last was{' '}
+                  {lastBreastSide === 'left' ? 'Left' : 'Right'}
+                </Text>
+              </View>
+            ) : null}
+
+            <Label>SIDES</Label>
+            <View style={styles.sideRow}>
+              <SideTimer label="Left" seconds={liveLeft} active={activeSide === 'left'} onPress={() => toggleSide('left')} />
+              <SideTimer label="Right" seconds={liveRight} active={activeSide === 'right'} onPress={() => toggleSide('right')} />
+            </View>
+            {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
+
+            {activeSide === null && leftSec === 0 && rightSec === 0 ? (
+              <>
+                <Text style={styles.orDivider}>or enter minutes</Text>
+                <View style={styles.sideRow}>
+                  <TextInput
+                    style={[styles.input, styles.half]}
+                    value={leftMin}
+                    onChangeText={(t) => {
+                      setLeftMin(t);
+                      if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+                    }}
+                    placeholder="Left min"
+                    placeholderTextColor={colors.dim}
+                    keyboardType="number-pad"
+                  />
+                  <TextInput
+                    style={[styles.input, styles.half]}
+                    value={rightMin}
+                    onChangeText={(t) => {
+                      setRightMin(t);
+                      if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+                    }}
+                    placeholder="Right min"
+                    placeholderTextColor={colors.dim}
+                    keyboardType="number-pad"
+                  />
+                </View>
+              </>
+            ) : null}
           </>
         ) : (
           <>
@@ -275,19 +370,13 @@ export default function LogFeedScreen() {
           </>
         )}
 
-        {/* Duration — record with the timer OR enter minutes (one is enough). */}
-        {type !== 'bottle' ? (
+        {/* Pump duration — record with the timer OR enter minutes. */}
+        {type === 'pump' ? (
           <>
             <Label>TIMER</Label>
             <View style={styles.timerCard}>
-              {timing ? (
-                <Text style={styles.timerCaption}>
-                  {side ? `RECORDING · ${side.toUpperCase()}` : 'RECORDING'}
-                </Text>
-              ) : null}
-              <Text style={styles.timerClock}>
-                {formatMMSS(timing ? liveSeconds : timerSeconds ?? 0)}
-              </Text>
+              {timing ? <Text style={styles.timerCaption}>RECORDING</Text> : null}
+              <Text style={styles.timerClock}>{formatMMSS(timing ? liveSeconds : timerSeconds ?? 0)}</Text>
               <Pressable
                 style={[styles.timerButton, timing && styles.timerButtonStop]}
                 onPress={timing ? stopTimer : startTimer}
@@ -316,7 +405,7 @@ export default function LogFeedScreen() {
           </>
         ) : null}
 
-        {!timing ? (
+        {!timing && activeSide === null ? (
           <TimeField
             label={type === 'breast' ? 'STARTED' : 'TIME'}
             value={startTime}
@@ -362,6 +451,29 @@ function ErrorText({ children }: { children: ReactNode }) {
   return <Text style={styles.error}>{children}</Text>;
 }
 
+function SideTimer({
+  label,
+  seconds,
+  active,
+  onPress,
+}: {
+  label: string;
+  seconds: number;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={[styles.sideTimer, active && styles.sideTimerActive]} onPress={onPress}>
+      <Text style={[styles.sideLabel, active && styles.sideLabelActive]}>{label}</Text>
+      <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
+      <View style={[styles.sideBtn, active && styles.sideBtnActive]}>
+        <Ionicons name={active ? 'stop' : 'play'} size={14} color={active ? colors.bg : colors.accent} />
+        <Text style={[styles.sideBtnText, active && styles.sideBtnTextActive]}>{active ? 'Stop' : 'Start'}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
@@ -399,6 +511,45 @@ const styles = StyleSheet.create({
   },
   inputText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
   inputPlaceholder: { fontFamily: fonts.ui, fontSize: 17, color: colors.dim },
+  sideRow: { flexDirection: 'row', gap: spacing.md },
+  half: { flex: 1 },
+  hintPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.md,
+  },
+  hintText: { fontFamily: fonts.ui, fontSize: 14, color: colors.accent, flexShrink: 1 },
+  sideTimer: {
+    flex: 1,
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.lg,
+  },
+  sideTimerActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  sideLabel: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 1, color: colors.dim },
+  sideLabelActive: { color: colors.accent },
+  sideClock: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
+  sideBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.surface2,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  sideBtnActive: { backgroundColor: colors.accent },
+  sideBtnText: { fontFamily: fonts.uiBold, fontSize: 14, color: colors.accent },
+  sideBtnTextActive: { color: colors.bg },
   timerCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,

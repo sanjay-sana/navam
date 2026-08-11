@@ -7,10 +7,13 @@ import { unitToMl } from './units';
 export interface FeedDraft {
   type: FeedType;
   startTime: Date;
-  /** breast/pump side; null = unset (pump allows null). */
+  /** pump side; null = unset. Breast side is derived from the per-side seconds. */
   side: Side | null;
-  /** breast session length in seconds (timer or manual); null if not provided. */
+  /** pump session length in seconds (timer or manual); null if not provided. */
   durationSeconds: number | null;
+  /** breast: seconds timed on each side (timer or manual). */
+  leftSeconds?: number | null;
+  rightSeconds?: number | null;
   /** raw volume text in the user's unit (bottle/pump). */
   volumeText: string;
   contents: Contents | null;
@@ -47,24 +50,22 @@ export function validateFeedDraft(draft: FeedDraft, now: Date = new Date()): Fee
   let value: FeedInput;
 
   if (draft.type === 'breast') {
-    if (draft.side !== 'left' && draft.side !== 'right' && draft.side !== 'both') {
-      errors.side = 'Pick a side';
+    // Side is derived from which side(s) were timed — no upfront choice.
+    const l = Math.max(0, Math.round(draft.leftSeconds ?? 0));
+    const r = Math.max(0, Math.round(draft.rightSeconds ?? 0));
+    if (l <= 0 && r <= 0) {
+      errors.duration = 'Time at least one side, or enter minutes';
     }
-    const dur = draft.durationSeconds;
-    if (dur == null || dur <= 0) {
-      errors.duration = 'Record a time or enter minutes';
-    }
-    const end_time =
-      dur && dur > 0 ? new Date(draft.startTime.getTime() + dur * 1000).toISOString() : null;
+    const derived: Side = l > 0 && r > 0 ? 'both' : r > 0 ? 'right' : 'left';
+    const total = l + r;
+    const end_time = total > 0 ? new Date(draft.startTime.getTime() + total * 1000).toISOString() : null;
     value = {
       type: 'breast',
       start_time,
       end_time,
-      side: draft.side,
-      // Only attribute a per-side duration when the side is unambiguous; for
-      // 'both' the total is recoverable from end_time - start_time.
-      duration_left_s: draft.side === 'left' ? (dur ?? null) : null,
-      duration_right_s: draft.side === 'right' ? (dur ?? null) : null,
+      side: total > 0 ? derived : null,
+      duration_left_s: l > 0 ? l : null,
+      duration_right_s: r > 0 ? r : null,
     };
   } else {
     // bottle | pump — both need a positive volume.

@@ -14,6 +14,7 @@ import type {
   GrowthInput,
   GrowthMeasurement,
   Settings,
+  Side,
   SleepEvent,
   SleepInput,
   SleepKind,
@@ -207,6 +208,17 @@ export async function updateReminder(
 }
 
 /** MAX(start_time) over qualifying feeds (breast | bottle); null if none yet. */
+/** Side of the most recent breast feed (for the alternate-side hint). */
+export async function getLastBreastSide(babyId: number): Promise<Side | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ side: Side | null }>(
+    `SELECT side FROM feed_events WHERE baby_id = ? AND type = 'breast'
+     ORDER BY start_time DESC LIMIT 1`,
+    [babyId]
+  );
+  return row?.side ?? null;
+}
+
 export async function getLatestQualifyingFeedStart(babyId: number): Promise<string | null> {
   const db = await getDb();
   const row = await db.getFirstAsync<{ start: string | null }>(

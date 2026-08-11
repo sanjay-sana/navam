@@ -13,45 +13,46 @@ const base: Omit<FeedDraft, 'type'> = {
   unitVolume: 'ml',
 };
 
-describe('breast feeds', () => {
-  it('stores a per-side duration for a single known side and sets end_time', () => {
-    const r = validateFeedDraft({ ...base, type: 'breast', side: 'left', durationSeconds: 720 }, now);
+describe('breast feeds (derived side from per-side timers)', () => {
+  it('left only → side "left", left duration set, end_time from total', () => {
+    const r = validateFeedDraft({ ...base, type: 'breast', leftSeconds: 720, rightSeconds: 0 }, now);
     expect(r.ok).toBe(true);
     if (r.ok) {
+      expect(r.value.side).toBe('left');
       expect(r.value.duration_left_s).toBe(720);
       expect(r.value.duration_right_s).toBeNull();
       expect(r.value.end_time).toBe(new Date(start.getTime() + 720_000).toISOString());
     }
   });
 
-  it('leaves per-side null for "both" (total recoverable from end-start)', () => {
-    const r = validateFeedDraft({ ...base, type: 'breast', side: 'both', durationSeconds: 600 }, now);
+  it('right only → side "right"', () => {
+    const r = validateFeedDraft({ ...base, type: 'breast', leftSeconds: 0, rightSeconds: 540 }, now);
     expect(r.ok).toBe(true);
     if (r.ok) {
+      expect(r.value.side).toBe('right');
+      expect(r.value.duration_right_s).toBe(540);
       expect(r.value.duration_left_s).toBeNull();
-      expect(r.value.duration_right_s).toBeNull();
     }
   });
 
-  it('requires a side', () => {
-    const r = validateFeedDraft({ ...base, type: 'breast', side: null, durationSeconds: 600 }, now);
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.errors.side).toBeDefined();
+  it('both sides → side "both", both durations set, end_time from sum', () => {
+    const r = validateFeedDraft({ ...base, type: 'breast', leftSeconds: 300, rightSeconds: 420 }, now);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.side).toBe('both');
+      expect(r.value.duration_left_s).toBe(300);
+      expect(r.value.duration_right_s).toBe(420);
+      expect(r.value.end_time).toBe(new Date(start.getTime() + 720_000).toISOString());
+    }
   });
 
-  it('requires a duration (timer or minutes)', () => {
-    const none = validateFeedDraft({ ...base, type: 'breast', side: 'right', durationSeconds: null }, now);
+  it('requires at least one side to have time', () => {
+    const none = validateFeedDraft({ ...base, type: 'breast', leftSeconds: 0, rightSeconds: 0 }, now);
     expect(none.ok).toBe(false);
     if (!none.ok) expect(none.errors.duration).toBeDefined();
 
-    const zero = validateFeedDraft({ ...base, type: 'breast', side: 'right', durationSeconds: 0 }, now);
-    expect(zero.ok).toBe(false);
-  });
-
-  it('accepts a right-side feed with a duration', () => {
-    const r = validateFeedDraft({ ...base, type: 'breast', side: 'right', durationSeconds: 540 }, now);
-    expect(r.ok).toBe(true);
-    if (r.ok) expect(r.value.duration_right_s).toBe(540);
+    const missing = validateFeedDraft({ ...base, type: 'breast' }, now);
+    expect(missing.ok).toBe(false);
   });
 });
 
