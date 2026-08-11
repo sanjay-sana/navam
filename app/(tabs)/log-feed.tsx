@@ -308,8 +308,22 @@ export default function LogFeedScreen() {
 
             <Label>SIDES</Label>
             <View style={styles.sideRow}>
-              <SideTimer label="Left" seconds={liveLeft} active={activeSide === 'left'} onToggle={() => toggleSide('left')} onEdit={() => setShowSidePicker('left')} />
-              <SideTimer label="Right" seconds={liveRight} active={activeSide === 'right'} onToggle={() => toggleSide('right')} onEdit={() => setShowSidePicker('right')} />
+              <SideTimer
+                label="Left"
+                seconds={liveLeft}
+                active={activeSide === 'left'}
+                onToggle={() => toggleSide('left')}
+                onEdit={() => setShowSidePicker('left')}
+                onReset={() => setLeftSec(0)}
+              />
+              <SideTimer
+                label="Right"
+                seconds={liveRight}
+                active={activeSide === 'right'}
+                onToggle={() => toggleSide('right')}
+                onEdit={() => setShowSidePicker('right')}
+                onReset={() => setRightSec(0)}
+              />
             </View>
             <Text style={styles.sideHint}>Tap a side to start/stop · tap its time to set it manually</Text>
             {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
@@ -449,15 +463,22 @@ function SideTimer({
   active,
   onToggle,
   onEdit,
+  onReset,
 }: {
   label: string;
   seconds: number;
   active: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onReset: () => void;
 }) {
   return (
     <View style={[styles.sideTimer, active && styles.sideTimerActive]}>
+      {!active && seconds > 0 ? (
+        <Pressable style={styles.sideReset} onPress={onReset} hitSlop={10}>
+          <Ionicons name="refresh" size={15} color={colors.dim} />
+        </Pressable>
+      ) : null}
       <Text style={[styles.sideLabel, active && styles.sideLabelActive]}>{label}</Text>
       {/* When stopped, the time is an editable field (bordered + pencil). While
           running, it's just the live clock. */}
@@ -539,6 +560,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingVertical: spacing.lg,
   },
+  sideReset: { position: 'absolute', top: spacing.sm, right: spacing.sm, padding: spacing.xs, zIndex: 1 },
   sideTimerActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   sideLabel: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 1, color: colors.dim },
   sideLabelActive: { color: colors.accent },
