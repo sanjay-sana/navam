@@ -160,7 +160,10 @@ export default function LogDiaperScreen() {
         <Pressable style={styles.flagRow} onPress={() => setFlagged((f) => !f)}>
           <View style={styles.flagLabel}>
             <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={18} color={flagged ? colors.accent : colors.dim} />
-            <Text style={styles.flagText}>Flag for review</Text>
+            <View style={styles.flagTextWrap}>
+              <Text style={styles.flagText}>Flag for review</Text>
+              <Text style={styles.flagHint}>Find it later in History → Flagged</Text>
+            </View>
           </View>
           <Switch
             value={flagged}
@@ -267,8 +270,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     marginTop: spacing.md,
   },
-  flagLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  flagLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  flagTextWrap: { flexShrink: 1 },
   flagText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.text },
+  flagHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: 1 },
   typeCard: {
     flexDirection: 'row',
     alignItems: 'center',
