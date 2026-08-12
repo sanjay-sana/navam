@@ -71,6 +71,7 @@ export interface SleepDraft {
   location?: string | null;
   how?: string | null;
   notes?: string;
+  flagged?: boolean;
 }
 
 export interface SleepErrors {
@@ -110,6 +111,7 @@ export function validateSleepDraft(draft: SleepDraft, now: Date = new Date()): S
       location: draft.location ?? null,
       how: draft.how ?? null,
       notes: draft.notes?.trim() || null,
+      flagged: draft.flagged ? 1 : 0,
     },
   };
 }

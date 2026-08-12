@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS diaper_events (
   color       TEXT,                                              -- optional, off fast path
   consistency TEXT,                                              -- optional, off fast path
   notes       TEXT,
+  flagged     INTEGER NOT NULL DEFAULT 0,                         -- v7: flag for review
   created_at  TEXT NOT NULL,
   updated_at  TEXT NOT NULL
 );
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS sleep_events (                          -- v3
   location    TEXT,                                                -- optional, off fast path
   how         TEXT,                                                -- optional
   notes       TEXT,
+  flagged     INTEGER NOT NULL DEFAULT 0,                          -- v7: flag for review
   created_at  TEXT NOT NULL,
   updated_at  TEXT NOT NULL
 );

@@ -13,7 +13,7 @@ function feed(p: Partial<FeedEvent>): FeedEvent {
   };
 }
 function diaper(p: Partial<DiaperEvent>): DiaperEvent {
-  return { id: 2, baby_id: 1, time: '2026-06-20T01:15:00.000Z', type: 'both', color: null, consistency: null, notes: null, created_at: '', updated_at: '', ...p };
+  return { id: 2, baby_id: 1, time: '2026-06-20T01:15:00.000Z', type: 'both', color: null, consistency: null, notes: null, flagged: 0, created_at: '', updated_at: '', ...p };
 }
 function growth(p: Partial<GrowthMeasurement>): GrowthMeasurement {
   return { id: 3, baby_id: 1, measured_at: '2026-06-20', weight_g: 5900, length_cm: 58.4, head_circumference_cm: null, notes: null, created_at: '', updated_at: '', ...p };

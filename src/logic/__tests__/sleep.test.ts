@@ -11,6 +11,7 @@ function sleep(p: Partial<SleepEvent>): SleepEvent {
     location: null,
     how: null,
     notes: null,
+    flagged: 0,
     created_at: '',
     updated_at: '',
     ...p,
@@ -123,5 +124,12 @@ describe('validateSleepDraft', () => {
     if (r.ok) expect(r.value.end_time).toBeNull();
     // start still can't be in the future
     expect(validateSleepDraft({ startTime: new Date(now.getTime() + 60_000), endTime: null, kind: 'night' }, now).ok).toBe(false);
+  });
+
+  it('carries the flag (0 by default, 1 when set)', () => {
+    const off = validateSleepDraft({ startTime: start, endTime: end, kind: 'nap' }, now);
+    if (off.ok) expect(off.value.flagged).toBe(0);
+    const on = validateSleepDraft({ startTime: start, endTime: end, kind: 'nap', flagged: true }, now);
+    if (on.ok) expect(on.value.flagged).toBe(1);
   });
 });

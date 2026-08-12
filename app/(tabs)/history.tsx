@@ -89,6 +89,11 @@ export default function HistoryScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>History</Text>
+        <View style={styles.headerSpacer} />
+        <Pressable style={styles.flaggedBtn} onPress={() => router.push('/flagged')} hitSlop={8}>
+          <Ionicons name="flag" size={15} color={colors.accent} />
+          <Text style={styles.flaggedBtnText}>Flagged</Text>
+        </Pressable>
       </View>
 
       <View style={styles.dayNav}>
@@ -114,7 +119,7 @@ export default function HistoryScreen() {
   );
 }
 
-function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => void }) {
+export function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => void }) {
   const color =
     entry.kind === 'sleep'
       ? eventColors.sleep
@@ -151,6 +156,7 @@ function EntryRow({ entry, onPress }: { entry: TimelineEntry; onPress: () => voi
         <Text style={styles.rowTitle}>{entry.title}</Text>
         {entry.subtitle ? <Text style={styles.rowSubtitle}>{entry.subtitle}</Text> : null}
       </View>
+      {entry.flagged ? <Ionicons name="flag" size={15} color={colors.accent} style={styles.rowFlag} /> : null}
       <Ionicons name="chevron-forward" size={20} color={colors.dim} />
     </Pressable>
   );
@@ -167,6 +173,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   title: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
+  headerSpacer: { flex: 1 },
+  flaggedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+  },
+  flaggedBtnText: { fontFamily: fonts.uiBold, fontSize: 14, color: colors.accent },
+  rowFlag: { marginRight: spacing.xs },
   dayNav: {
     flexDirection: 'row',
     alignItems: 'center',

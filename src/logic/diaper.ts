@@ -8,6 +8,7 @@ export interface DiaperDraft {
   color?: string | null;
   consistency?: string | null;
   notes?: string;
+  flagged?: boolean;
 }
 
 export interface DiaperErrors {
@@ -42,6 +43,7 @@ export function validateDiaperDraft(draft: DiaperDraft, now: Date = new Date()):
       color: hasStool ? draft.color ?? null : null,
       consistency: hasStool ? draft.consistency ?? null : null,
       notes: draft.notes?.trim() || null,
+      flagged: draft.flagged ? 1 : 0,
     },
   };
 }

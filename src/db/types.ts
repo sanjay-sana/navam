@@ -95,6 +95,7 @@ export interface DiaperEvent {
   color: string | null;
   consistency: string | null;
   notes: string | null;
+  flagged: number; // 1 = flagged for review
   created_at: string;
   updated_at: string;
 }
@@ -105,6 +106,7 @@ export interface DiaperInput {
   color?: string | null;
   consistency?: string | null;
   notes?: string | null;
+  flagged?: number;
 }
 
 export interface GrowthMeasurement {
@@ -136,6 +138,7 @@ export interface SleepEvent {
   location: string | null;
   how: string | null;
   notes: string | null;
+  flagged: number; // 1 = flagged for review
   created_at: string;
   updated_at: string;
 }
@@ -147,4 +150,5 @@ export interface SleepInput {
   location?: string | null;
   how?: string | null;
   notes?: string | null;
+  flagged?: number;
 }

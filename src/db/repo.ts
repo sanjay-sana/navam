@@ -347,9 +347,9 @@ export async function createDiaperEvent(babyId: number, input: DiaperInput): Pro
   const db = await getDb();
   const ts = nowUtc();
   const res = await db.runAsync(
-    `INSERT INTO diaper_events (baby_id, time, type, color, consistency, notes, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [babyId, input.time, input.type, input.color ?? null, input.consistency ?? null, input.notes ?? null, ts, ts]
+    `INSERT INTO diaper_events (baby_id, time, type, color, consistency, notes, flagged, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [babyId, input.time, input.type, input.color ?? null, input.consistency ?? null, input.notes ?? null, input.flagged ?? 0, ts, ts]
   );
   return res.lastInsertRowId;
 }
@@ -364,9 +364,18 @@ export async function getDiaperEvent(id: number): Promise<DiaperEvent | null> {
 export async function updateDiaperEvent(id: number, input: DiaperInput): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    `UPDATE diaper_events SET time = ?, type = ?, color = ?, consistency = ?, notes = ?, updated_at = ?
+    `UPDATE diaper_events SET time = ?, type = ?, color = ?, consistency = ?, notes = ?, flagged = ?, updated_at = ?
      WHERE id = ?`,
-    [input.time, input.type, input.color ?? null, input.consistency ?? null, input.notes ?? null, nowUtc(), id]
+    [input.time, input.type, input.color ?? null, input.consistency ?? null, input.notes ?? null, input.flagged ?? 0, nowUtc(), id]
+  );
+}
+
+/** Flagged diaper events, newest first. */
+export async function getFlaggedDiapers(babyId: number): Promise<DiaperEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<DiaperEvent>(
+    'SELECT * FROM diaper_events WHERE baby_id = ? AND flagged = 1 ORDER BY time DESC',
+    [babyId]
   );
 }
 
@@ -525,8 +534,8 @@ export async function createSleepEvent(babyId: number, input: SleepInput): Promi
   const db = await getDb();
   const ts = nowUtc();
   const res = await db.runAsync(
-    `INSERT INTO sleep_events (baby_id, start_time, end_time, kind, location, how, notes, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO sleep_events (baby_id, start_time, end_time, kind, location, how, notes, flagged, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       babyId,
       input.start_time,
@@ -535,6 +544,7 @@ export async function createSleepEvent(babyId: number, input: SleepInput): Promi
       input.location ?? null,
       input.how ?? null,
       input.notes ?? null,
+      input.flagged ?? 0,
       ts,
       ts,
     ]
@@ -550,7 +560,7 @@ export async function getSleepEvent(id: number): Promise<SleepEvent | null> {
 export async function updateSleepEvent(id: number, input: SleepInput): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    `UPDATE sleep_events SET start_time = ?, end_time = ?, kind = ?, location = ?, how = ?, notes = ?, updated_at = ?
+    `UPDATE sleep_events SET start_time = ?, end_time = ?, kind = ?, location = ?, how = ?, notes = ?, flagged = ?, updated_at = ?
      WHERE id = ?`,
     [
       input.start_time,
@@ -559,6 +569,7 @@ export async function updateSleepEvent(id: number, input: SleepInput): Promise<v
       input.location ?? null,
       input.how ?? null,
       input.notes ?? null,
+      input.flagged ?? 0,
       nowUtc(),
       id,
     ]
@@ -568,6 +579,15 @@ export async function updateSleepEvent(id: number, input: SleepInput): Promise<v
 export async function deleteSleepEvent(id: number): Promise<void> {
   const db = await getDb();
   await db.runAsync('DELETE FROM sleep_events WHERE id = ?', [id]);
+}
+
+/** Flagged sleep events, newest first. */
+export async function getFlaggedSleeps(babyId: number): Promise<SleepEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<SleepEvent>(
+    'SELECT * FROM sleep_events WHERE baby_id = ? AND flagged = 1 ORDER BY start_time DESC',
+    [babyId]
+  );
 }
 
 /** Sleeps that STARTED in [startIso, endIso) — attribution by start day. */

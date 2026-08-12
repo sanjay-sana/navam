@@ -6,7 +6,7 @@ const units = { volume: 'ml', mass: 'g', length: 'cm' } as const;
 function sleepEv(p: Partial<SleepEvent>): SleepEvent {
   return {
     id: 1, baby_id: 1, start_time: '2026-06-20T13:00:00.000Z', end_time: '2026-06-20T14:00:00.000Z',
-    kind: 'nap', location: null, how: null, notes: null, created_at: '', updated_at: '', ...p,
+    kind: 'nap', location: null, how: null, notes: null, flagged: 0, created_at: '', updated_at: '', ...p,
   };
 }
 
@@ -18,7 +18,7 @@ function feed(p: Partial<FeedEvent>): FeedEvent {
   };
 }
 function diaper(p: Partial<DiaperEvent>): DiaperEvent {
-  return { id: 1, baby_id: 1, time: '2026-06-20T01:15:00.000Z', type: 'both', color: null, consistency: null, notes: null, created_at: '', updated_at: '', ...p };
+  return { id: 1, baby_id: 1, time: '2026-06-20T01:15:00.000Z', type: 'both', color: null, consistency: null, notes: null, flagged: 0, created_at: '', updated_at: '', ...p };
 }
 function growth(p: Partial<GrowthMeasurement>): GrowthMeasurement {
   return { id: 1, baby_id: 1, measured_at: '2026-06-20', weight_g: null, length_cm: null, head_circumference_cm: null, notes: null, created_at: '', updated_at: '', ...p };

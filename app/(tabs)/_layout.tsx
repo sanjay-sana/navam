@@ -66,6 +66,7 @@ export default function TabLayout() {
       <Tabs.Screen name="log-feed" options={{ href: null }} />
       <Tabs.Screen name="log-sleep" options={{ href: null }} />
       <Tabs.Screen name="log-diaper" options={{ href: null }} />
+      <Tabs.Screen name="flagged" options={{ href: null }} />
       <Tabs.Screen name="log-growth" options={{ href: null }} />
       <Tabs.Screen name="edit-profile" options={{ href: null }} />
       <Tabs.Screen name="history" options={{ href: null }} />

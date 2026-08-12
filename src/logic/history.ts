@@ -30,6 +30,7 @@ export interface TimelineEntry {
   hasClock: boolean;
   title: string;
   subtitle: string;
+  flagged?: boolean;
 }
 
 const SIDE_LABEL = { left: 'Left', right: 'Right', both: 'Both' } as const;
@@ -76,6 +77,7 @@ export function diaperEntry(d: DiaperEvent): TimelineEntry {
     hasClock: true,
     title: 'Diaper',
     subtitle: parts,
+    flagged: d.flagged === 1,
   };
 }
 
@@ -109,6 +111,7 @@ export function sleepEntry(s: SleepEvent): TimelineEntry {
     hasClock: true,
     title: s.kind === 'night' ? 'Night sleep' : 'Nap',
     subtitle,
+    flagged: s.flagged === 1,
   };
 }
 

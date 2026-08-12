@@ -54,4 +54,12 @@ describe('validateDiaperDraft', () => {
       expect(r.value.notes).toBeNull();
     }
   });
+
+  it('carries the flag (0 by default, 1 when set)', () => {
+    const t = new Date('2026-06-21T11:00:00');
+    const off = validateDiaperDraft({ type: 'wet', time: t }, now);
+    if (off.ok) expect(off.value.flagged).toBe(0);
+    const on = validateDiaperDraft({ type: 'wet', time: t, flagged: true }, now);
+    if (on.ok) expect(on.value.flagged).toBe(1);
+  });
 });

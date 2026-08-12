@@ -31,6 +31,7 @@ function diaper(partial: Partial<DiaperEvent>): DiaperEvent {
     color: null,
     consistency: null,
     notes: null,
+    flagged: 0,
     created_at: '',
     updated_at: '',
     ...partial,
@@ -99,7 +100,7 @@ describe('trendSummary', () => {
 function sleepEv(p: Partial<SleepEvent>): SleepEvent {
   return {
     id: 1, baby_id: 1, start_time: now.toISOString(), end_time: now.toISOString(),
-    kind: 'nap', location: null, how: null, notes: null, created_at: '', updated_at: '', ...p,
+    kind: 'nap', location: null, how: null, notes: null, flagged: 0, created_at: '', updated_at: '', ...p,
   };
 }
 

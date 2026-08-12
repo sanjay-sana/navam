@@ -121,6 +121,12 @@ ALTER TABLE settings ADD COLUMN night_end_min INTEGER NOT NULL DEFAULT 360;
 // launch (0 = not yet applied). Never overrides a later manual choice.
 const MIGRATION_6 = `ALTER TABLE settings ADD COLUMN units_auto_set INTEGER NOT NULL DEFAULT 0;`;
 
+// v7: "flag for review" on note-bearing events (diaper + sleep).
+const MIGRATION_7 = `
+ALTER TABLE diaper_events ADD COLUMN flagged INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE sleep_events ADD COLUMN flagged INTEGER NOT NULL DEFAULT 0;
+`;
+
 export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('navam.db');
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -176,5 +182,12 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
       await db.execAsync(MIGRATION_6);
     });
     await db.execAsync('PRAGMA user_version = 6');
+  }
+
+  if (version < 7) {
+    await db.withTransactionAsync(async () => {
+      await db.execAsync(MIGRATION_7);
+    });
+    await db.execAsync('PRAGMA user_version = 7');
   }
 }

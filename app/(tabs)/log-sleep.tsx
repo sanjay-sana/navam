@@ -46,6 +46,7 @@ export default function LogSleepScreen() {
   const [location, setLocation] = useState<string | null>(null);
   const [how, setHow] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [flagged, setFlagged] = useState(false);
   const [ongoing, setOngoing] = useState(false); // still asleep (end_time null)
   const [errors, setErrors] = useState<SleepErrors>({});
   const [saving, setSaving] = useState(false);
@@ -65,6 +66,7 @@ export default function LogSleepScreen() {
           setLocation(null);
           setHow(null);
           setNotes('');
+          setFlagged(false);
           setOngoing(false);
           setErrors({});
           return;
@@ -79,6 +81,7 @@ export default function LogSleepScreen() {
         setLocation(s.location);
         setHow(s.how);
         setNotes(s.notes ?? '');
+        setFlagged(s.flagged === 1);
         setErrors({});
       })();
       return () => {
@@ -94,7 +97,7 @@ export default function LogSleepScreen() {
 
   async function onSave() {
     if (!activeBaby) return;
-    const result = validateSleepDraft({ startTime: start, endTime: ongoing ? null : end, kind, location, how, notes });
+    const result = validateSleepDraft({ startTime: start, endTime: ongoing ? null : end, kind, location, how, notes, flagged });
     if (!result.ok) {
       setErrors(result.errors);
       return;
@@ -180,6 +183,19 @@ export default function LogSleepScreen() {
           multiline
         />
 
+        <Pressable style={styles.flagRow} onPress={() => setFlagged((f) => !f)}>
+          <View style={styles.flagLabel}>
+            <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={18} color={flagged ? colors.accent : colors.dim} />
+            <Text style={styles.flagText}>Flag for review</Text>
+          </View>
+          <Switch
+            value={flagged}
+            onValueChange={setFlagged}
+            trackColor={{ true: colors.accent, false: colors.surface2 }}
+            thumbColor={colors.white}
+          />
+        </Pressable>
+
         {editId != null ? (
           <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
             <Text style={styles.deleteText}>Delete sleep</Text>
@@ -233,6 +249,20 @@ const styles = StyleSheet.create({
     minHeight: 56,
     textAlignVertical: 'top',
   },
+  flagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.md,
+  },
+  flagLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  flagText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.text },
   deleteButton: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.md },
   deleteText: { fontFamily: fonts.uiBold, fontSize: 16, color: '#E8896B' },
   saveButton: {

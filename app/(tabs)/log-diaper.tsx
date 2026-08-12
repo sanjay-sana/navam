@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChipSelect, type ChipOption } from '@/src/components/ChipSelect';
@@ -44,6 +44,7 @@ export default function LogDiaperScreen() {
   const [color, setColor] = useState<string | null>(null);
   const [consistency, setConsistency] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [flagged, setFlagged] = useState(false);
   const [errors, setErrors] = useState<DiaperErrors>({});
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -59,6 +60,7 @@ export default function LogDiaperScreen() {
           setColor(null);
           setConsistency(null);
           setNotes('');
+          setFlagged(false);
           setErrors({});
           return;
         }
@@ -69,6 +71,7 @@ export default function LogDiaperScreen() {
         setColor(d.color);
         setConsistency(d.consistency);
         setNotes(d.notes ?? '');
+        setFlagged(d.flagged === 1);
         setErrors({});
       })();
       return () => {
@@ -81,7 +84,7 @@ export default function LogDiaperScreen() {
 
   async function onSave() {
     if (!activeBaby) return;
-    const result = validateDiaperDraft({ type, time, color, consistency, notes });
+    const result = validateDiaperDraft({ type, time, color, consistency, notes, flagged });
     if (!result.ok) {
       setErrors(result.errors);
       return;
@@ -164,6 +167,19 @@ export default function LogDiaperScreen() {
           multiline
         />
 
+        <Pressable style={styles.flagRow} onPress={() => setFlagged((f) => !f)}>
+          <View style={styles.flagLabel}>
+            <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={18} color={flagged ? colors.accent : colors.dim} />
+            <Text style={styles.flagText}>Flag for review</Text>
+          </View>
+          <Switch
+            value={flagged}
+            onValueChange={setFlagged}
+            trackColor={{ true: colors.accent, false: colors.surface2 }}
+            thumbColor={colors.white}
+          />
+        </Pressable>
+
         {editId != null ? (
           <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
             <Text style={styles.deleteText}>Delete diaper</Text>
@@ -239,6 +255,20 @@ const styles = StyleSheet.create({
     minHeight: 56,
     textAlignVertical: 'top',
   },
+  flagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.md,
+  },
+  flagLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  flagText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.text },
   typeCard: {
     flexDirection: 'row',
     alignItems: 'center',
