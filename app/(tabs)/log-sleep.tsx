@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -51,6 +51,7 @@ export default function LogSleepScreen() {
   const [errors, setErrors] = useState<SleepErrors>({});
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
 
   // Load/reset on focus — persistent tab route won't remount per editId.
   useFocusEffect(
@@ -129,7 +130,7 @@ export default function LogSleepScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12}>
             <Ionicons name="chevron-back" size={26} color={colors.text} />
@@ -194,6 +195,7 @@ export default function LogSleepScreen() {
           style={styles.notes}
           value={notes}
           onChangeText={setNotes}
+          onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200)}
           placeholder="Anything to note"
           placeholderTextColor={colors.dim}
           multiline
