@@ -173,16 +173,6 @@ export default function LogSleepScreen() {
         <Text style={styles.label}>HOW (OPTIONAL)</Text>
         <ChipSelect options={HOW_OPTIONS} value={how} onChange={setHow} color={colors.sleep} />
 
-        <Text style={styles.label}>NOTES (OPTIONAL)</Text>
-        <TextInput
-          style={styles.notes}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Anything to note"
-          placeholderTextColor={colors.dim}
-          multiline
-        />
-
         <Pressable style={styles.flagRow} onPress={() => setFlagged((f) => !f)}>
           <View style={styles.flagLabel}>
             <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={18} color={flagged ? colors.accent : colors.dim} />
@@ -195,6 +185,16 @@ export default function LogSleepScreen() {
             thumbColor={colors.white}
           />
         </Pressable>
+
+        <Text style={styles.label}>NOTES (OPTIONAL)</Text>
+        <TextInput
+          style={styles.notes}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Anything to note"
+          placeholderTextColor={colors.dim}
+          multiline
+        />
 
         {editId != null ? (
           <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>

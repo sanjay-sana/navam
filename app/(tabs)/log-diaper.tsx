@@ -157,16 +157,6 @@ export default function LogDiaperScreen() {
           </>
         ) : null}
 
-        <Text style={styles.optLabel}>NOTES (OPTIONAL)</Text>
-        <TextInput
-          style={styles.notes}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Anything to note"
-          placeholderTextColor={colors.dim}
-          multiline
-        />
-
         <Pressable style={styles.flagRow} onPress={() => setFlagged((f) => !f)}>
           <View style={styles.flagLabel}>
             <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={18} color={flagged ? colors.accent : colors.dim} />
@@ -179,6 +169,16 @@ export default function LogDiaperScreen() {
             thumbColor={colors.white}
           />
         </Pressable>
+
+        <Text style={styles.optLabel}>NOTES (OPTIONAL)</Text>
+        <TextInput
+          style={styles.notes}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Anything to note"
+          placeholderTextColor={colors.dim}
+          multiline
+        />
 
         {editId != null ? (
           <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
