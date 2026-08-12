@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChipSelect, type ChipOption } from '@/src/components/ChipSelect';
@@ -158,21 +158,13 @@ export default function LogDiaperScreen() {
           </>
         ) : null}
 
-        <Pressable style={styles.flagRow} onPress={() => setFlagged((f) => !f)}>
-          <View style={styles.flagLabel}>
-            <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={18} color={flagged ? colors.accent : colors.dim} />
-            <View style={styles.flagTextWrap}>
-              <Text style={styles.flagText}>Flag for review</Text>
-              <Text style={styles.flagHint}>Find it later in History → Flagged</Text>
-            </View>
-          </View>
-          <Switch
-            value={flagged}
-            onValueChange={setFlagged}
-            trackColor={{ true: colors.accent, false: colors.surface2 }}
-            thumbColor={colors.white}
-          />
+        <Pressable style={[styles.flagChip, flagged && styles.flagChipOn]} onPress={() => setFlagged((f) => !f)}>
+          <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={15} color={flagged ? colors.accent : colors.dim} />
+          <Text style={[styles.flagChipText, flagged && styles.flagChipTextOn]}>
+            {flagged ? 'Flagged for review' : 'Flag for review'}
+          </Text>
         </Pressable>
+        {flagged ? <Text style={styles.flagChipHint}>Find it in History → Flagged</Text> : null}
 
         <Text style={styles.optLabel}>NOTES (OPTIONAL)</Text>
         <TextInput
@@ -260,22 +252,23 @@ const styles = StyleSheet.create({
     minHeight: 56,
     textAlignVertical: 'top',
   },
-  flagRow: {
+  flagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     marginTop: spacing.md,
   },
-  flagLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
-  flagTextWrap: { flexShrink: 1 },
-  flagText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.text },
-  flagHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: 1 },
+  flagChipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  flagChipText: { fontFamily: fonts.uiBold, fontSize: 14, color: colors.dim },
+  flagChipTextOn: { color: colors.accent },
+  flagChipHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: spacing.xs },
   typeCard: {
     flexDirection: 'row',
     alignItems: 'center',
