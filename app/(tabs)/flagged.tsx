@@ -4,16 +4,18 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import * as repo from '@/src/db/repo';
 import { buildTimeline, type TimelineEntry } from '@/src/logic/history';
 import { useAppData } from '@/src/state/AppDataProvider';
-import { colors, fonts, spacing } from '@/src/theme/theme';
+import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 import { EntryRow } from './history';
 
 export default function FlaggedScreen() {
   const router = useRouter();
   const { activeBaby, settings } = useAppData();
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
+  const [showClear, setShowClear] = useState(false);
 
   const load = useCallback(async () => {
     if (!activeBaby || !settings) return;
@@ -33,6 +35,12 @@ export default function FlaggedScreen() {
     router.push({ pathname: entry.kind === 'sleep' ? '/log-sleep' : '/log-diaper', params: { id: String(entry.id) } });
   }
 
+  async function doClear() {
+    setShowClear(false);
+    if (activeBaby) await repo.clearAllFlags(activeBaby.id);
+    await load();
+  }
+
   if (!activeBaby) return null;
 
   return (
@@ -42,7 +50,23 @@ export default function FlaggedScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>Flagged</Text>
+        <View style={styles.headerSpacer} />
+        {entries.length > 0 ? (
+          <Pressable style={styles.clearBtn} onPress={() => setShowClear(true)} hitSlop={8}>
+            <Text style={styles.clearBtnText}>Clear all</Text>
+          </Pressable>
+        ) : null}
       </View>
+
+      <ConfirmDialog
+        visible={showClear}
+        title="Clear all flags?"
+        message="This removes the review flag from every diaper and sleep. The entries themselves are kept."
+        confirmLabel="Clear all"
+        destructive
+        onCancel={() => setShowClear(false)}
+        onConfirm={doClear}
+      />
 
       <ScrollView contentContainerStyle={styles.list}>
         {entries.length === 0 ? (
@@ -72,6 +96,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   title: { fontFamily: fonts.display, fontSize: 30, color: colors.text },
+  headerSpacer: { flex: 1 },
+  clearBtn: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 1,
+  },
+  clearBtnText: { fontFamily: fonts.uiBold, fontSize: 13, color: colors.dim },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
   emptyWrap: { alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl * 2 },
   empty: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.dim },

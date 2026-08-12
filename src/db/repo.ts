@@ -590,6 +590,16 @@ export async function getFlaggedSleeps(babyId: number): Promise<SleepEvent[]> {
   );
 }
 
+/** Unflag all flagged diaper + sleep events for a baby. */
+export async function clearAllFlags(babyId: number): Promise<void> {
+  const db = await getDb();
+  const ts = nowUtc();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE diaper_events SET flagged = 0, updated_at = ? WHERE baby_id = ? AND flagged = 1', [ts, babyId]);
+    await db.runAsync('UPDATE sleep_events SET flagged = 0, updated_at = ? WHERE baby_id = ? AND flagged = 1', [ts, babyId]);
+  });
+}
+
 /** Sleeps that STARTED in [startIso, endIso) — attribution by start day. */
 export async function getSleepEventsBetween(
   babyId: number,
