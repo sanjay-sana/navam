@@ -174,15 +174,15 @@ export default function LogSleepScreen() {
         <Text style={styles.label}>HOW (OPTIONAL)</Text>
         <ChipSelect options={HOW_OPTIONS} value={how} onChange={setHow} color={colors.sleep} />
 
-        <Pressable style={[styles.flagChip, flagged && styles.flagChipOn]} onPress={() => setFlagged((f) => !f)}>
-          <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={15} color={flagged ? colors.accent : colors.dim} />
-          <Text style={[styles.flagChipText, flagged && styles.flagChipTextOn]}>
-            {flagged ? 'Flagged for review' : 'Flag for review'}
-          </Text>
-        </Pressable>
-        {flagged ? <Text style={styles.flagChipHint}>Find it in History → Flagged</Text> : null}
-
-        <Text style={styles.label}>NOTES (OPTIONAL)</Text>
+        <View style={styles.notesHeader}>
+          <Text style={styles.notesHeaderLabel}>NOTES (OPTIONAL)</Text>
+          <Pressable style={[styles.flagChip, flagged && styles.flagChipOn]} onPress={() => setFlagged((f) => !f)}>
+            <Ionicons name={flagged ? 'flag' : 'flag-outline'} size={14} color={flagged ? colors.accent : colors.dim} />
+            <Text style={[styles.flagChipText, flagged && styles.flagChipTextOn]}>
+              {flagged ? 'Flagged' : 'Flag for review'}
+            </Text>
+          </Pressable>
+        </View>
         <TextInput
           style={styles.notes}
           value={notes}
@@ -192,6 +192,7 @@ export default function LogSleepScreen() {
           placeholderTextColor={colors.dim}
           multiline
         />
+        {flagged ? <Text style={styles.flagChipHint}>Find it later in History → Flagged</Text> : null}
 
         {editId != null ? (
           <Pressable style={styles.deleteButton} onPress={() => setShowDelete(true)}>
@@ -246,21 +247,27 @@ const styles = StyleSheet.create({
     minHeight: 56,
     textAlignVertical: 'top',
   },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  notesHeaderLabel: { fontFamily: fonts.uiBold, fontSize: 12, letterSpacing: 1, color: colors.dim },
   flagChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    alignSelf: 'flex-start',
     backgroundColor: colors.surface,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginTop: spacing.md,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
   },
   flagChipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  flagChipText: { fontFamily: fonts.uiBold, fontSize: 14, color: colors.dim },
+  flagChipText: { fontFamily: fonts.uiBold, fontSize: 13, color: colors.dim },
   flagChipTextOn: { color: colors.accent },
   flagChipHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: spacing.xs },
   deleteButton: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.md },
