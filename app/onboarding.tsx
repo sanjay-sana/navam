@@ -87,7 +87,7 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <BrandMark size={84} />
+          <BrandMark size={84} animate />
           <Text style={styles.title}>Welcome to Navam</Text>
           <Text style={styles.subtitle}>Let&apos;s set up your baby.</Text>
           <Text style={styles.privacyLine}>Private by design — everything stays on this device.</Text>

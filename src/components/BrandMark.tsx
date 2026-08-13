@@ -1,7 +1,8 @@
 // The Navam logo mark — a yawning baby cradled in a honey crescent moon, as an
 // SVG so it stays crisp at any size and follows the theme. Same geometry as the
 // app icon (composition B).
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
+import { AccessibilityInfo, Animated, Easing } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 
 import { colors } from '@/src/theme/theme';
@@ -35,12 +36,41 @@ const HR = 170;
 export const BrandMark = memo(function BrandMark({
   size = 30,
   dimmed = false,
+  animate = false,
 }: {
   size?: number;
   /** Fades the mark for an inactive/disabled state (e.g. unfocused tab). */
   dimmed?: boolean;
+  /** Gentle "breathing" pulse — for hero placements, not tab icons. */
+  animate?: boolean;
 }) {
+  // A slow, soft scale so the sleepy baby looks like it's breathing. Native
+  // driver = runs on the UI thread; skipped when the OS asks to reduce motion.
+  const breath = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!animate) return;
+    let loop: Animated.CompositeAnimation | null = null;
+    let cancelled = false;
+    AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (cancelled || reduce) return;
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(breath, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(breath, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      );
+      loop.start();
+    });
+    return () => {
+      cancelled = true;
+      loop?.stop();
+    };
+  }, [animate, breath]);
+
+  const scale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.045] });
+
   return (
+    <Animated.View style={animate ? { transform: [{ scale }] } : undefined}>
     <Svg width={size} height={size} viewBox="0 0 1024 1024">
       <G opacity={dimmed ? 0.4 : 1}>
       <Path d={MOON} fill={colors.accent} />
@@ -72,5 +102,6 @@ export const BrandMark = memo(function BrandMark({
       <Ellipse cx={HC.x} cy={HC.y + 114} rx={19} ry={17} fill="#E8907E" />
       </G>
     </Svg>
+    </Animated.View>
   );
 });
