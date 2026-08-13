@@ -259,7 +259,7 @@ export default function SettingsScreen() {
 
         <Text style={styles.section}>ABOUT</Text>
         <Pressable
-          style={styles.exportRow}
+          style={styles.row}
           onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})}
         >
           <Text style={styles.rowLabel}>Privacy policy</Text>
