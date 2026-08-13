@@ -90,6 +90,7 @@ export default function OnboardingScreen() {
           <BrandMark size={84} />
           <Text style={styles.title}>Welcome to Navam</Text>
           <Text style={styles.subtitle}>Let&apos;s set up your baby.</Text>
+          <Text style={styles.privacyLine}>Private by design — everything stays on this device.</Text>
         </View>
 
         {/* Name */}
@@ -260,6 +261,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 16,
     color: colors.dim,
+  },
+  privacyLine: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.dim,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.md,
   },
   label: {
     fontFamily: fonts.uiBold,

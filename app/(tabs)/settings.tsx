@@ -2,8 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Application from 'expo-application';
+import Constants from 'expo-constants';
 
 import { BrandMark } from '@/src/components/BrandMark';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
@@ -36,6 +38,11 @@ function formatTime(min: number): string {
 const TIME_COLUMNS = [
   { items: Array.from({ length: (24 * 60) / STEP_MIN }, (_, i) => ({ label: formatTime(i * STEP_MIN) })) },
 ];
+
+const PRIVACY_URL = 'https://sanjay-sana.github.io/navam/privacy.html';
+const APP_VERSION = Constants.expoConfig?.version ?? Application.nativeApplicationVersion ?? '1.0.0';
+const BUILD_NUMBER = Application.nativeBuildVersion;
+const VERSION_LABEL = BUILD_NUMBER ? `${APP_VERSION} (${BUILD_NUMBER})` : APP_VERSION;
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -250,6 +257,17 @@ export default function SettingsScreen() {
           <Text style={styles.startOverText}>Start over</Text>
         </Pressable>
 
+        <Text style={styles.section}>ABOUT</Text>
+        <Pressable
+          style={styles.exportRow}
+          onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})}
+        >
+          <Text style={styles.rowLabel}>Privacy policy</Text>
+          <Ionicons name="open-outline" size={20} color={colors.dim} />
+        </Pressable>
+        <Text style={styles.aboutBlurb}>Navam keeps all your data on your device.</Text>
+        <Text style={styles.versionText}>Navam v{VERSION_LABEL}</Text>
+
         <ConfirmDialog
           visible={showReset}
           title="Start over?"
@@ -379,4 +397,6 @@ const styles = StyleSheet.create({
   exportHint: { fontFamily: fonts.ui, fontSize: 15, color: colors.dim },
   startOver: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.xl },
   startOverText: { fontFamily: fonts.uiBold, fontSize: 16, color: '#E8896B' },
+  aboutBlurb: { fontFamily: fonts.ui, fontSize: 13, color: colors.dim, marginTop: spacing.md, textAlign: 'center' },
+  versionText: { fontFamily: fonts.ui, fontSize: 13, color: colors.dim, marginTop: spacing.xs, textAlign: 'center' },
 });
