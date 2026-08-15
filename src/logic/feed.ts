@@ -54,7 +54,7 @@ export function validateFeedDraft(draft: FeedDraft, now: Date = new Date()): Fee
     const l = Math.max(0, Math.round(draft.leftSeconds ?? 0));
     const r = Math.max(0, Math.round(draft.rightSeconds ?? 0));
     if (l <= 0 && r <= 0) {
-      errors.duration = 'Time at least one side, or enter minutes';
+      errors.duration = 'Time a side, or tap its time to set minutes';
     }
     const derived: Side = l > 0 && r > 0 ? 'both' : r > 0 ? 'right' : 'left';
     const total = l + r;
@@ -87,10 +87,10 @@ export function validateFeedDraft(draft: FeedDraft, now: Date = new Date()): Fee
         contents: draft.contents,
       };
     } else {
-      // pump — needs a duration (timer or minutes), like breast.
+      // pump — needs a duration (timer or tap-to-set minutes), like breast.
       const dur = draft.durationSeconds;
       if (dur == null || dur <= 0) {
-        errors.duration = 'Record a time or enter minutes';
+        errors.duration = 'Time the pump, or tap the time to set minutes';
       }
       const end_time =
         dur && dur > 0 ? new Date(draft.startTime.getTime() + dur * 1000).toISOString() : null;

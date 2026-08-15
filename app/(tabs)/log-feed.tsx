@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
@@ -74,7 +74,6 @@ export default function LogFeedScreen() {
   const [timing, setTiming] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
   const recordStartRef = useRef<number | null>(null);
-  const [manualMinutes, setManualMinutes] = useState('');
   const [, setTick] = useState(0);
 
   function resetTimers() {
@@ -87,7 +86,6 @@ export default function LogFeedScreen() {
     setTiming(false);
     setTimerSeconds(null);
     recordStartRef.current = null;
-    setManualMinutes('');
   }
 
   const [errors, setErrors] = useState<FeedErrors>({});
@@ -171,6 +169,9 @@ export default function LogFeedScreen() {
     setStartTime(new Date());
   }
 
+  // Pump timer is an accumulator: `timerSeconds` holds banked seconds so it can
+  // pause/continue and restart, like the breast side-timers. Starting fresh
+  // (Record / Restart) clears the bank; pausing folds the current run into it.
   function startTimer() {
     const start = new Date();
     recordStartRef.current = start.getTime();
@@ -180,23 +181,43 @@ export default function LogFeedScreen() {
     setTiming(true);
   }
 
-  function stopTimer() {
+  function pauseTimer() {
     if (recordStartRef.current != null) {
-      setTimerSeconds(Math.round((Date.now() - recordStartRef.current) / 1000));
+      const banked = timerSeconds ?? 0;
+      setTimerSeconds(banked + Math.round((Date.now() - recordStartRef.current) / 1000));
     }
+    recordStartRef.current = null;
     setTiming(false);
   }
 
+  function resumeTimer() {
+    recordStartRef.current = Date.now();
+    setErrors({});
+    setTiming(true);
+  }
+
+  // Single Start/Stop toggle that accumulates (Stop = pause, Start = continue),
+  // exactly like a breast side-timer. Restart is the ↻ reset.
+  function togglePump() {
+    if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+    if (timing) pauseTimer();
+    else if (timerSeconds != null) resumeTimer();
+    else startTimer();
+  }
+  function resetPump() {
+    recordStartRef.current = null;
+    setTiming(false);
+    setTimerSeconds(null);
+  }
+
   function effectiveDurationSeconds(): number | null {
-    if (timerSeconds != null) return timerSeconds;
-    const m = Number(manualMinutes.trim());
-    return Number.isFinite(m) && m > 0 ? Math.round(m * 60) : null;
+    return timerSeconds;
   }
 
   const liveSeconds =
     timing && recordStartRef.current != null
-      ? Math.floor((Date.now() - recordStartRef.current) / 1000)
-      : 0;
+      ? (timerSeconds ?? 0) + Math.floor((Date.now() - recordStartRef.current) / 1000)
+      : timerSeconds ?? 0;
 
   // --- Breast side timers ---
   function foldActiveSide() {
@@ -382,81 +403,42 @@ export default function LogFeedScreen() {
           </>
         )}
 
-        {/* Pump duration. Editing → an adjustable value; new → live timer that,
-            once stopped, stays tap-to-editable and re-recordable (breast parity). */}
-        {type === 'pump' && editId != null ? (
+        {/* Pump timer reuses the breast side-timer: Start/Stop accumulates
+            (Stop = pause, Start = continue), ↻ restarts, tap the time to set it
+            manually. No live timer in edit mode. */}
+        {type === 'pump' ? (
           <>
             <Label>DURATION</Label>
-            <Pressable style={styles.input} onPress={() => setShowPumpPicker(true)}>
-              <View style={styles.rowBetween}>
-                <Text style={styles.inputText}>{formatMMSS(timerSeconds ?? 0)}</Text>
-                <Ionicons name="pencil" size={14} color={colors.dim} />
-              </View>
-            </Pressable>
-            {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
-          </>
-        ) : type === 'pump' ? (
-          <>
-            <Label>TIMER</Label>
-            <View style={styles.timerCard}>
-              {timing ? <Text style={styles.timerCaption}>RECORDING</Text> : null}
-              {!timing && timerSeconds != null ? (
-                // Stopped with a recorded time → tap to fine-tune it.
-                <Pressable style={styles.timerClockEdit} onPress={() => setShowPumpPicker(true)} hitSlop={8}>
-                  <Text style={styles.timerClock}>{formatMMSS(timerSeconds)}</Text>
-                  <Ionicons name="pencil" size={16} color={colors.dim} />
-                </Pressable>
-              ) : (
-                <Text style={styles.timerClock}>{formatMMSS(timing ? liveSeconds : 0)}</Text>
-              )}
-              <Pressable
-                style={[styles.timerButton, timing && styles.timerButtonStop]}
-                onPress={timing ? stopTimer : startTimer}
-              >
-                <Text style={styles.timerButtonText}>
-                  {timing ? 'Stop' : timerSeconds != null ? 'Record again' : 'Record'}
-                </Text>
-              </Pressable>
+            <View style={styles.sideRow}>
+              <SideTimer
+                label="Pump"
+                seconds={liveSeconds}
+                active={timing}
+                editing={editId != null}
+                onToggle={togglePump}
+                onEdit={() => setShowPumpPicker(true)}
+                onReset={resetPump}
+              />
             </View>
-            {!timing && timerSeconds != null ? (
-              <Text style={styles.sideHint}>Tap the time to adjust it</Text>
-            ) : null}
+            <Text style={styles.sideHint}>
+              {editId != null ? 'Tap the time to adjust it' : 'Tap Start/Stop · tap the time to set it manually'}
+            </Text>
+            {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
 
-            {!timing && timerSeconds == null ? (
-              <>
-                <Text style={styles.orDivider}>or enter minutes</Text>
-                <TextInput
-                  style={styles.input}
-                  value={manualMinutes}
-                  onChangeText={(t) => {
-                    setManualMinutes(t);
-                    if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
-                  }}
-                  placeholder="e.g. 12"
-                  placeholderTextColor={colors.dim}
-                  keyboardType="number-pad"
-                />
-              </>
-            ) : null}
-            {!timing && errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
+            <WheelCompoundModal
+              visible={showPumpPicker}
+              title="Minutes"
+              columns={MINUTE_COLUMNS}
+              initial={[Math.min(90, Math.round((timerSeconds ?? 0) / 60))]}
+              compose={(i) => i[0]}
+              onCancel={() => setShowPumpPicker(false)}
+              onConfirm={(min) => {
+                setTimerSeconds(min * 60);
+                if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+                setShowPumpPicker(false);
+              }}
+            />
           </>
-        ) : null}
-
-        {/* Shared pump-duration wheel — tap-to-edit in both new and edit modes. */}
-        {type === 'pump' ? (
-          <WheelCompoundModal
-            visible={showPumpPicker}
-            title="Minutes"
-            columns={MINUTE_COLUMNS}
-            initial={[Math.min(90, Math.round((timerSeconds ?? 0) / 60))]}
-            compose={(i) => i[0]}
-            onCancel={() => setShowPumpPicker(false)}
-            onConfirm={(min) => {
-              setTimerSeconds(min * 60);
-              if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
-              setShowPumpPicker(false);
-            }}
-          />
         ) : null}
 
         {!timing && activeSide === null ? (
@@ -590,7 +572,6 @@ const styles = StyleSheet.create({
   },
   inputText: { fontFamily: fonts.ui, fontSize: 17, color: colors.text },
   inputPlaceholder: { fontFamily: fonts.ui, fontSize: 17, color: colors.dim },
-  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sideRow: { flexDirection: 'row', gap: spacing.md },
   sideHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.dim, marginTop: spacing.sm, textAlign: 'center' },
   hintPill: {
@@ -643,35 +624,6 @@ const styles = StyleSheet.create({
   sideBtnActive: { backgroundColor: colors.accent },
   sideBtnText: { fontFamily: fonts.uiBold, fontSize: 14, color: colors.accent },
   sideBtnTextActive: { color: colors.bg },
-  timerCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.md,
-  },
-  timerCaption: { fontFamily: fonts.uiBold, fontSize: 13, letterSpacing: 1, color: colors.dim },
-  orDivider: {
-    fontFamily: fonts.ui,
-    fontSize: 13,
-    color: colors.dim,
-    textAlign: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  timerClock: { fontFamily: fonts.display, fontSize: 56, color: colors.text },
-  timerClockEdit: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  timerButton: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm + 2,
-  },
-  timerButtonStop: { backgroundColor: colors.diaper },
-  timerButtonText: { fontFamily: fonts.uiBold, fontSize: 16, color: colors.bg },
-
   error: { fontFamily: fonts.ui, fontSize: 13, color: '#E8896B', marginTop: spacing.sm },
   deleteButton: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.md },
   deleteText: { fontFamily: fonts.uiBold, fontSize: 16, color: '#E8896B' },
