@@ -557,6 +557,24 @@ export async function getSleepEvent(id: number): Promise<SleepEvent | null> {
   return (await db.getFirstAsync<SleepEvent>('SELECT * FROM sleep_events WHERE id = ?', [id])) ?? null;
 }
 
+/**
+ * Bulk-insert a generated dataset (experimental "Load sample data" tool). Runs
+ * in a single transaction so ~400 rows land fast; callers should reschedule the
+ * feed reminder and refresh app state afterwards.
+ */
+export async function insertSampleData(
+  babyId: number,
+  data: { feeds: FeedInput[]; diapers: DiaperInput[]; sleeps: SleepInput[]; growth: GrowthInput[] }
+): Promise<void> {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    for (const g of data.growth) await createGrowthMeasurement(babyId, g);
+    for (const f of data.feeds) await createFeedEvent(babyId, f);
+    for (const d of data.diapers) await createDiaperEvent(babyId, d);
+    for (const s of data.sleeps) await createSleepEvent(babyId, s);
+  });
+}
+
 export async function updateSleepEvent(id: number, input: SleepInput): Promise<void> {
   const db = await getDb();
   await db.runAsync(

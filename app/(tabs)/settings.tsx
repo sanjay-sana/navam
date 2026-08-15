@@ -14,6 +14,7 @@ import { WheelCompoundModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import type { UnitLength, UnitMass, UnitVolume } from '@/src/db/types';
 import { exportCsv } from '@/src/lib/exportCsv';
+import { buildSampleData } from '@/src/logic/sampleData';
 import { ensureNotificationPermission, syncFeedReminder } from '@/src/notifications/feedReminder';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
@@ -54,6 +55,8 @@ export default function SettingsScreen() {
   const [nightPicker, setNightPicker] = useState<'start' | 'end' | null>(null);
   const [showReset, setShowReset] = useState(false);
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
+  const [showSample, setShowSample] = useState(false);
+  const [loadingSample, setLoadingSample] = useState(false);
 
   const loadReminder = useCallback(async () => {
     if (!activeBaby) return;
@@ -115,6 +118,26 @@ export default function SettingsScreen() {
     setShowReset(false);
     await repo.resetApp();
     await refresh(); // active baby now null → route gate sends you to onboarding
+  }
+
+  async function doLoadSample() {
+    if (!activeBaby) return;
+    setShowSample(false);
+    setLoadingSample(true);
+    try {
+      const data = buildSampleData({ dob: activeBaby.date_of_birth });
+      await repo.insertSampleData(activeBaby.id, data);
+      await syncFeedReminder(activeBaby.id);
+      await refresh();
+      setNotice({
+        title: 'Sample data added',
+        message: `Added ${data.feeds.length} feeds, ${data.diapers.length} diapers, ${data.sleeps.length} sleeps, and ${data.growth.length} growth points.`,
+      });
+    } catch (e) {
+      setNotice({ title: 'Could not load sample data', message: String(e) });
+    } finally {
+      setLoadingSample(false);
+    }
   }
 
   const dob = new Date(`${activeBaby.date_of_birth}T00:00:00`);
@@ -256,6 +279,28 @@ export default function SettingsScreen() {
         <Pressable style={styles.startOver} onPress={() => setShowReset(true)}>
           <Text style={styles.startOverText}>Start over</Text>
         </Pressable>
+
+        <Text style={styles.section}>EXPERIMENTAL</Text>
+        <Pressable style={styles.exportRow} onPress={() => setShowSample(true)} disabled={loadingSample}>
+          <Text style={styles.rowLabel}>Load sample data</Text>
+          <View style={styles.exportRight}>
+            <Text style={styles.exportHint}>{loadingSample ? 'Loading…' : 'Screenshots'}</Text>
+            <Ionicons name="sparkles-outline" size={20} color={colors.dim} />
+          </View>
+        </Pressable>
+        <Text style={styles.aboutBlurb}>
+          Fills the app with ~3 weeks of realistic events so the screens look real for screenshots. Adds to your
+          current data.
+        </Text>
+
+        <ConfirmDialog
+          visible={showSample}
+          title="Load sample data?"
+          message="Adds ~3 weeks of realistic feeds, diapers, sleep, and growth so the app looks real for screenshots. This adds to your current data — use Start over first if you want only sample data."
+          confirmLabel="Load"
+          onCancel={() => setShowSample(false)}
+          onConfirm={doLoadSample}
+        />
 
         <Text style={styles.section}>ABOUT</Text>
         <Pressable
