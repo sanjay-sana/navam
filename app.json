@@ -43,7 +43,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#17131D"
         }
-      ]
+      ],
+      "expo-sharing",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
