@@ -382,7 +382,8 @@ export default function LogFeedScreen() {
           </>
         )}
 
-        {/* Pump duration. Editing → just an adjustable value; new → live timer. */}
+        {/* Pump duration. Editing → an adjustable value; new → live timer that,
+            once stopped, stays tap-to-editable and re-recordable (breast parity). */}
         {type === 'pump' && editId != null ? (
           <>
             <Label>DURATION</Label>
@@ -393,33 +394,33 @@ export default function LogFeedScreen() {
               </View>
             </Pressable>
             {errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
-            <WheelCompoundModal
-              visible={showPumpPicker}
-              title="Minutes"
-              columns={MINUTE_COLUMNS}
-              initial={[Math.min(90, Math.round((timerSeconds ?? 0) / 60))]}
-              compose={(i) => i[0]}
-              onCancel={() => setShowPumpPicker(false)}
-              onConfirm={(min) => {
-                setTimerSeconds(min * 60);
-                if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
-                setShowPumpPicker(false);
-              }}
-            />
           </>
         ) : type === 'pump' ? (
           <>
             <Label>TIMER</Label>
             <View style={styles.timerCard}>
               {timing ? <Text style={styles.timerCaption}>RECORDING</Text> : null}
-              <Text style={styles.timerClock}>{formatMMSS(timing ? liveSeconds : timerSeconds ?? 0)}</Text>
+              {!timing && timerSeconds != null ? (
+                // Stopped with a recorded time → tap to fine-tune it.
+                <Pressable style={styles.timerClockEdit} onPress={() => setShowPumpPicker(true)} hitSlop={8}>
+                  <Text style={styles.timerClock}>{formatMMSS(timerSeconds)}</Text>
+                  <Ionicons name="pencil" size={16} color={colors.dim} />
+                </Pressable>
+              ) : (
+                <Text style={styles.timerClock}>{formatMMSS(timing ? liveSeconds : 0)}</Text>
+              )}
               <Pressable
                 style={[styles.timerButton, timing && styles.timerButtonStop]}
                 onPress={timing ? stopTimer : startTimer}
               >
-                <Text style={styles.timerButtonText}>{timing ? 'Stop' : 'Record'}</Text>
+                <Text style={styles.timerButtonText}>
+                  {timing ? 'Stop' : timerSeconds != null ? 'Record again' : 'Record'}
+                </Text>
               </Pressable>
             </View>
+            {!timing && timerSeconds != null ? (
+              <Text style={styles.sideHint}>Tap the time to adjust it</Text>
+            ) : null}
 
             {!timing && timerSeconds == null ? (
               <>
@@ -439,6 +440,23 @@ export default function LogFeedScreen() {
             ) : null}
             {!timing && errors.duration ? <ErrorText>{errors.duration}</ErrorText> : null}
           </>
+        ) : null}
+
+        {/* Shared pump-duration wheel — tap-to-edit in both new and edit modes. */}
+        {type === 'pump' ? (
+          <WheelCompoundModal
+            visible={showPumpPicker}
+            title="Minutes"
+            columns={MINUTE_COLUMNS}
+            initial={[Math.min(90, Math.round((timerSeconds ?? 0) / 60))]}
+            compose={(i) => i[0]}
+            onCancel={() => setShowPumpPicker(false)}
+            onConfirm={(min) => {
+              setTimerSeconds(min * 60);
+              if (errors.duration) setErrors((e) => ({ ...e, duration: undefined }));
+              setShowPumpPicker(false);
+            }}
+          />
         ) : null}
 
         {!timing && activeSide === null ? (
@@ -644,6 +662,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   timerClock: { fontFamily: fonts.display, fontSize: 56, color: colors.text },
+  timerClockEdit: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   timerButton: {
     backgroundColor: colors.accent,
     borderRadius: radius.pill,
