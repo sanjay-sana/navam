@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# stray device screen captures dropped at the repo root (store-ready copies live in store-assets/screenshots/)
+/1000*.png
