@@ -287,7 +287,7 @@ export default function SettingsScreen() {
         {SHOW_SAMPLE_DATA ? (
           <>
             <Text style={styles.section}>EXPERIMENTAL</Text>
-            <Pressable style={styles.exportRow} onPress={() => setShowSample(true)} disabled={loadingSample}>
+            <Pressable style={styles.row} onPress={() => setShowSample(true)} disabled={loadingSample}>
               <Text style={styles.rowLabel}>Load sample data</Text>
               <View style={styles.exportRight}>
                 <Text style={styles.exportHint}>{loadingSample ? 'Loading…' : 'Screenshots'}</Text>
