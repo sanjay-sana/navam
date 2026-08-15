@@ -45,6 +45,10 @@ const APP_VERSION = Constants.expoConfig?.version ?? Application.nativeApplicati
 const BUILD_NUMBER = Application.nativeBuildVersion;
 const VERSION_LABEL = BUILD_NUMBER ? `${APP_VERSION} (${BUILD_NUMBER})` : APP_VERSION;
 
+// The sample-data tool is a screenshot aid — shown in dev (Expo Go / dev client)
+// and preview builds (which set the env flag in eas.json), never in production.
+const SHOW_SAMPLE_DATA = __DEV__ || process.env.EXPO_PUBLIC_SHOW_SAMPLE === '1';
+
 export default function SettingsScreen() {
   const router = useRouter();
   const { activeBaby, settings, refresh } = useAppData();
@@ -280,27 +284,31 @@ export default function SettingsScreen() {
           <Text style={styles.startOverText}>Start over</Text>
         </Pressable>
 
-        <Text style={styles.section}>EXPERIMENTAL</Text>
-        <Pressable style={styles.exportRow} onPress={() => setShowSample(true)} disabled={loadingSample}>
-          <Text style={styles.rowLabel}>Load sample data</Text>
-          <View style={styles.exportRight}>
-            <Text style={styles.exportHint}>{loadingSample ? 'Loading…' : 'Screenshots'}</Text>
-            <Ionicons name="sparkles-outline" size={20} color={colors.dim} />
-          </View>
-        </Pressable>
-        <Text style={styles.aboutBlurb}>
-          Fills the app with ~3 weeks of realistic events so the screens look real for screenshots. Adds to your
-          current data.
-        </Text>
+        {SHOW_SAMPLE_DATA ? (
+          <>
+            <Text style={styles.section}>EXPERIMENTAL</Text>
+            <Pressable style={styles.exportRow} onPress={() => setShowSample(true)} disabled={loadingSample}>
+              <Text style={styles.rowLabel}>Load sample data</Text>
+              <View style={styles.exportRight}>
+                <Text style={styles.exportHint}>{loadingSample ? 'Loading…' : 'Screenshots'}</Text>
+                <Ionicons name="sparkles-outline" size={20} color={colors.dim} />
+              </View>
+            </Pressable>
+            <Text style={styles.aboutBlurb}>
+              Fills the app with ~3 weeks of realistic events so the screens look real for screenshots. Adds to your
+              current data.
+            </Text>
 
-        <ConfirmDialog
-          visible={showSample}
-          title="Load sample data?"
-          message="Adds ~3 weeks of realistic feeds, diapers, sleep, and growth so the app looks real for screenshots. This adds to your current data — use Start over first if you want only sample data."
-          confirmLabel="Load"
-          onCancel={() => setShowSample(false)}
-          onConfirm={doLoadSample}
-        />
+            <ConfirmDialog
+              visible={showSample}
+              title="Load sample data?"
+              message="Adds ~3 weeks of realistic feeds, diapers, sleep, and growth so the app looks real for screenshots. This adds to your current data — use Start over first if you want only sample data."
+              confirmLabel="Load"
+              onCancel={() => setShowSample(false)}
+              onConfirm={doLoadSample}
+            />
+          </>
+        ) : null}
 
         <Text style={styles.section}>ABOUT</Text>
         <Pressable
