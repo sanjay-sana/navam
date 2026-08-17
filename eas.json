@@ -8,8 +8,7 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_SHOW_SAMPLE": "1" }
+      "android": { "buildType": "apk" }
     },
     "production": {
       "autoIncrement": true,

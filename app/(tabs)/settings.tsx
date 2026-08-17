@@ -45,9 +45,10 @@ const APP_VERSION = Constants.expoConfig?.version ?? Application.nativeApplicati
 const BUILD_NUMBER = Application.nativeBuildVersion;
 const VERSION_LABEL = BUILD_NUMBER ? `${APP_VERSION} (${BUILD_NUMBER})` : APP_VERSION;
 
-// The sample-data tool is a screenshot aid — shown in dev (Expo Go / dev client)
-// and preview builds (which set the env flag in eas.json), never in production.
-const SHOW_SAMPLE_DATA = __DEV__ || process.env.EXPO_PUBLIC_SHOW_SAMPLE === '1';
+// The sample-data tool is a screenshot aid — dev only (Expo Go / dev client).
+// It is compiled out of both preview and production builds so a shared build can
+// never let a real user overwrite their data.
+const SHOW_SAMPLE_DATA = __DEV__;
 
 export default function SettingsScreen() {
   const router = useRouter();
