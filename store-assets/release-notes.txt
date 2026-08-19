@@ -1,0 +1,9 @@
+=== Recommended (reusable for production) ===
+<en-US>
+First release of Navam — a private, offline baby tracker. Log feeds (breast, bottle, pump), diapers, sleep, and growth against WHO percentiles. Glanceable Today countdown, Trends, editable History, local reminders, and CSV export. Everything stays on your device.
+</en-US>
+
+=== Minimal (fine for closed testing) ===
+<en-US>
+Initial release for closed testing.
+</en-US>
