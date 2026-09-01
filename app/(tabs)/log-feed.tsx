@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
@@ -91,6 +91,7 @@ export default function LogFeedScreen() {
   const [errors, setErrors] = useState<FeedErrors>({});
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showDiscard, setShowDiscard] = useState(false);
 
   // Load (edit) or reset (new) on focus. Persistent tab route won't remount per
   // editId, so an editId effect won't re-fire when re-opening the same id.
@@ -149,6 +150,43 @@ export default function LogFeedScreen() {
       deactivateKeepAwake(TAG);
     };
   }, [timerRunning]);
+
+  // Unsaved timer progress on a NEW log — a timer still running, or one stopped
+  // with banked time that hasn't been saved. In edit mode the fields are
+  // pre-filled from a saved feed, so backing out there is never a loss.
+  function hasUnsavedTimer(): boolean {
+    if (editId != null) return false;
+    if (type === 'breast') return activeSide != null || leftSec > 0 || rightSec > 0;
+    if (type === 'pump') return timing || (timerSeconds ?? 0) > 0;
+    return false;
+  }
+  // Latest value for the hardware-back handler, which subscribes only once.
+  const dirtyRef = useRef(false);
+  dirtyRef.current = hasUnsavedTimer();
+
+  // Going back with unsaved timer progress would silently discard it, so ask
+  // first. Guards both the header chevron and the hardware/gesture back button.
+  function attemptBack() {
+    if (hasUnsavedTimer()) setShowDiscard(true);
+    else router.back();
+  }
+  function confirmDiscard() {
+    setShowDiscard(false);
+    resetTimers();
+    router.back();
+  }
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (dirtyRef.current) {
+          setShowDiscard(true);
+          return true; // swallow the back press; the dialog decides
+        }
+        return false;
+      });
+      return () => sub.remove();
+    }, [])
+  );
 
   function switchType(next: FeedType) {
     setType(next);
@@ -300,7 +338,7 @@ export default function LogFeedScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+          <Pressable onPress={attemptBack} hitSlop={12}>
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </Pressable>
           <Text style={styles.title}>
@@ -464,6 +502,17 @@ export default function LogFeedScreen() {
           destructive
           onCancel={() => setShowDelete(false)}
           onConfirm={doDelete}
+        />
+
+        <ConfirmDialog
+          visible={showDiscard}
+          title={type === 'pump' ? 'Discard this pump?' : 'Discard this feed?'}
+          message="This hasn’t been saved yet. Leaving now discards the timer."
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          destructive
+          onCancel={() => setShowDiscard(false)}
+          onConfirm={confirmDiscard}
         />
       </ScrollView>
 
