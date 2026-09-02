@@ -22,6 +22,21 @@ Low-risk, no architecture change, all consistent with the offline ethos.
 - **Head circumference** on Growth — `GrowthInput.head_circumference_cm` already
   exists in the schema; needs an input + a third chart toggle (Weight / Length /
   Head).
+- **Backup & restore (local JSON snapshot)** — a lossless, user-controlled
+  backup that stays fully offline: the app never talks to a server. **Backup**
+  dumps every table through `repo` into a versioned JSON envelope
+  (`{ app_version, schema_version, baby, feeds, diapers, sleeps, growth }`),
+  writes it to cache, and hands it to the **OS share sheet** (`expo-sharing`, as
+  CSV already does) — *you* decide where it goes. **Restore** opens the system
+  file picker (`expo-document-picker`), reads the file **locally**, validates the
+  version header (refuse a newer-than-supported file), and **replaces** all data
+  in a **single transaction** behind a ConfirmDialog. Unlike CSV export this is
+  lossless — it carries **sleep and pump durations**, which the CSV drops — and
+  JSON keeps it human-inspectable, reinforcing the privacy story rather than
+  straining it. Two Settings rows (Back up / Restore) under a DATA section.
+  (Raw-SQLite `VACUUM INTO` was the lossless alternative; JSON chosen for
+  transparency + forward-migratable shape.) Nudge the privacy copy from
+  "everything stays on this device" toward "nothing moves unless *you* move it."
 - **Notification snooze / quiet-hours** — explicitly deferred from v1 (§5.4).
 - **Sleep refinements** (sleep plan **S4**): night-wakings within a night sleep;
   overnight **midnight-split** attribution in Trends. See
