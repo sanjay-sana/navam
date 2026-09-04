@@ -12,14 +12,16 @@ import { buildBackupJson, parseBackup, type BackupData } from '@/src/logic/backu
 export async function exportBackup(): Promise<'ok' | 'no-baby'> {
   const baby = await repo.getActiveBaby();
   if (!baby) return 'no-baby';
-  const [feeds, diapers, sleeps, growth] = await Promise.all([
+  const [feeds, diapers, sleeps, growth, settings, reminder] = await Promise.all([
     repo.getAllFeedEvents(baby.id),
     repo.getAllDiaperEvents(baby.id),
     repo.getAllSleepEvents(baby.id),
     repo.getGrowthMeasurements(baby.id),
+    repo.getSettings(),
+    repo.getFeedReminder(baby.id),
   ]);
   const json = buildBackupJson(
-    { baby, feeds, diapers, sleeps, growth },
+    { baby, feeds, diapers, sleeps, growth, settings, reminder },
     Application.nativeApplicationVersion
   );
 

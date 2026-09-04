@@ -14,8 +14,12 @@ import type {
   FeedInput,
   GrowthInput,
   GrowthMeasurement,
+  Settings,
   SleepEvent,
   SleepInput,
+  UnitLength,
+  UnitMass,
+  UnitVolume,
 } from '@/src/db/types';
 
 /** Tag that identifies our file, so we can reject unrelated JSON early. */
@@ -23,12 +27,29 @@ export const BACKUP_FORMAT = 'navam-backup';
 /** Bump when the snapshot shape changes in a non-additive way. */
 export const BACKUP_VERSION = 1;
 
+/** Preferences worth restoring so a reinstall rebuilds the same setup. */
+export interface BackupSettings {
+  unit_volume: UnitVolume;
+  unit_mass: UnitMass;
+  unit_length: UnitLength;
+  track_sleep: number;
+  night_start_min: number;
+  night_end_min: number;
+}
+export interface BackupReminder {
+  enabled: number; // 0 | 1
+  interval_minutes: number;
+}
+
 export interface BackupData {
   baby: BabyInput;
   feeds: FeedInput[];
   diapers: DiaperInput[];
   sleeps: SleepInput[];
   growth: GrowthInput[];
+  /** Optional — absent in older backups; restore falls back to defaults. */
+  settings: BackupSettings | null;
+  reminder: BackupReminder | null;
 }
 
 export interface BackupFile extends BackupData {
@@ -79,7 +100,15 @@ function growthToInput(g: GrowthMeasurement): GrowthInput {
 
 /** Assemble the JSON string for a backup (pretty-printed for inspectability). */
 export function buildBackupJson(
-  input: { baby: Baby; feeds: FeedEvent[]; diapers: DiaperEvent[]; sleeps: SleepEvent[]; growth: GrowthMeasurement[] },
+  input: {
+    baby: Baby;
+    feeds: FeedEvent[];
+    diapers: DiaperEvent[];
+    sleeps: SleepEvent[];
+    growth: GrowthMeasurement[];
+    settings: Settings;
+    reminder: { enabled: boolean; intervalMinutes: number } | null;
+  },
   appVersion: string | null
 ): string {
   const file: BackupFile = {
@@ -98,6 +127,17 @@ export function buildBackupJson(
     diapers: input.diapers.map(diaperToInput),
     sleeps: input.sleeps.map(sleepToInput),
     growth: input.growth.map(growthToInput),
+    settings: {
+      unit_volume: input.settings.unit_volume,
+      unit_mass: input.settings.unit_mass,
+      unit_length: input.settings.unit_length,
+      track_sleep: input.settings.track_sleep,
+      night_start_min: input.settings.night_start_min,
+      night_end_min: input.settings.night_end_min,
+    },
+    reminder: input.reminder
+      ? { enabled: input.reminder.enabled ? 1 : 0, interval_minutes: input.reminder.intervalMinutes }
+      : null,
   };
   return JSON.stringify(file, null, 2);
 }
@@ -144,8 +184,38 @@ export function parseBackup(text: string): ParseResult {
       diapers: arr<DiaperInput>(f.diapers),
       sleeps: arr<SleepInput>(f.sleeps),
       growth: arr<GrowthInput>(f.growth),
+      settings: parseSettings(f.settings),
+      reminder: parseReminder(f.reminder),
     },
   };
+}
+
+const IN = <T,>(v: unknown, allowed: readonly T[]): T | null =>
+  allowed.includes(v as T) ? (v as T) : null;
+const int = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : null);
+
+/** Optional settings block — every field must be valid or the block is dropped. */
+function parseSettings(v: unknown): BackupSettings | null {
+  if (!v || typeof v !== 'object') return null;
+  const s = v as Record<string, unknown>;
+  const unit_volume = IN<UnitVolume>(s.unit_volume, ['ml', 'oz']);
+  const unit_mass = IN<UnitMass>(s.unit_mass, ['g', 'lb_oz']);
+  const unit_length = IN<UnitLength>(s.unit_length, ['cm', 'in']);
+  const track_sleep = int(s.track_sleep);
+  const night_start_min = int(s.night_start_min);
+  const night_end_min = int(s.night_end_min);
+  if (!unit_volume || !unit_mass || !unit_length || track_sleep == null || night_start_min == null || night_end_min == null) {
+    return null;
+  }
+  return { unit_volume, unit_mass, unit_length, track_sleep: track_sleep ? 1 : 0, night_start_min, night_end_min };
+}
+
+function parseReminder(v: unknown): BackupReminder | null {
+  if (!v || typeof v !== 'object') return null;
+  const r = v as Record<string, unknown>;
+  const interval = int(r.interval_minutes);
+  if (interval == null || interval <= 0) return null;
+  return { enabled: r.enabled ? 1 : 0, interval_minutes: interval };
 }
 
 /** Total event count in a backup (for the confirm dialog + result notice). */

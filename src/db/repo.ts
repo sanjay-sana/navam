@@ -617,6 +617,31 @@ export async function restoreBackup(babyId: number, data: BackupData): Promise<v
     for (const f of data.feeds) await createFeedEvent(babyId, f);
     for (const d of data.diapers) await createDiaperEvent(babyId, d);
     for (const s of data.sleeps) await createSleepEvent(babyId, s);
+
+    // Preferences — restore units + night window + sleep toggle (never touch
+    // active_baby_id / theme). units_auto_set = 1 so region defaults don't later
+    // clobber the restored units.
+    if (data.settings) {
+      await db.runAsync(
+        `UPDATE settings SET unit_volume = ?, unit_mass = ?, unit_length = ?, track_sleep = ?,
+           night_start_min = ?, night_end_min = ?, units_auto_set = 1, updated_at = ? WHERE id = 1`,
+        [
+          data.settings.unit_volume,
+          data.settings.unit_mass,
+          data.settings.unit_length,
+          data.settings.track_sleep,
+          data.settings.night_start_min,
+          data.settings.night_end_min,
+          ts,
+        ]
+      );
+    }
+    if (data.reminder) {
+      await db.runAsync(
+        `UPDATE reminder_configs SET enabled = ?, interval_minutes = ?, updated_at = ? WHERE baby_id = ? AND type = 'feed'`,
+        [data.reminder.enabled, data.reminder.interval_minutes, ts, babyId]
+      );
+    }
   });
 }
 

@@ -1,5 +1,12 @@
-import type { Baby, DiaperEvent, FeedEvent, GrowthMeasurement, SleepEvent } from '@/src/db/types';
+import type { Baby, DiaperEvent, FeedEvent, GrowthMeasurement, Settings, SleepEvent } from '@/src/db/types';
 import { BACKUP_FORMAT, BACKUP_VERSION, backupCounts, buildBackupJson, parseBackup } from '../backup';
+
+const settings: Settings = {
+  id: 1, unit_volume: 'oz', unit_mass: 'lb_oz', unit_length: 'in', active_baby_id: 1,
+  theme: 'dark', track_sleep: 0, night_start_min: 1230, night_end_min: 390, units_auto_set: 1,
+  updated_at: 'x',
+};
+const reminder = { enabled: true, intervalMinutes: 150 };
 
 const baby: Baby = {
   id: 1,
@@ -37,7 +44,7 @@ const growth: GrowthMeasurement[] = [
 
 describe('backup round-trip', () => {
   it('serialises to a tagged, versioned envelope', () => {
-    const obj = JSON.parse(buildBackupJson({ baby, feeds, diapers, sleeps, growth }, '1.0.1'));
+    const obj = JSON.parse(buildBackupJson({ baby, feeds, diapers, sleeps, growth, settings, reminder }, '1.0.1'));
     expect(obj.format).toBe(BACKUP_FORMAT);
     expect(obj.version).toBe(BACKUP_VERSION);
     expect(obj.app_version).toBe('1.0.1');
@@ -45,7 +52,7 @@ describe('backup round-trip', () => {
   });
 
   it('parses back losslessly, including pump duration and sleep', () => {
-    const json = buildBackupJson({ baby, feeds, diapers, sleeps, growth }, null);
+    const json = buildBackupJson({ baby, feeds, diapers, sleeps, growth, settings, reminder }, null);
     const res = parseBackup(json);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
@@ -66,6 +73,18 @@ describe('backup round-trip', () => {
     // baby profile
     expect(v.baby.first_name).toBe('Aarav');
     expect(v.baby.date_of_birth).toBe('2026-07-01');
+  });
+
+  it('round-trips preferences (units, night window, sleep toggle, reminder)', () => {
+    const json = buildBackupJson({ baby, feeds, diapers, sleeps, growth, settings, reminder }, null);
+    const res = parseBackup(json);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.value.settings).toEqual({
+      unit_volume: 'oz', unit_mass: 'lb_oz', unit_length: 'in',
+      track_sleep: 0, night_start_min: 1230, night_end_min: 390,
+    });
+    expect(res.value.reminder).toEqual({ enabled: 1, interval_minutes: 150 });
   });
 });
 
@@ -89,11 +108,27 @@ describe('parseBackup validation', () => {
     expect(r.ok).toBe(true);
     if (r.ok) expect(backupCounts(r.value).total).toBe(0);
   });
+  it('tolerates a missing preferences block (settings/reminder null)', () => {
+    const r = parseBackup(JSON.stringify({ format: BACKUP_FORMAT, version: 1, baby: { sex: 'male', date_of_birth: '2026-01-01' } }));
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.settings).toBeNull();
+      expect(r.value.reminder).toBeNull();
+    }
+  });
+  it('drops a settings block with an invalid unit (all-or-nothing)', () => {
+    const r = parseBackup(JSON.stringify({
+      format: BACKUP_FORMAT, version: 1, baby: { sex: 'male', date_of_birth: '2026-01-01' },
+      settings: { unit_volume: 'gallons', unit_mass: 'g', unit_length: 'cm', track_sleep: 1, night_start_min: 1200, night_end_min: 360 },
+    }));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value.settings).toBeNull();
+  });
 });
 
 describe('backupCounts', () => {
   it('sums all event types', () => {
-    const json = buildBackupJson({ baby, feeds, diapers, sleeps, growth }, null);
+    const json = buildBackupJson({ baby, feeds, diapers, sleeps, growth, settings, reminder }, null);
     const r = parseBackup(json);
     if (!r.ok) throw new Error('parse failed');
     expect(backupCounts(r.value)).toEqual({ feeds: 2, diapers: 1, sleeps: 1, growth: 1, total: 5 });

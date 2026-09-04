@@ -156,6 +156,7 @@ export default function SettingsScreen() {
       await repo.restoreBackup(activeBaby.id, data);
       await syncFeedReminder(activeBaby.id);
       await refresh();
+      await loadReminder(); // reflect a restored reminder on/off + interval
       const c = backupCounts(data);
       setNotice({
         title: 'Backup restored',
