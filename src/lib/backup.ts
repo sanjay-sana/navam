@@ -3,6 +3,9 @@
 import * as Application from 'expo-application';
 import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
+// The new File().text() API doesn't reliably read the URI a document picker
+// returns; readAsStringAsync (still shipped under /legacy) is the proven path.
+import { readAsStringAsync } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 import * as repo from '@/src/db/repo';
@@ -56,9 +59,9 @@ export async function pickBackup(): Promise<ImportResult> {
   if (res.canceled || !res.assets?.[0]) return { status: 'cancelled' };
   let text: string;
   try {
-    text = await new File(res.assets[0].uri).text();
-  } catch {
-    return { status: 'error', message: 'Couldn’t read that file.' };
+    text = await readAsStringAsync(res.assets[0].uri);
+  } catch (e) {
+    return { status: 'error', message: `Couldn’t read that file. ${String(e)}` };
   }
   const parsed = parseBackup(text);
   if (!parsed.ok) return { status: 'error', message: parsed.error };
