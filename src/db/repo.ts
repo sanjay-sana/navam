@@ -3,6 +3,8 @@
 // The DB is opened + migrated lazily, once, and memoised.
 import * as SQLite from 'expo-sqlite';
 
+import type { BackupData } from '@/src/logic/backup';
+
 import { openDatabase } from './migrations';
 import type {
   Baby,
@@ -341,6 +343,14 @@ export async function getAllDiaperEvents(babyId: number): Promise<DiaperEvent[]>
   );
 }
 
+export async function getAllSleepEvents(babyId: number): Promise<SleepEvent[]> {
+  const db = await getDb();
+  return db.getAllAsync<SleepEvent>(
+    'SELECT * FROM sleep_events WHERE baby_id = ? ORDER BY start_time ASC',
+    [babyId]
+  );
+}
+
 // --- Diaper events ----------------------------------------------------------
 
 export async function createDiaperEvent(babyId: number, input: DiaperInput): Promise<number> {
@@ -568,6 +578,41 @@ export async function insertSampleData(
 ): Promise<void> {
   const db = await getDb();
   await db.withTransactionAsync(async () => {
+    for (const g of data.growth) await createGrowthMeasurement(babyId, g);
+    for (const f of data.feeds) await createFeedEvent(babyId, f);
+    for (const d of data.diapers) await createDiaperEvent(babyId, d);
+    for (const s of data.sleeps) await createSleepEvent(babyId, s);
+  });
+}
+
+/**
+ * Restore a backup by REPLACING the given baby's data (§ v1.1 backup/restore).
+ * Overwrites the baby's profile and wipes + re-inserts every event, all in one
+ * transaction so a bad file can't leave a half-imported DB. Callers should
+ * reschedule the feed reminder and refresh app state afterwards.
+ */
+export async function restoreBackup(babyId: number, data: BackupData): Promise<void> {
+  const db = await getDb();
+  const ts = nowUtc();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `UPDATE babies SET name = ?, first_name = ?, middle_name = ?, last_name = ?, sex = ?, date_of_birth = ?, updated_at = ?
+       WHERE id = ?`,
+      [
+        composeName(data.baby),
+        data.baby.first_name.trim(),
+        data.baby.middle_name?.trim() || null,
+        data.baby.last_name?.trim() || null,
+        data.baby.sex,
+        data.baby.date_of_birth,
+        ts,
+        babyId,
+      ]
+    );
+    await db.runAsync('DELETE FROM feed_events WHERE baby_id = ?', [babyId]);
+    await db.runAsync('DELETE FROM diaper_events WHERE baby_id = ?', [babyId]);
+    await db.runAsync('DELETE FROM sleep_events WHERE baby_id = ?', [babyId]);
+    await db.runAsync('DELETE FROM growth_measurements WHERE baby_id = ?', [babyId]);
     for (const g of data.growth) await createGrowthMeasurement(babyId, g);
     for (const f of data.feeds) await createFeedEvent(babyId, f);
     for (const d of data.diapers) await createDiaperEvent(babyId, d);

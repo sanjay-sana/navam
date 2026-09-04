@@ -13,7 +13,9 @@ import { Segmented } from '@/src/components/Segmented';
 import { WheelCompoundModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import type { UnitLength, UnitMass, UnitVolume } from '@/src/db/types';
+import { exportBackup, pickBackup } from '@/src/lib/backup';
 import { exportCsv } from '@/src/lib/exportCsv';
+import { backupCounts, type BackupData } from '@/src/logic/backup';
 import { buildSampleData } from '@/src/logic/sampleData';
 import { ensureNotificationPermission, syncFeedReminder } from '@/src/notifications/feedReminder';
 import { useAppData } from '@/src/state/AppDataProvider';
@@ -62,6 +64,9 @@ export default function SettingsScreen() {
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
   const [showSample, setShowSample] = useState(false);
   const [loadingSample, setLoadingSample] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<BackupData | null>(null);
 
   const loadReminder = useCallback(async () => {
     if (!activeBaby) return;
@@ -116,6 +121,50 @@ export default function SettingsScreen() {
       setNotice({ title: 'Export failed', message: String(e) });
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function onBackup() {
+    setBackingUp(true);
+    try {
+      const res = await exportBackup();
+      if (res === 'no-baby') setNotice({ title: 'Nothing to back up', message: 'Add a baby first.' });
+    } catch (e) {
+      setNotice({ title: 'Backup failed', message: String(e) });
+    } finally {
+      setBackingUp(false);
+    }
+  }
+
+  async function onRestorePick() {
+    setRestoring(true);
+    try {
+      const res = await pickBackup();
+      if (res.status === 'error') setNotice({ title: 'Can’t restore', message: res.message });
+      else if (res.status === 'ok') setPendingRestore(res.data); // confirm before writing
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  async function doRestore() {
+    if (!activeBaby || !pendingRestore) return;
+    const data = pendingRestore;
+    setPendingRestore(null);
+    setRestoring(true);
+    try {
+      await repo.restoreBackup(activeBaby.id, data);
+      await syncFeedReminder(activeBaby.id);
+      await refresh();
+      const c = backupCounts(data);
+      setNotice({
+        title: 'Backup restored',
+        message: `Restored ${c.feeds} feeds, ${c.diapers} diapers, ${c.sleeps} sleeps, and ${c.growth} growth points.`,
+      });
+    } catch (e) {
+      setNotice({ title: 'Restore failed', message: String(e) });
+    } finally {
+      setRestoring(false);
     }
   }
 
@@ -280,6 +329,43 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.dim} />
           </View>
         </Pressable>
+
+        {/* Backup & restore — a local, user-controlled JSON snapshot. Fully
+            offline: backup hands a file to the OS share sheet, restore reads a
+            file you pick. Lossless (carries sleep + pump, unlike CSV). */}
+        <Text style={styles.section}>BACKUP</Text>
+        <Pressable style={styles.row} onPress={onBackup} disabled={backingUp}>
+          <Text style={styles.rowLabel}>Back up data</Text>
+          <View style={styles.exportRight}>
+            <Text style={styles.exportHint}>{backingUp ? 'Preparing…' : 'Save a file'}</Text>
+            <Ionicons name="cloud-upload-outline" size={20} color={colors.dim} />
+          </View>
+        </Pressable>
+        <Pressable style={styles.row} onPress={onRestorePick} disabled={restoring}>
+          <Text style={styles.rowLabel}>Restore data</Text>
+          <View style={styles.exportRight}>
+            <Text style={styles.exportHint}>{restoring ? 'Working…' : 'From a file'}</Text>
+            <Ionicons name="cloud-download-outline" size={20} color={colors.dim} />
+          </View>
+        </Pressable>
+        <Text style={styles.aboutBlurb}>
+          Backups are files you save and control — nothing moves unless you move it. Restoring replaces everything
+          currently in the app.
+        </Text>
+
+        <ConfirmDialog
+          visible={pendingRestore != null}
+          title="Restore this backup?"
+          message={
+            pendingRestore
+              ? `This replaces all current data with ${backupCounts(pendingRestore).total} events from the backup. This cannot be undone.`
+              : ''
+          }
+          confirmLabel="Restore"
+          destructive
+          onCancel={() => setPendingRestore(null)}
+          onConfirm={doRestore}
+        />
 
         <Pressable style={styles.startOver} onPress={() => setShowReset(true)}>
           <Text style={styles.startOverText}>Start over</Text>
