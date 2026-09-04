@@ -49,44 +49,63 @@ export type ImportResult =
   | { status: 'error'; message: string }
   | { status: 'ok'; data: BackupData };
 
+function finishParse(text: string): ImportResult {
+  const parsed = parseBackup(text);
+  if (!parsed.ok) return { status: 'error', message: parsed.error };
+  return { status: 'ok', data: parsed.value };
+}
+
 /**
- * Read a picked file's text. Some providers (Drive, "cloud-only" files) hand
- * back a content:// URI that readAsStringAsync can't open directly, so fall
- * back to copying it into our own cache (via the ContentResolver) and reading
- * that local copy.
+ * Preferred picker: the new file-system's own picker returns a File already
+ * copied into our sandbox, so it reads reliably no matter the source provider
+ * (Downloads, Drive, ...). Returns null if this runtime lacks the API, so the
+ * caller can fall back to expo-document-picker.
  */
-async function readPickedText(uri: string): Promise<string> {
+async function pickViaFileSystem(): Promise<ImportResult | null> {
+  const picker = (File as unknown as { pickFileAsync?: unknown }).pickFileAsync;
+  if (typeof picker !== 'function') return null;
+  let picked: { canceled: boolean; result: File | null };
   try {
-    return await readAsStringAsync(uri);
+    picked = await (File as unknown as {
+      pickFileAsync: (o: { mimeTypes: string }) => Promise<{ canceled: boolean; result: File | null }>;
+    }).pickFileAsync({ mimeTypes: '*/*' });
+  } catch {
+    return null; // API present in JS but not the native runtime → fall back
+  }
+  if (picked.canceled || !picked.result) return { status: 'cancelled' };
+  try {
+    return finishParse(await picked.result.text());
+  } catch (e) {
+    return { status: 'error', message: `Couldn’t read that file. ${String(e)}` };
+  }
+}
+
+/**
+ * Fallback picker (expo-document-picker). Its content:// URI can be awkward to
+ * read from Expo Go's sandbox, so try a direct read, then a copy-into-cache.
+ */
+async function pickViaDocumentPicker(): Promise<ImportResult> {
+  const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+  if (res.canceled || !res.assets?.[0]) return { status: 'cancelled' };
+  const uri = res.assets[0].uri;
+  try {
+    return finishParse(await readAsStringAsync(uri));
   } catch (firstErr) {
     try {
       const dest = `${cacheDirectory}navam-restore-${Date.now()}.json`;
       await copyAsync({ from: uri, to: dest });
-      return await readAsStringAsync(dest);
+      return finishParse(await readAsStringAsync(dest));
     } catch {
-      throw firstErr; // report the original, more descriptive error
+      return {
+        status: 'error',
+        message: `Couldn’t read that file. Try saving the backup to your device (Files/Downloads) and pick it from there.\n\n${uri}\n${String(firstErr)}`,
+      };
     }
   }
 }
 
 /** Let the user pick a backup file and parse it (does NOT write to the DB). */
 export async function pickBackup(): Promise<ImportResult> {
-  const res = await DocumentPicker.getDocumentAsync({
-    type: '*/*', // some providers mislabel .json; filter nothing
-    copyToCacheDirectory: true, // ask the picker for a local copy up front
-  });
-  if (res.canceled || !res.assets?.[0]) return { status: 'cancelled' };
-  const uri = res.assets[0].uri;
-  let text: string;
-  try {
-    text = await readPickedText(uri);
-  } catch (e) {
-    return {
-      status: 'error',
-      message: `Couldn’t read that file. Try saving the backup to your device (Files/Downloads) and pick it from there.\n\n${uri}\n${String(e)}`,
-    };
-  }
-  const parsed = parseBackup(text);
-  if (!parsed.ok) return { status: 'error', message: parsed.error };
-  return { status: 'ok', data: parsed.value };
+  const viaFs = await pickViaFileSystem();
+  return viaFs ?? pickViaDocumentPicker();
 }
