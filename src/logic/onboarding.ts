@@ -12,9 +12,16 @@ export interface BabyDraft {
 
 export interface BabyDraftErrors {
   firstName?: string;
+  middleName?: string;
+  lastName?: string;
   sex?: string;
   dob?: string;
 }
+
+/** Max length per name part — caps input so long names can't break layouts or
+ *  the export/backup filename. Character set is intentionally unrestricted so
+ *  accents, apostrophes, hyphens, and non-Latin names are all accepted. */
+export const NAME_MAX_LENGTH = 40;
 
 export type ValidationResult =
   | { ok: true; value: BabyInput }
@@ -36,7 +43,12 @@ export function validateBabyDraft(draft: BabyDraft, now: Date = new Date()): Val
   const errors: BabyDraftErrors = {};
 
   const firstName = draft.firstName.trim();
+  const middleName = draft.middleName.trim();
+  const lastName = draft.lastName.trim();
   if (firstName.length === 0) errors.firstName = 'Enter a first name';
+  else if (firstName.length > NAME_MAX_LENGTH) errors.firstName = `Keep it under ${NAME_MAX_LENGTH} characters`;
+  if (middleName.length > NAME_MAX_LENGTH) errors.middleName = `Keep it under ${NAME_MAX_LENGTH} characters`;
+  if (lastName.length > NAME_MAX_LENGTH) errors.lastName = `Keep it under ${NAME_MAX_LENGTH} characters`;
 
   if (draft.sex !== 'male' && draft.sex !== 'female') {
     errors.sex = 'Select boy or girl';
@@ -57,8 +69,8 @@ export function validateBabyDraft(draft: BabyDraft, now: Date = new Date()): Val
     ok: true,
     value: {
       first_name: firstName,
-      middle_name: draft.middleName.trim() || null,
-      last_name: draft.lastName.trim() || null,
+      middle_name: middleName || null,
+      last_name: lastName || null,
       sex: draft.sex as Sex,
       date_of_birth: toIsoDate(draft.dob!),
     },

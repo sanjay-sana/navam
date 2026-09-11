@@ -19,7 +19,7 @@ import {
   weightLabel,
 } from '@/src/lib/measurementWheels';
 import { unitToCm, unitToGrams } from '@/src/logic/units';
-import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
+import { NAME_MAX_LENGTH, validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 import type { Sex, UnitLength, UnitMass } from '@/src/db/types';
@@ -102,6 +102,7 @@ export default function OnboardingScreen() {
           placeholder="First name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
+          maxLength={NAME_MAX_LENGTH}
         />
         {errors.firstName ? <Text style={styles.error}>{errors.firstName}</Text> : null}
 
@@ -113,6 +114,7 @@ export default function OnboardingScreen() {
           placeholder="Middle name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
+          maxLength={NAME_MAX_LENGTH}
         />
 
         <Text style={styles.label}>LAST NAME (OPTIONAL)</Text>
@@ -123,6 +125,7 @@ export default function OnboardingScreen() {
           placeholder="Last name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
+          maxLength={NAME_MAX_LENGTH}
         />
 
         {/* Sex */}

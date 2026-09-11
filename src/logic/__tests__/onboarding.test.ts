@@ -1,4 +1,4 @@
-import { toIsoDate, validateBabyDraft, type BabyDraft } from '@/src/logic/onboarding';
+import { NAME_MAX_LENGTH, toIsoDate, validateBabyDraft, type BabyDraft } from '@/src/logic/onboarding';
 
 const now = new Date(2026, 5, 21); // 21 Jun 2026, local
 const base: Omit<BabyDraft, 'firstName'> = {
@@ -60,6 +60,40 @@ describe('validateBabyDraft', () => {
   it('allows a baby born today', () => {
     const r = validateBabyDraft({ ...base, firstName: 'A', dob: new Date(2026, 5, 21) }, now);
     expect(r.ok).toBe(true);
+  });
+
+  it('accepts a name at the exact length limit', () => {
+    const r = validateBabyDraft({ ...base, firstName: 'a'.repeat(NAME_MAX_LENGTH) }, now);
+    expect(r.ok).toBe(true);
+  });
+
+  it('rejects an over-long first name', () => {
+    const r = validateBabyDraft({ ...base, firstName: 'a'.repeat(NAME_MAX_LENGTH + 1) }, now);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.firstName).toBeDefined();
+  });
+
+  it('rejects over-long middle and last names', () => {
+    const r = validateBabyDraft(
+      { ...base, firstName: 'Aarav', middleName: 'm'.repeat(41), lastName: 'l'.repeat(41) },
+      now
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.errors.middleName).toBeDefined();
+      expect(r.errors.lastName).toBeDefined();
+    }
+  });
+
+  it('measures length after trimming (surrounding spaces do not count)', () => {
+    const r = validateBabyDraft({ ...base, firstName: `  ${'a'.repeat(NAME_MAX_LENGTH)}  ` }, now);
+    expect(r.ok).toBe(true);
+  });
+
+  it('accepts accented, apostrophe, hyphen, and non-Latin names', () => {
+    for (const name of ['José', 'Zoë', "O'Brien", 'Anne-Marie', '中文', 'हिन्दी']) {
+      expect(validateBabyDraft({ ...base, firstName: name }, now).ok).toBe(true);
+    }
   });
 });
 

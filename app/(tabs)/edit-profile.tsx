@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WheelDateTimeModal } from '@/src/components/WheelPicker';
 import * as repo from '@/src/db/repo';
 import type { Sex } from '@/src/db/types';
-import { validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
+import { NAME_MAX_LENGTH, validateBabyDraft, type BabyDraftErrors } from '@/src/logic/onboarding';
 import { useAppData } from '@/src/state/AppDataProvider';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 
@@ -66,6 +66,7 @@ export default function EditProfileScreen() {
           placeholder="First name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
+          maxLength={NAME_MAX_LENGTH}
         />
         {errors.firstName ? <Text style={styles.error}>{errors.firstName}</Text> : null}
 
@@ -77,6 +78,7 @@ export default function EditProfileScreen() {
           placeholder="Middle name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
+          maxLength={NAME_MAX_LENGTH}
         />
 
         <Text style={styles.label}>LAST NAME (OPTIONAL)</Text>
@@ -87,6 +89,7 @@ export default function EditProfileScreen() {
           placeholder="Last name"
           placeholderTextColor={colors.dim}
           autoCapitalize="words"
+          maxLength={NAME_MAX_LENGTH}
         />
 
         <Text style={styles.label}>SEX</Text>
