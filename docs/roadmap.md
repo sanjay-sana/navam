@@ -13,6 +13,17 @@ next tier by what actually annoys us.
 
 ---
 
+## Shipped since v1
+- **Backup & restore (local JSON snapshot)** — lossless, fully-offline backup:
+  Settings → Back up writes a versioned JSON envelope of every table and hands
+  it to the OS share sheet; Restore picks a file (via the file-system picker,
+  falling back to `expo-document-picker`), validates it, and **replaces** all
+  data in a single transaction. Carries **sleep + pump durations** the CSV drops,
+  and also restores preferences (units, night window, feed reminder). Doubles as
+  the migration path off a sideloaded preview build onto the store build.
+
+---
+
 ## v1.1 — small polish (post-launch, usage-driven)
 Low-risk, no architecture change, all consistent with the offline ethos.
 
@@ -22,21 +33,6 @@ Low-risk, no architecture change, all consistent with the offline ethos.
 - **Head circumference** on Growth — `GrowthInput.head_circumference_cm` already
   exists in the schema; needs an input + a third chart toggle (Weight / Length /
   Head).
-- **Backup & restore (local JSON snapshot)** — a lossless, user-controlled
-  backup that stays fully offline: the app never talks to a server. **Backup**
-  dumps every table through `repo` into a versioned JSON envelope
-  (`{ app_version, schema_version, baby, feeds, diapers, sleeps, growth }`),
-  writes it to cache, and hands it to the **OS share sheet** (`expo-sharing`, as
-  CSV already does) — *you* decide where it goes. **Restore** opens the system
-  file picker (`expo-document-picker`), reads the file **locally**, validates the
-  version header (refuse a newer-than-supported file), and **replaces** all data
-  in a **single transaction** behind a ConfirmDialog. Unlike CSV export this is
-  lossless — it carries **sleep and pump durations**, which the CSV drops — and
-  JSON keeps it human-inspectable, reinforcing the privacy story rather than
-  straining it. Two Settings rows (Back up / Restore) under a DATA section.
-  (Raw-SQLite `VACUUM INTO` was the lossless alternative; JSON chosen for
-  transparency + forward-migratable shape.) Nudge the privacy copy from
-  "everything stays on this device" toward "nothing moves unless *you* move it."
 - **In-app review prompt** — request a Play rating via `expo-store-review`
   (Google's In-App Review API) at a positive milestone, e.g. once total logged
   events cross ~20–30. Request once, then flag it in settings so it never
