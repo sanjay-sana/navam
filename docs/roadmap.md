@@ -37,6 +37,12 @@ Low-risk, no architecture change, all consistent with the offline ethos.
   (Raw-SQLite `VACUUM INTO` was the lossless alternative; JSON chosen for
   transparency + forward-migratable shape.) Nudge the privacy copy from
   "everything stays on this device" toward "nothing moves unless *you* move it."
+- **In-app review prompt** — request a Play rating via `expo-store-review`
+  (Google's In-App Review API) at a positive milestone, e.g. once total logged
+  events cross ~20–30. Request once, then flag it in settings so it never
+  re-fires. Must NOT gate features, incentivise, or pre-filter to happy users
+  (all Play violations) — just request at a good moment and let Google decide
+  whether to show it.
 - **Notification snooze / quiet-hours** — explicitly deferred from v1 (§5.4).
 - **Sleep refinements** (sleep plan **S4**): night-wakings within a night sleep;
   overnight **midnight-split** attribution in Trends. See
