@@ -90,6 +90,38 @@ Where Navam gets genuinely smarter and more useful without collecting anything.
   leaves the device" promise for a minor's health data, and adds key-management +
   SQL-sandbox surface. Only ever as an explicit opt-in. (§9 deferral.)
 
+## Monetization stance
+How Navam earns without betraying what it is. Gate any billing work behind real
+demand — don't build it until there are enough users that a small conversion is
+worth the effort.
+
+- **Off the table — permanently.** Ads (the listing says "no ads, no tracking";
+  ad networks are third-party trackers and need network) and selling/sharing
+  data (it's a minor's health data on a privacy-first app). These would destroy
+  the one thing that differentiates Navam.
+- **Primary model: free core + one-time "Pro" unlock.** A generous free core,
+  and a **one-time purchase** (not a subscription) for power/convenience
+  features. One-time fits because baby tracking has a short, intense usage
+  window (people churn in ~3 months) and the offline app has **no ongoing server
+  cost** to justify recurring charges — a subscription for something that costs
+  us nothing to run breeds resentment. "Buy it, own it, no strings" also matches
+  the privacy ethos.
+- **Free forever — never paywalled:** core logging, and anything safety-related,
+  especially **backup/restore and CSV export**. Locking someone's own data
+  behind a paywall betrays the whole promise.
+- **Pro (one-time) candidates:** PDF pediatrician report, extended trends /
+  history windows, wake-window prediction, growth velocity, multi-baby, extra
+  themes — the committed-parent conveniences, not what a casual user needs.
+- **Subscription — reserved for v3 sync only.** Multi-caregiver sync is the one
+  feature with a genuine recurring server cost, so it's the only thing a
+  subscription can honestly charge for.
+- **The pitch is the ethos:** "You're the customer, not the product — no ads, no
+  data sales. Buy Pro to support a solo developer keeping your baby's data
+  private." Privacy-conscious users convert *better* when respected.
+- **Reality check:** a niche, no-marketing, free-core app converts ~2–5% at a
+  few dollars — coffee money until real scale. Play takes 15% on the first
+  $1M/yr for small developers.
+
 ---
 
 ### Notes
