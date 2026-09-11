@@ -13,6 +13,34 @@ next tier by what actually annoys us.
 
 ---
 
+## Release gates
+Don't start a tier until the previous one has *earned* it. Each gate tests three
+things together — **reach** (are people finding it), **retention** (do they keep
+using it — the real signal for a tracker), and **demand** (are they asking for
+what's next). Numbers are adjustable targets for a private, no-marketing,
+word-of-mouth app — the *structure* matters more than the exact figures, and
+retention always outweighs installs. Read all of these free in Play Console
+(Statistics, Acquisition/retention cohorts, Ratings, Android vitals).
+
+- **v1 → v1.1** *(is the core worth polishing?)* — ~100 installs, a clean
+  production launch, a handful of 4★+ ratings, no critical-bug pattern in
+  reviews, and ≥3 unprompted requests among the v1.1 candidates. Bar is low —
+  these are cheap polish items. Build what people ask for; skip the rest.
+- **v1.1 → v2** *(is there a base worth making smarter for?)* — ~1,000 installs
+  with meaningful **D30 retention** (people still logging a month in), 20–50
+  ratings at 4.2★+, and clear pull for a differentiator (repeated "does it
+  predict naps?" / "can I get a pediatrician report?"). That pull is what earns
+  wake-window prediction and the PDF summary.
+- **v2 → v3** *(the expensive, strategic tier)* — several thousand active users,
+  a sustained base, and explicit repeated demand for the specific v3 feature.
+  ⚠️ Different in kind: sync means a **backend with ongoing cost + liability for
+  a minor's health data**, so the real gate is "enough demand that you'll
+  monetize it (see Monetization stance) or happily fund the servers." Never
+  cross into v3 casually — it turns Navam from a local tool into an operated
+  service.
+
+---
+
 ## Shipped since v1
 - **Backup & restore (local JSON snapshot)** — lossless, fully-offline backup:
   Settings → Back up writes a versioned JSON envelope of every table and hands
