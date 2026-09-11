@@ -1,25 +1,31 @@
-Navam is a calm, private baby tracker built for one thing: logging your baby's day in the fewest taps possible — even one-handed at 3am.
+Navam is a calm, private baby tracker built for one thing: logging your newborn's day in the fewest taps possible — even one-handed at 3am.
 
-Everything stays on your phone. No account, no cloud, no ads, no tracking.
+Everything stays on your phone. No account, no sign-up, no cloud, no ads, no tracking.
+
+Most baby tracker apps are bloated, ask you to make an account, and send your baby's data to their servers. Navam does the opposite. It's a fast, focused feeding and diaper log that works completely offline and keeps every entry on your device.
 
 WHAT YOU CAN TRACK
-• Feeding — breast (live timer or manual), bottle (volume + contents), and pumping, kept separate.
-• Diapers — wet, dirty, or mixed in two taps, with optional colour, consistency and notes.
-• Sleep — naps and night sleep with a one-tap "asleep / awake" toggle and a running timer.
-• Growth — weight and length, plotted against real WHO percentile curves.
+• Feeding — breastfeeding with a live nursing timer for each side (or enter minutes manually), bottle feeds with volume and contents, and pumping sessions, all kept separate.
+• Diapers — log a wet, dirty, or mixed diaper in two taps, with optional colour, consistency and notes.
+• Sleep — track naps and night sleep with a one-tap "asleep / awake" toggle and a running sleep timer.
+• Growth — record weight and length and see them plotted against real WHO growth percentile curves.
 
 SEE THE PATTERNS
-• Today — a glanceable "next feed" countdown, daily counts, and current sleep state.
-• Trends — daily feeds, intake, pumping, diapers, and sleep over 7/14/30 days.
-• History — a clean timeline you can edit or delete anytime.
+• Today — a glanceable "next feed" countdown, daily feed and diaper counts, and your baby's current sleep state at a glance.
+• Trends — daily feeds, milk intake, pumping output, wet and dirty diapers, and sleep over the last 7, 14, or 30 days.
+• History — a clean timeline of every event that you can edit or delete anytime.
 
 BUILT TO BE FAST AND CALM
-• Gentle dark "nightlight" theme, designed for late-night use.
-• Smooth scroll pickers instead of fiddly keyboards.
-• Local feed reminders you can turn on and tune.
-• Export everything to CSV whenever you like.
+• A gentle dark "nightlight" theme, designed for late-night and middle-of-the-night use.
+• Smooth scroll pickers instead of fiddly keyboards, so logging is quick and one-handed.
+• Local feed reminders you can turn on and tune to your baby's schedule.
+• Back up and restore your data as a file whenever you like — perfect for switching phones.
+• Export everything to a CSV spreadsheet to share with your pediatrician or keep your own records.
 
 PRIVATE BY DESIGN
-Navam works fully offline. Your baby's data never leaves your device — there are no servers, no analytics, and no third-party trackers. It's your data, on your phone, full stop.
+Navam works fully offline. Your baby's data never leaves your device — there are no servers, no analytics, and no third-party trackers. Nothing moves unless you move it. It's your data, on your phone, full stop.
 
-Made for single-caregiver, single-device use.
+WHO NAVAM IS FOR
+Navam is made for a single caregiver tracking one baby on one device, who wants a simple, private, no-nonsense newborn tracker without accounts, subscriptions, or ads. If you want a quiet, dependable feeding and sleep log for those first months, Navam is for you.
+
+Keywords: baby tracker, newborn tracker, feeding tracker, breastfeeding tracker, nursing timer, bottle feeding log, pumping tracker, diaper log, baby sleep tracker, baby growth chart, WHO percentiles, offline baby log, private, no ads.
