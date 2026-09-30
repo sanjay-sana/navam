@@ -27,5 +27,3 @@ Navam works fully offline. Your baby's data never leaves your device — there a
 
 WHO NAVAM IS FOR
 Navam is made for a single caregiver tracking one baby on one device, who wants a simple, private, no-nonsense newborn tracker without accounts, subscriptions, or ads. If you want a quiet, dependable feeding and sleep log for those first months, Navam is for you.
-
-Keywords: baby tracker, newborn tracker, feeding tracker, breastfeeding tracker, nursing timer, bottle feeding log, pumping tracker, diaper log, baby sleep tracker, baby growth chart, WHO percentiles, offline baby log, private, no ads.
