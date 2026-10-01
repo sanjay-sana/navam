@@ -1,5 +1,10 @@
 Play "What's new" notes, newest first. Paste the <en-US> block for the release.
 
+=== 1.0.3 ===
+<en-US>
+Accessibility and polish: screens now adapt properly to large font sizes, the feed and pump timers no longer get cut off, and leaving a screen while a timer is running always asks before discarding it.
+</en-US>
+
 === 1.0.2 ===
 <en-US>
 Privacy improvement: your baby's data now stays entirely on your device and is never copied to the cloud. To move your data to a new phone, use Settings → Back up to save a file, then Restore it there.
