@@ -55,6 +55,17 @@ retention always outweighs installs. Read all of these free in Play Console
 ## v1.1 — small polish (post-launch, usage-driven)
 Low-risk, no architecture change, all consistent with the offline ethos.
 
+- **Large-font / accessibility pass** — RN `<Text>` scales with the OS font
+  setting, so large-font / large-display users (e.g. older caregivers) see
+  broken layouts: overflow, clipping, buttons pushed off-screen. Fix with a
+  combination — **(a)** a global `maxFontSizeMultiplier` cap (~1.3–1.4) applied
+  at the root so text grows but is bounded (never fully disable scaling — that's
+  user-hostile); **(b)** make the sensitive screens flex/wrap (prime suspects:
+  Today ring + counts, timer cards, segmented controls); **(c)** test at
+  Android's largest font *and* display size across every screen. Cap alone is
+  only a half-fix — the per-screen layout work is what makes it actually look
+  right. (Verify the cap mechanism on RN 0.85 / React 19 by building, not
+  assuming — React 19 changed component defaults.) Reported by a real user.
 - **Feed notes** — the feed screen has no notes field today (the `feed_events`
   table already has a dormant `notes` column). Add it, then add
   **flag-for-review** on feed too, for parity with diaper/sleep.
