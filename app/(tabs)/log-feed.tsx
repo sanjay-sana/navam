@@ -17,6 +17,7 @@ import { validateFeedDraft, type FeedErrors } from '@/src/logic/feed';
 import { mlToUnit } from '@/src/logic/units';
 import { syncFeedReminder } from '@/src/notifications/feedReminder';
 import { useAppData } from '@/src/state/AppDataProvider';
+import { registerNavGuard, unregisterNavGuard, type NavGuard } from '@/src/state/navGuard';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 
 // Pump is its own chooser entry, so the feed type selector is breast/bottle only.
@@ -164,27 +165,52 @@ export default function LogFeedScreen() {
   const dirtyRef = useRef(false);
   dirtyRef.current = hasUnsavedTimer();
 
-  // Going back with unsaved timer progress would silently discard it, so ask
-  // first. Guards both the header chevron and the hardware/gesture back button.
+  // Leaving with unsaved timer progress would silently discard it, so ask first.
+  // One dialog guards every exit — header chevron, hardware/gesture back, AND a
+  // tab switch (via the nav guard). The confirmed action is stashed in a ref so
+  // the single dialog can perform whichever exit triggered it.
+  const proceedRef = useRef<() => void>(() => router.back());
+  function requestLeave(proceed: () => void) {
+    if (hasUnsavedTimer()) {
+      proceedRef.current = proceed;
+      setShowDiscard(true);
+    } else {
+      proceed();
+    }
+  }
   function attemptBack() {
-    if (hasUnsavedTimer()) setShowDiscard(true);
-    else router.back();
+    requestLeave(() => router.back());
   }
   function confirmDiscard() {
     setShowDiscard(false);
     resetTimers();
-    router.back();
+    proceedRef.current();
   }
   useFocusEffect(
     useCallback(() => {
       const sub = BackHandler.addEventListener('hardwareBackPress', () => {
         if (dirtyRef.current) {
+          proceedRef.current = () => router.back();
           setShowDiscard(true);
           return true; // swallow the back press; the dialog decides
         }
         return false;
       });
       return () => sub.remove();
+    }, [])
+  );
+  // Register a nav guard so a tab switch prompts the same discard dialog.
+  useFocusEffect(
+    useCallback(() => {
+      const guard: NavGuard = {
+        hasUnsaved: () => dirtyRef.current,
+        confirm: (proceed) => {
+          proceedRef.current = proceed;
+          setShowDiscard(true);
+        },
+      };
+      registerNavGuard(guard);
+      return () => unregisterNavGuard(guard);
     }, [])
   );
 

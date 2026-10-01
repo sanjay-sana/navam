@@ -4,7 +4,20 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/src/components/BrandMark';
+import { getNavGuard } from '@/src/state/navGuard';
 import { colors, fonts } from '@/src/theme/theme';
+
+// If a focused screen has unsaved work, a tab tap prompts "discard?" instead of
+// switching. On confirm the guard performs the switch itself.
+function guardedTabPress(navigate: () => void) {
+  return (e: { preventDefault: () => void }) => {
+    const guard = getNavGuard();
+    if (guard && guard.hasUnsaved()) {
+      e.preventDefault();
+      guard.confirm(navigate);
+    }
+  };
+}
 
 // 4 tabs: Today / Log / Trends / Settings (per CLAUDE.md). Dark-only.
 // Log is the prominent center action — a filled accent square with a plus,
@@ -32,6 +45,9 @@ export default function TabLayout() {
           title: 'Today',
           tabBarIcon: ({ focused }) => <BrandMark size={28} dimmed={!focused} />,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: guardedTabPress(() => navigation.navigate('index')),
+        })}
       />
       <Tabs.Screen
         name="log"
@@ -43,6 +59,9 @@ export default function TabLayout() {
             </View>
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: guardedTabPress(() => navigation.navigate('log')),
+        })}
       />
       <Tabs.Screen
         name="trends"
@@ -52,6 +71,9 @@ export default function TabLayout() {
             <Ionicons name="stats-chart" color={color} size={size} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: guardedTabPress(() => navigation.navigate('trends')),
+        })}
       />
       <Tabs.Screen
         name="settings"
@@ -61,6 +83,9 @@ export default function TabLayout() {
             <Ionicons name="settings-sharp" color={color} size={size} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: guardedTabPress(() => navigation.navigate('settings')),
+        })}
       />
       {/* Routes in the group but hidden from the tab bar (tab bar stays at 4). */}
       <Tabs.Screen name="log-feed" options={{ href: null }} />
