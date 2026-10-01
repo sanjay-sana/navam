@@ -42,3 +42,7 @@ yarn-error.*
 
 # stray device screen captures dropped at the repo root (store-ready copies live in store-assets/screenshots/)
 /1000*.png
+
+# Personal screenshots (never commit)
+mom_screen.jpg
+*_screen.jpg
