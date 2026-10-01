@@ -1,4 +1,11 @@
-=== Recommended (reusable for production) ===
+Play "What's new" notes, newest first. Paste the <en-US> block for the release.
+
+=== 1.0.2 ===
+<en-US>
+Privacy improvement: your baby's data now stays entirely on your device and is never copied to the cloud. To move your data to a new phone, use Settings → Back up to save a file, then Restore it there.
+</en-US>
+
+=== 1.0.0 / 1.0.1 — first release ===
 <en-US>
 First release of Navam — a private, offline baby tracker. Log feeds (breast, bottle, pump), diapers, sleep, and growth against WHO percentiles. Glanceable Today countdown, Trends, editable History, local reminders, and CSV export. Everything stays on your device.
 </en-US>
