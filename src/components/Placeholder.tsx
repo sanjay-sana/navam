@@ -1,6 +1,7 @@
 // Temporary empty-tab scaffold for Phase 0. Each tab replaces this with its real
 // screen in later phases (Today P2, Log P3/P4, Trends P5, Settings P5/P6).
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, fonts, spacing } from '@/src/theme/theme';

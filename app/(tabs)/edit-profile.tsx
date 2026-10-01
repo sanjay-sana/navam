@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { WheelDateTimeModal } from '@/src/components/WheelPicker';

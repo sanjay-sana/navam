@@ -4,7 +4,8 @@
 // the current time. Used by the feed and diaper log screens.
 import { format, isToday } from 'date-fns';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 
 import { WheelDateTimeModal } from '@/src/components/WheelPicker';
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';

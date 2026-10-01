@@ -1,16 +1,8 @@
 // Custom dark-themed "casino scroll" date/time picker — a bottom-sheet modal
 // with snapping scroll wheels, fully on-theme (replaces the native dialog).
 import { Fragment, useEffect, useRef, useState } from 'react';
-import {
-  Modal,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Modal, type NativeScrollEvent, type NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 

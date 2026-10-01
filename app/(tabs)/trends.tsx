@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BarChart } from '@/src/components/BarChart';

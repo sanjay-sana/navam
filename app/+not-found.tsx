@@ -1,5 +1,6 @@
 import { Link, Stack } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 
 import { colors, fonts, spacing } from '@/src/theme/theme';
 

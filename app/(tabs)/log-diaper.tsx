@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChipSelect, type ChipOption } from '@/src/components/ChipSelect';

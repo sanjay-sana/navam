@@ -1,7 +1,8 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { PumpIcon } from '@/src/components/PumpIcon';
 import { useRouter, type Href } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAppData } from '@/src/state/AppDataProvider';

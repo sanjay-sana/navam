@@ -1,6 +1,7 @@
 // Themed confirmation dialog (replaces the system Alert.alert, which doesn't
 // follow the app theme). Controlled via `visible`.
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 

@@ -3,7 +3,8 @@ import { format } from 'date-fns';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
@@ -362,7 +363,7 @@ export default function LogFeedScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Pressable onPress={attemptBack} hitSlop={12}>
             <Ionicons name="chevron-back" size={26} color={colors.text} />
@@ -592,11 +593,15 @@ function SideTimer({
           running, it's just the live clock. */}
       {active ? (
         <View style={styles.sideClockPlain}>
-          <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
+          <Text style={styles.sideClock} numberOfLines={1} adjustsFontSizeToFit>
+            {formatMMSS(seconds)}
+          </Text>
         </View>
       ) : (
         <Pressable style={styles.sideClockBox} onPress={onEdit} hitSlop={8}>
-          <Text style={styles.sideClock}>{formatMMSS(seconds)}</Text>
+          <Text style={styles.sideClock} numberOfLines={1} adjustsFontSizeToFit>
+            {formatMMSS(seconds)}
+          </Text>
           <Ionicons name="pencil" size={13} color={colors.dim} />
         </Pressable>
       )}
@@ -612,6 +617,7 @@ function SideTimer({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  scroll: { flex: 1 },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
   header: {
     flexDirection: 'row',

@@ -1,6 +1,7 @@
 // Wrapping single-select chip row for optional fields (tap selected to clear).
 // Each option may carry a colour dot (used for diaper colour).
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 
 import { colors, fonts, radius, spacing } from '@/src/theme/theme';
 

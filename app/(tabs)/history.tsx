@@ -3,7 +3,8 @@ import { PumpIcon } from '@/src/components/PumpIcon';
 import { format, isSameDay, subDays } from 'date-fns';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as repo from '@/src/db/repo';

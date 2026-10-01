@@ -2,7 +2,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CountdownRing } from '@/src/components/CountdownRing';
